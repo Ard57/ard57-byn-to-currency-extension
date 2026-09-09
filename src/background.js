@@ -1,4 +1,5 @@
 import { getExchangeRates, convertAmount } from './rates.js';
+import { formatPrices, convertPrices, LAYOUT } from './format.js';
 
 /**
  * Handle messages from content scripts or popup.
@@ -42,4 +43,7 @@ console.log('BYN to Currency: service worker registered');
 // Expose on global scope for easy testing in the DevTools console
 globalThis.getExchangeRates = getExchangeRates;
 globalThis.convertAmount = convertAmount;
+globalThis.formatPrices = formatPrices;
+globalThis.convertPrices = convertPrices;
+globalThis.LAYOUT = LAYOUT;
 
