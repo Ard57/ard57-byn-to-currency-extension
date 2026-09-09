@@ -1,5 +1,12 @@
 import { getExchangeRates, convertAmount } from './rates.js';
 import { formatPrices, convertPrices, LAYOUT } from './format.js';
+import {
+  resolveSettings,
+  getSettingsForUrl,
+  setSiteSettings,
+  setPageRule,
+  removePageRule,
+} from './settings.js';
 
 /**
  * Handle messages from content scripts or popup.
@@ -46,4 +53,9 @@ globalThis.convertAmount = convertAmount;
 globalThis.formatPrices = formatPrices;
 globalThis.convertPrices = convertPrices;
 globalThis.LAYOUT = LAYOUT;
+globalThis.resolveSettings = resolveSettings;
+globalThis.getSettingsForUrl = getSettingsForUrl;
+globalThis.setSiteSettings = setSiteSettings;
+globalThis.setPageRule = setPageRule;
+globalThis.removePageRule = removePageRule;
 
