@@ -159,6 +159,54 @@ export function resolveSettings(url, settings = {}) {
 }
 
 /**
+ * Collects every currency mentioned anywhere in the settings — global
+ * defaults, every site, every page rule.
+ *
+ * The rate cache is global while currency lists are per-site, so a single
+ * fetch has to satisfy all of them: the union is what gets requested. Without
+ * this, a site configured for PLN would silently render nothing for it,
+ * because the fetcher would never have asked for PLN.
+ *
+ * @param {Object} settings - Stored settings object
+ * @returns {string[]} Uppercased, deduplicated currency codes
+ */
+export function collectCurrencies(settings = {}) {
+  const found = new Set();
+
+  const add = list => {
+    if (!Array.isArray(list)) {
+      return;
+    }
+    for (const code of list) {
+      if (typeof code === 'string' && code) {
+        found.add(code.toUpperCase());
+      }
+    }
+  };
+
+  add({ ...DEFAULT_SETTINGS, ...(settings.defaults ?? {}) }.currencies);
+
+  for (const site of Object.values(settings.sites ?? {})) {
+    add(site?.currencies);
+    for (const rule of site?.pages ?? []) {
+      add(rule?.currencies);
+    }
+  }
+
+  return [...found];
+}
+
+/**
+ * Convenience: every currency the user has configured, read from storage.
+ * Pass the result to getExchangeRates().
+ *
+ * @returns {Promise<string[]>}
+ */
+export async function getAllCurrencies() {
+  return collectCurrencies(await loadSettings());
+}
+
+/**
  * Reads the full settings object from storage.
  *
  * @returns {Promise<Object>}
