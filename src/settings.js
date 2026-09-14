@@ -3,6 +3,12 @@ import { LAYOUT } from './format.js';
 const SETTINGS_KEY = 'siteSettings';
 
 /**
+ * The currency page prices are written in. Every conversion starts from it, so
+ * its rate is always fetched regardless of what the user converts into.
+ */
+export const SOURCE_CURRENCY = 'BYN';
+
+/**
  * Global fallback, used for any site the user has not configured.
  */
 export const DEFAULT_SETTINGS = {
@@ -167,11 +173,14 @@ export function resolveSettings(url, settings = {}) {
  * this, a site configured for PLN would silently render nothing for it,
  * because the fetcher would never have asked for PLN.
  *
+ * SOURCE_CURRENCY is always included: prices are read in it, so every
+ * conversion needs its rate whatever the targets are.
+ *
  * @param {Object} settings - Stored settings object
  * @returns {string[]} Uppercased, deduplicated currency codes
  */
 export function collectCurrencies(settings = {}) {
-  const found = new Set();
+  const found = new Set([SOURCE_CURRENCY]);
 
   const add = list => {
     if (!Array.isArray(list)) {
