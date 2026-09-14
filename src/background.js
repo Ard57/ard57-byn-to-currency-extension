@@ -6,7 +6,22 @@ import {
   setSiteSettings,
   setPageRule,
   removePageRule,
+  collectCurrencies,
+  getAllCurrencies,
 } from './settings.js';
+
+/**
+ * Rates covering every currency the user has configured, across all sites.
+ *
+ * The currency list lives in settings, the fetcher takes it as an argument —
+ * rates.js stays a leaf module rather than importing settings.js, which would
+ * close the cycle settings → format → rates.
+ *
+ * @returns {Promise<Object>} Rates object from getExchangeRates()
+ */
+function getConfiguredRates() {
+  return getAllCurrencies().then(getExchangeRates);
+}
 
 /**
  * Handle messages from content scripts or popup.
@@ -20,7 +35,7 @@ import {
  */
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'GET_RATES') {
-    getExchangeRates()
+    getConfiguredRates()
       .then(data => sendResponse({ success: true, data }))
       .catch(error => sendResponse({ success: false, error: error.message }));
 
@@ -31,7 +46,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'CONVERT') {
     const { amount, from, to } = message;
 
-    getExchangeRates()
+    getConfiguredRates()
       .then(data => {
         const result = convertAmount(amount, from, to, data.rates);
         sendResponse({
@@ -58,4 +73,7 @@ globalThis.getSettingsForUrl = getSettingsForUrl;
 globalThis.setSiteSettings = setSiteSettings;
 globalThis.setPageRule = setPageRule;
 globalThis.removePageRule = removePageRule;
+globalThis.collectCurrencies = collectCurrencies;
+globalThis.getAllCurrencies = getAllCurrencies;
+globalThis.getConfiguredRates = getConfiguredRates;
 
