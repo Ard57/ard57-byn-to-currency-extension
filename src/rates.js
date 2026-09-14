@@ -22,32 +22,23 @@ let lastFailureAt = 0;
 const BASE_CURRENCY = 'USD';
 
 /**
- * Fetched whatever the settings say: USD because it is the base, BYN because
- * it is the currency page prices are read in.
- */
-const REQUIRED_CURRENCIES = [BASE_CURRENCY, 'BYN'];
-
-/** Used when a caller supplies no list — console testing, mostly. */
-const DEFAULT_CURRENCIES = [...REQUIRED_CURRENCIES, 'EUR', 'RUB'];
-
-/**
- * Cleans a caller-supplied currency list: uppercased, deduplicated, always
- * including the required pair, and sorted so the same set always produces the
- * same cache and in-flight key.
+ * Cleans a caller-supplied currency list: uppercased, deduplicated, and sorted
+ * so the same set always produces the same cache and in-flight key.
+ *
+ * BASE_CURRENCY is always included — not as a preference but because every
+ * cross-rate divides through it, and it costs nothing, being worth 1 of itself.
+ * Which currencies are actually wanted is the caller's business entirely; see
+ * collectCurrencies() in settings.js.
  *
  * @param {string[]} [currencies]
  * @returns {string[]}
  */
 function normalizeCurrencies(currencies) {
-  const list = Array.isArray(currencies) && currencies.length
-    ? currencies
-    : DEFAULT_CURRENCIES;
-
-  const codes = list
+  const codes = (Array.isArray(currencies) ? currencies : [])
     .filter(code => typeof code === 'string' && code)
     .map(code => code.toUpperCase());
 
-  return [...new Set([...REQUIRED_CURRENCIES, ...codes])].sort();
+  return [...new Set([BASE_CURRENCY, ...codes])].sort();
 }
 
 /**
@@ -118,15 +109,39 @@ function isFresh(cached) {
 }
 
 /**
+ * True if the cache was fetched for at least the currencies asked for.
+ *
+ * The check is against what was *requested*, not what came back: an API that
+ * silently omits an unsupported code would otherwise never satisfy the check,
+ * and every call would refetch forever.
+ *
+ * Cache entries written before `quotes` existed fall back to their rate keys.
+ *
+ * @param {Object|null} cached
+ * @param {string[]} currencies - Normalized currency codes
+ * @returns {boolean}
+ */
+function covers(cached, currencies) {
+  if (!cached) {
+    return false;
+  }
+
+  const requested = new Set(cached.quotes ?? Object.keys(cached.rates ?? {}));
+  return currencies.every(code => requested.has(code));
+}
+
+/**
  * Saves exchange rates to chrome.storage.local with a fetch timestamp.
  *
  * @param {Object} normalizedData - { rates: { USD: 1, BYN: ..., ... }, date: "..." }
+ * @param {string[]} currencies - The list this fetch was made for
  * @returns {Promise<Object>} The stored rates object
  */
-async function cacheRates(normalizedData) {
+async function cacheRates(normalizedData, currencies) {
   const ratesData = {
     rates: normalizedData.rates,
-    base: 'USD',
+    base: BASE_CURRENCY,
+    quotes: currencies,
     date: normalizedData.date,
     fetchedAt: Date.now(),
   };
@@ -138,19 +153,28 @@ async function cacheRates(normalizedData) {
 /**
  * Fetches and caches rates, collapsing concurrent callers onto one request.
  *
+ * Sharing is keyed by the currency list, so a caller wanting a wider set is
+ * not handed a narrower fetch that happens to be in flight.
+ *
+ * @param {string[]} currencies - Normalized currency codes
  * @returns {Promise<Object>} The freshly stored rates object
  * @throws {Error} If the fetch fails
  */
-function refreshRates() {
-  inFlightFetch ??= fetchRatesFromApi()
-    .then(cacheRates)
-    .catch(error => {
-      lastFailureAt = Date.now();
-      throw error;
-    })
-    .finally(() => {
-      inFlightFetch = null;
-    });
+function refreshRates(currencies) {
+  const key = currencies.join(',');
+
+  if (!inFlightFetch || inFlightKey !== key) {
+    inFlightKey = key;
+    inFlightFetch = fetchRatesFromApi(currencies)
+      .then(data => cacheRates(data, currencies))
+      .catch(error => {
+        lastFailureAt = Date.now();
+        throw error;
+      })
+      .finally(() => {
+        inFlightFetch = null;
+      });
+  }
 
   return inFlightFetch;
 }
@@ -160,7 +184,7 @@ function refreshRates() {
  * failing just because the network did.
  *
  * Order of preference:
- *   1. Cache younger than 24 hours
+ *   1. Cache younger than 24 hours that covers every requested currency
  *   2. A fresh fetch
  *   3. Whatever is cached, however old, flagged with `stale: true`
  *
@@ -168,14 +192,22 @@ function refreshRates() {
  * without attempting a fetch while a recent failure is inside the retry
  * cooldown, so an outage costs one request rather than one per price.
  *
+ * A stale fallback is returned even when it does not cover every requested
+ * currency — `convertPrices` skips what it cannot convert, so a partial answer
+ * still beats a blank page.
+ *
+ * @param {string[]} [currencies] - Currency codes to make available. Callers
+ *   pass the union of every configured site's list, via collectCurrencies().
+ *   Omitting it yields the base currency alone.
  * @returns {Promise<Object>} Rates object:
  *   { rates: { USD: 1, BYN: 3.02, EUR: 0.86, RUB: 85.56 }, base: "USD",
- *     date: "...", fetchedAt: ..., stale?: true }
+ *     quotes: [...], date: "...", fetchedAt: ..., stale?: true }
  */
-export async function getExchangeRates() {
+export async function getExchangeRates(currencies) {
+  const wanted = normalizeCurrencies(currencies);
   const cached = await readCache();
 
-  if (isFresh(cached)) {
+  if (isFresh(cached) && covers(cached, wanted)) {
     return cached;
   }
 
@@ -184,7 +216,7 @@ export async function getExchangeRates() {
   }
 
   try {
-    return await refreshRates();
+    return await refreshRates(wanted);
   } catch (error) {
     if (cached) {
       console.warn('BYN to Currency: rate refresh failed, using cached rates —', error.message);
