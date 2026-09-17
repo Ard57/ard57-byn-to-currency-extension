@@ -58,6 +58,29 @@ export const SITE_PRESETS = {
   'onliner.by': {
     fontSize: '0.85em',
     opacity: 0.85,
+
+    /**
+     * Catalog widgets embedded in news articles, e.g.
+     * tech.onliner.by/2026/09/17/kakoj-ajfon-vybrat. Set on the parent domain
+     * because the widget is a shared news component; subdomains with their own
+     * prices (catalog.) override the selector. Verified on tech. only.
+     *
+     *   <div class="news-widget__price">
+     *     <div class="news-widget__price-value news-widget__price-value_primary">
+     *       <a class="news-widget__link news-widget__link_other">2483 ƃ</a>
+     *     </div>
+     *   </div>
+     *   <div class="news-widget__monthly">…от 75,78 ƃ/мес…</div>
+     *
+     * Only the price converts, not the monthly installment. The menu's
+     * "Авто до 4000 ƃ" labels are outside the widget and never matched.
+     *
+     * Appended inside the price-value div, which carries the price's 20px
+     * bold, so the conversion inherits it with no borrowed classes. The
+     * column is 180px, so the ruble amount wraps to a second line.
+     */
+    priceSelector: '.news-widget__price-value_primary > .news-widget__link',
+    priceContainer: '.news-widget__price-value_primary',
   },
 
   /**
