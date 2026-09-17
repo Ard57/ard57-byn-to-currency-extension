@@ -228,11 +228,59 @@ export const SITE_PRESETS = {
   },
 
   /**
-   * TODO: confirm what mb.onliner.by actually sells before tuning this.
-   * Until then it inherits the onliner.by styling and the global layout and
-   * decimals, which is the safe default rather than a guess.
+   * Motorcycles. An older table-based design, so nothing is shared with the
+   * car site's markup. Whole numbers, like cars.
+   *
+   * Search page (mb.onliner.by/), one price per row, then a separate
+   * "ТОРГ / ОБМЕН" paragraph:
+   *
+   *   <td class="cost lst"><div class="cost-i">
+   *     <p class="big"><a><span class="price-primary">51 150 ƃ</span></a></p>
+   *     <p><strong class="c-torg">ТОРГ</strong></p>
+   *   </div></td>
+   *
+   * The price column is 80px wide, so the conversion is stacked, appended
+   * inside p.big right under the price. There it inherits 13px; bold is added
+   * to match the price (18px bold does not fit the column).
+   *
+   * Bike page (mb.onliner.by/moto/216196) shows the same price twice, in the
+   * header and again under the description. Both are this bike's own price,
+   * so both convert:
+   *
+   *   <div class="autoba-hd-details">
+   *     <span class="autoba-hd-details-costs"><span class="cost price-primary">52 295 ƃ</span></span>
+   *     <strong class="c-torg">ТОРГ</strong>
+   *   </div>
+   *
+   * Both containers have font-size 0, so an inherited or em size would be
+   * invisible and the rule sets an explicit 15px semibold (as on the car ad
+   * page). Appended to the details row, after "ТОРГ", keeping the price and
+   * its badge together on one line with the conversion below.
+   *
+   * The price filter's "ƃ" label (strong.price-filter) has no number and is
+   * outside both selectors.
    */
-  'mb.onliner.by': {},
+  'mb.onliner.by': {
+    layout: LAYOUT.BLOCK,
+    decimals: 0,
+
+    priceSelector: 'td.cost .price-primary, .autoba-hd-details .price-primary',
+    priceContainer: '.cost-i .big',
+    fontSize: null,
+    fontWeight: 'bold',
+
+    styles: [
+      {
+        selector: '.autoba-hd-details',
+        layout: LAYOUT.INLINE,
+        priceContainer: '.autoba-hd-details',
+        fontSize: '15px',
+        fontWeight: '600',
+        // The row falls back to Verdana; the price itself uses this stack.
+        fontFamily: 'nbrb, Arial, Helvetica',
+      },
+    ],
+  },
 };
 
 /**
