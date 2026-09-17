@@ -157,20 +157,53 @@ export const SITE_PRESETS = {
   },
 
   /**
-   * Real estate. Prices run to six figures, where kopecks are noise, and
-   * listings have vertical room for a stacked conversion.
+   * Real estate. Prices run to six or seven figures, so no cents anywhere.
+   * The page always shows BYN (the ?currency= parameter changes nothing).
    *
-   * Two price contexts, both covered by inheritance alone for now:
-   *   - listing cards: white bold text over the photo
-   *   - apartment page: black text on a yellow panel
+   * Search page (r.onliner.by/pk/): cards appear in the list on the right AND
+   * in the map popup opened by clicking a red dot. Both use the same card
+   * component, so one selector covers both; the popup is added to the page on
+   * click, and the content script's MutationObserver picks it up.
    *
-   * TODO: add `styles` entries once the real selectors are inspected — e.g. if
-   * the card's photo leaves too little room for a stacked block.
+   *   <span class="classified__figure" style="background-image: …">
+   *     <span class="classified__price classified__price_primary">
+   *       <span class="classified__price-value classified__price-value_primary">
+   *         <span>305 000,00</span> <span class="classified__currency">ƃ</span>
+   *
+   * The number and the sign are separate spans, so the price element is their
+   * parent and its combined text is parsed. The price box is absolutely
+   * positioned at the bottom of the photo: a stacked conversion appended
+   * inside it inherits the white bold text and its shadow, and the box grows
+   * upward, staying inside the photo (measured in the 215px list card and
+   * the 242px popup card).
+   *
+   * Apartment page (r.onliner.by/pk/apartments/1283917): the price sits in a
+   * yellow panel, 21px on #ffdd22.
+   *
+   *   <div class="apartment-bar__item apartment-bar__item_price">
+   *     <span class="apartment-bar__price apartment-bar__price_primary">
+   *       <span class="apartment-bar__price-value apartment-bar__price-value_primary">1 103 322,00 ƃ</span>
+   *
+   * A `styles` rule keeps it on one line, appended inside the panel so the
+   * yellow grows with it (55px → 75px). 0.7em fits the 280px text width even
+   * for amounts several digits longer; 0.75em already wraps those.
    */
   'r.onliner.by': {
     layout: LAYOUT.BLOCK,
     decimals: 0,
-    styles: [],
+
+    priceSelector: '.classified__price-value_primary, .apartment-bar__price-value_primary',
+    priceContainer: '.classified__price',
+
+    styles: [
+      {
+        selector: '.apartment-bar',
+        layout: LAYOUT.INLINE,
+        priceContainer: '.apartment-bar__item_price',
+        fontSize: '0.7em',
+        fontWeight: 'bold',
+      },
+    ],
   },
 
   /**
