@@ -13,6 +13,19 @@
     "service_worker": "src/background.js",
     "type": "module"
   },
+  "content_scripts": [
+    {
+      "matches": ["https://*.onliner.by/*"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/*.js"],
+      "matches": ["https://*.onliner.by/*"]
+    }
+  ],
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

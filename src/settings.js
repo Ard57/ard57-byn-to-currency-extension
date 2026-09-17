@@ -1,4 +1,5 @@
 import { LAYOUT } from './format.js';
+import { SITE_PRESETS, hostnameChain } from './sites.js';
 
 const SETTINGS_KEY = 'siteSettings';
 
@@ -15,8 +16,42 @@ export const DEFAULT_SETTINGS = {
   currencies: ['USD', 'EUR', 'RUB'],
   layout: LAYOUT.INLINE,
   display: 'symbol',
-  decimals: 2,
+  decimals: { default: 2, RUB: 0 },
   locale: 'en-US',
+
+  /**
+   * CSS selector for the elements holding prices. A site without one is left
+   * untouched — nothing is scanned there. Sites get theirs from sites.js.
+   */
+  priceSelector: null,
+
+  /**
+   * Selector for the closest ancestor of a price that the conversion is
+   * appended to. Null means the price element's own parent.
+   */
+  priceContainer: null,
+
+  /**
+   * 'append' — last child of priceContainer.
+   * 'after'  — directly after the price element; priceContainer is ignored.
+   * For a price followed by siblings that must stay below the conversion.
+   */
+  insertPosition: 'append',
+
+  /**
+   * Space-separated classes added to the conversion. For prices styled by
+   * their own classes rather than an ancestor's, so borrowing the site's
+   * classes is the way to match its look.
+   */
+  className: null,
+
+  /**
+   * Font family, weight and color are inherited from the container, so only
+   * relative adjustments are set here. See the Styling notes in sites.js.
+   */
+  fontSize: '0.85em',
+  opacity: 0.85,
+  styles: [],
 };
 
 /**
@@ -45,7 +80,8 @@ export const DEFAULT_SETTINGS = {
  *     }
  *   }
  *
- * Resolution is a three-layer merge: defaults ← site ← first matching page rule.
+ * Resolution also layers in built-in presets along the hostname chain — see
+ * resolveSettings() for the exact order.
  */
 
 /**
@@ -133,13 +169,24 @@ function ruleOverrides(rule) {
  * Resolves the effective settings for a URL. Pure — takes the whole settings
  * object rather than reading storage, so it is straightforward to test.
  *
+ * Layers, later wins:
+ *   1. DEFAULT_SETTINGS
+ *   2. The user's stored global defaults
+ *   3. Built-in SITE_PRESETS along the hostname chain, broadest first
+ *   4. The user's stored sites along the hostname chain, broadest first
+ *
+ * Each host applies its own fields, then its first matching page rule. All
+ * presets come before any stored site, so something the user stored — even on
+ * the parent domain — beats a built-in preset for a subdomain.
+ *
  * An unparseable URL falls back to the global defaults rather than throwing.
  *
  * @param {string} url - Full page URL
  * @param {Object} settings - Stored settings object
+ * @param {Object} [presets] - Built-in presets; replaceable for testing
  * @returns {Object} Resolved settings, ready to spread into formatPrices options
  */
-export function resolveSettings(url, settings = {}) {
+export function resolveSettings(url, settings = {}, presets = SITE_PRESETS) {
   const defaults = { ...DEFAULT_SETTINGS, ...(settings.defaults ?? {}) };
 
   let parsed;
@@ -149,24 +196,31 @@ export function resolveSettings(url, settings = {}) {
     return defaults;
   }
 
-  const site = settings.sites?.[normalizeHost(parsed.hostname)];
-  if (!site) {
-    return defaults;
+  const chain = hostnameChain(normalizeHost(parsed.hostname));
+  let resolved = defaults;
+
+  for (const sites of [presets, settings.sites]) {
+    for (const host of chain) {
+      const site = sites?.[host];
+      if (!site) {
+        continue;
+      }
+
+      const { pages, ...siteOverrides } = site;
+      resolved = {
+        ...resolved,
+        ...siteOverrides,
+        ...ruleOverrides(findPageRule(parsed, pages)),
+      };
+    }
   }
 
-  const { pages, ...siteOverrides } = site;
-  const pageRule = findPageRule(parsed, pages);
-
-  return {
-    ...defaults,
-    ...siteOverrides,
-    ...ruleOverrides(pageRule),
-  };
+  return resolved;
 }
 
 /**
  * Collects every currency mentioned anywhere in the settings — global
- * defaults, every site, every page rule.
+ * defaults, every built-in preset and stored site, every page rule.
  *
  * The rate cache is global while currency lists are per-site, so a single
  * fetch has to satisfy all of them: the union is what gets requested. Without
@@ -195,10 +249,12 @@ export function collectCurrencies(settings = {}) {
 
   add({ ...DEFAULT_SETTINGS, ...(settings.defaults ?? {}) }.currencies);
 
-  for (const site of Object.values(settings.sites ?? {})) {
-    add(site?.currencies);
-    for (const rule of site?.pages ?? []) {
-      add(rule?.currencies);
+  for (const sites of [SITE_PRESETS, settings.sites]) {
+    for (const site of Object.values(sites ?? {})) {
+      add(site?.currencies);
+      for (const rule of site?.pages ?? []) {
+        add(rule?.currencies);
+      }
     }
   }
 
@@ -222,7 +278,9 @@ export async function getAllCurrencies() {
  */
 export async function loadSettings() {
   const result = await chrome.storage.local.get(SETTINGS_KEY);
-  return result[SETTINGS_KEY] ?? { defaults: { ...DEFAULT_SETTINGS }, sites: {} };
+  // Fall back to empty layers, not a copy of DEFAULT_SETTINGS: the first save
+  // would store that copy, and later changes to the defaults would never apply.
+  return result[SETTINGS_KEY] ?? { defaults: {}, sites: {} };
 }
 
 /**
