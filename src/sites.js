@@ -174,11 +174,57 @@ export const SITE_PRESETS = {
   },
 
   /**
-   * Cars. Same reasoning as real estate — large round numbers.
+   * Cars. Large round numbers, so no cents in any currency.
+   *
+   * Only onliner's own BYN price of each ad converts. Not similar-ad prices,
+   * leasing ("от 1013 ƃ месяц", "Первоначальный взнос 22 399 ƃ"), or the menu's
+   * "Авто до 4000 ƃ" labels. A price element holding USD text is left alone
+   * too: the parser only reads BYN markers, so it finds nothing to convert.
+   *
+   * Listing cards (ab.onliner.by/), two variants, each the only child of the
+   * price part:
+   *
+   *   <div class="vehicle-form__offers-part vehicle-form__offers-part_price">
+   *     <div class="vehicle-form__description ... _font-weight_bold ..."> 17 532 ƃ </div>
+   *   </div>
+   *   <div class="vehicle-form__offers-part vehicle-form__offers-part_price">
+   *     <div class="button-style ... vehicle-form__button_price"> 24 000 ƃ </div>
+   *   </div>
+   *
+   * The price part is a flex row with font-size 0 — anything appended inside
+   * it inherits 0px and is invisible. So the conversion goes right after the
+   * price and borrows the regular price's classes (16px bold); fontSize is
+   * reset because an em size would scale off that 0px.
+   *
+   * Ad page (ab.onliner.by/audi/a6/5077777): the price is `.jest-price-byn`,
+   * 36px bold, which does not fit on one line. A `styles` rule swaps in the
+   * similar-ads price classes (15px semibold), which do.
+   *
+   * Both page kinds share one selector with an element-scoped rule rather
+   * than a URL page rule: a three-segment URL pattern would also match
+   * generation listings like /audi/a6/4gc7-restayling and strip their card
+   * conversions.
+   *
+   * Stacked on the listing: in the narrow price column none of the cards fit
+   * all three currencies on one line. The ad page has room, so its rule keeps
+   * the conversion inline.
    */
   'ab.onliner.by': {
     layout: LAYOUT.BLOCK,
     decimals: 0,
+
+    priceSelector: '.vehicle-form__offers-part_price > div, .jest-price-byn',
+    insertPosition: 'after',
+    className: 'vehicle-form__description vehicle-form__description_middle vehicle-form__description_primary vehicle-form__description_font-weight_bold vehicle-form__description_condensed-other',
+    fontSize: null,
+
+    styles: [
+      {
+        selector: '.jest-price-byn',
+        layout: LAYOUT.INLINE,
+        className: 'vehicle-form__description vehicle-form__description_primary vehicle-form__description_base-alter vehicle-form__description_font-weight_semibold',
+      },
+    ],
   },
 
   /**
