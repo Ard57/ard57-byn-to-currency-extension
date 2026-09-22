@@ -46,6 +46,8 @@ export const DEFAULT_OPTIONS = {
   locale: 'en-US',
   /** Include the source currency in the output (usually redundant). */
   includeSource: false,
+  /** Appended to every converted value, e.g. '/м²' → "$1,531/м²". */
+  suffix: '',
 };
 
 /**
@@ -142,7 +144,7 @@ export function convertPrices(amount, fromCurrency, currencies, rates, options =
     parts.push({
       currency,
       value,
-      text: formatValue(value, currency, resolved),
+      text: formatValue(value, currency, resolved) + (resolved.suffix ?? ''),
     });
   }
 
