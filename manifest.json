@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "description": "Display BYN prices in USD, EUR and RUB",
   "permissions": [
-    "storage"
+    "storage",
+    "alarms"
   ],
   "host_permissions": [
     "https://api.frankfurter.dev/*"
