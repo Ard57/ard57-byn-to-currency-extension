@@ -1,5 +1,6 @@
 import { getExchangeRates, convertAmount } from './rates.js';
 import { formatPrices, convertPrices, LAYOUT } from './format.js';
+import { nextUpdateAt } from './schedule.js';
 import {
   resolveSettings,
   getSettingsForUrl,
@@ -22,6 +23,49 @@ import {
 function getConfiguredRates() {
   return getAllCurrencies().then(getExchangeRates);
 }
+
+/** Name of the alarm that wakes the worker for the daily refresh. */
+const REFRESH_ALARM = 'refresh-rates';
+
+/**
+ * Arms a one-shot alarm for the next scheduled publication.
+ *
+ * One-shot rather than periodic: a fixed period would drift off 17:00 twice a
+ * year when the clocks move, and would keep firing through the weekend. Each
+ * run arms the next, so the schedule is recomputed every time.
+ *
+ * Creating an alarm under an existing name replaces it, so calling this more
+ * often than needed is harmless.
+ *
+ * @returns {Promise<void>}
+ */
+function scheduleRefresh() {
+  return chrome.alarms.create(REFRESH_ALARM, { when: nextUpdateAt() });
+}
+
+// Alarms survive a browser restart, but not an extension install or update —
+// and a browser that was closed at 17:00 needs the schedule moved on.
+chrome.runtime.onInstalled.addListener(scheduleRefresh);
+chrome.runtime.onStartup.addListener(scheduleRefresh);
+
+/**
+ * Refreshes the cache shortly after new rates are published, so the first page
+ * load of the evening reads storage instead of waiting on the network.
+ *
+ * getConfiguredRates() fetches because the cache is now behind the day's
+ * publication; if the alarm fires a moment early it finds the cache still
+ * fresh and does nothing, and the re-armed alarm comes back to it.
+ */
+chrome.alarms.onAlarm.addListener(alarm => {
+  if (alarm.name !== REFRESH_ALARM) {
+    return;
+  }
+
+  scheduleRefresh();
+  getConfiguredRates().catch(error =>
+    console.warn('BYN to Currency: scheduled rate refresh failed —', error.message),
+  );
+});
 
 /**
  * Handle messages from content scripts or popup.
@@ -76,4 +120,6 @@ globalThis.removePageRule = removePageRule;
 globalThis.collectCurrencies = collectCurrencies;
 globalThis.getAllCurrencies = getAllCurrencies;
 globalThis.getConfiguredRates = getConfiguredRates;
+globalThis.nextUpdateAt = nextUpdateAt;
+globalThis.scheduleRefresh = scheduleRefresh;
 

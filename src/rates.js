@@ -1,6 +1,7 @@
+import { lastUpdateAt } from './schedule.js';
+
 const API_BASE_URL = 'https://api.frankfurter.dev/v2/rates';
 const CACHE_KEY = 'exchangeRates';
-const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 /**
  * After a failed fetch, don't hit the API again for this long. A catalog page
@@ -101,11 +102,17 @@ async function readCache() {
 }
 
 /**
+ * True if the cache was filled after the latest rates were published, so a
+ * refetch would only return the same numbers.
+ *
+ * Age is beside the point: Friday's rates are still current on Sunday, while
+ * yesterday's are obsolete the moment today's go out. See schedule.js.
+ *
  * @param {Object|null} cached
- * @returns {boolean} True if the cache is young enough to use without refetching
+ * @returns {boolean}
  */
 function isFresh(cached) {
-  return Boolean(cached) && Date.now() - cached.fetchedAt <= CACHE_MAX_AGE_MS;
+  return Boolean(cached) && cached.fetchedAt >= lastUpdateAt();
 }
 
 /**
@@ -184,7 +191,7 @@ function refreshRates(currencies) {
  * failing just because the network did.
  *
  * Order of preference:
- *   1. Cache younger than 24 hours that covers every requested currency
+ *   1. Cache filled since the last publication, covering every requested currency
  *   2. A fresh fetch
  *   3. Whatever is cached, however old, flagged with `stale: true`
  *
