@@ -14,7 +14,7 @@ import { SOURCE_CURRENCY } from './settings.js';
 const MARKER_ATTRIBUTE = 'data-byn-to-currency';
 
 /** Style fields that settings or a `styles` rule may set. */
-const STYLE_FIELDS = ['fontSize', 'fontWeight', 'fontFamily', 'color', 'opacity'];
+const STYLE_FIELDS = ['fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity'];
 
 /**
  * What was inserted for each price element, and for which source text.
@@ -160,7 +160,11 @@ export function annotatePrices(root, settings, rates) {
       if (!container) {
         continue;
       }
-      container.appendChild(node);
+      if (effective.insertPosition === 'afterContainer') {
+        container.after(node);
+      } else {
+        container.appendChild(node);
+      }
     }
 
     inserted.set(priceElement, { source, node });
