@@ -42,6 +42,32 @@ function safeClosest(element, selector) {
 }
 
 /**
+ * The price element's text, minus any conversion inserted inside it.
+ *
+ * A preset may append the conversion into the price element itself (to stack
+ * it under the price inside a flex item). Its text must not count as part of
+ * the price, or every scan would see changed text and re-insert — forever,
+ * since each insertion triggers the next scan.
+ *
+ * @param {Element} element
+ * @returns {string}
+ */
+function priceText(element) {
+  if (!element.querySelector(`[${MARKER_ATTRIBUTE}]`)) {
+    return element.textContent;
+  }
+
+  let text = '';
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.parentElement.closest(`[${MARKER_ATTRIBUTE}]`)) {
+      text += node.data;
+    }
+  }
+  return text;
+}
+
+/**
  * Settings for one price: the resolved settings, with the first matching
  * `styles` rule on top. A rule may override formatting as well as styling —
  * a cramped card can switch layout without the rest of the page changing.
@@ -130,7 +156,7 @@ export function annotatePrices(root, settings, rates) {
       continue;
     }
 
-    const source = priceElement.textContent;
+    const source = priceText(priceElement);
     const previous = inserted.get(priceElement);
 
     if (previous && previous.source === source && previous.node.isConnected) {
