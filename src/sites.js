@@ -425,6 +425,74 @@ export const SITE_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Real estate. Own components, none of which the kufar.by rules fit, so this
+   * preset replaces the parent's selector and rules outright. Six-figure
+   * prices, so no cents.
+   *
+   * Both the price and the price per m² convert, each into its own stack right
+   * under it: two columns, currencies side by side. The same conversions are
+   * what Kufar hides behind the calculator icon's tooltip — the icon stays,
+   * the conversions are simply always visible.
+   *
+   * Listing cards (re.kufar.by/l/belarus/kupit/kvartiru), a flex row:
+   *
+   *   <div class="…__price …__price__map">
+   *     <span class="…__price__byr" data-testid="card-price">178 008 р.</span>
+   *     <span class="…__price__meter">4 485 р./м²</span>
+   *     <div class="…__calculator-icon">…</div>
+   *
+   * The row is nowrap with overflow hidden, so each stack is appended INSIDE
+   * its own span (priceContainer ':scope' — closest() matches the element
+   * itself). Flex items are blockified, so the stack sits under the number.
+   *
+   * Ad page (re.kufar.by/vi/minsk/kupit/kvartiru/1080759810), a flex row
+   * aligned to the bottom:
+   *
+   *   <div class="…__adview_desktop_price">
+   *     <div class="…__container …__price"><span class="…__main">559 107 р.</span></div>
+   *     <div><span class="…__per_square_meter">7 586 р./м²</span></div>
+   *     <div class="…__calculator-icon">…</div>
+   *
+   * Same treatment. Both stacks use one explicit size and line height, so
+   * their rows line up across the two columns even though the prices above
+   * them differ in size (24px vs 14px here, 18px vs 14px on cards). Each
+   * stack keeps its price's weight and color: bold under the price, gray
+   * under the per-m² figure.
+   *
+   * Recommendations on the ad page, no data-testid:
+   *
+   *   <div class="…__header">
+   *     <p class="…__price"><span>483 552 р.</span><span></span></p>
+   *
+   * The <p> is nowrap with overflow hidden; the first span is inline-block,
+   * so the stack goes inside it like the others.
+   *
+   * The fixed footer bar repeating the price is left alone, as on kufar.by.
+   */
+  're.kufar.by': {
+    layout: LAYOUT.BLOCK,
+    decimals: 0,
+
+    priceSelector: [
+      '[data-testid="card-price"]',
+      '[class$="__price__meter"]',
+      '[class$="__adview_desktop_price"] [class$="__main"]',
+      '[class$="__per_square_meter"]',
+      '[class$="__header"] > [class$="__price"] > span:first-child',
+    ].join(', '),
+    priceContainer: ':scope',
+    fontSize: '14px',
+    lineHeight: '20px',
+
+    styles: [
+      {
+        selector: '[class$="__price__meter"], [class$="__per_square_meter"]',
+        suffix: '/м²',
+      },
+    ],
+  },
 };
 
 /**
