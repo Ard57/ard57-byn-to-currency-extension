@@ -316,10 +316,14 @@ export const SITE_PRESETS = {
   },
 
   /**
-   * Classifieds. A Next.js site whose class names are CSS-module hashes
-   * ("styles-module-scss-module__eug91q__price") that change on redeploy, so
-   * selectors lean on data-testid, schema.org attributes, and the unhashed
+   * Classifieds, including auto.kufar.by. A Next.js site whose class names are
+   * CSS-module hashes ("styles-module-scss-module__eug91q__price") that change
+   * on redeploy, so selectors lean on data-testid, data-name, and the unhashed
    * tail of a class name via [class*=…] / [class$=…].
+   *
+   * Everything lives on the parent domain: auto. reuses the same components,
+   * and the rules are scoped by element, so each only fires where its markup
+   * exists.
    *
    * Listing cards (kufar.by/l/mobilnye-telefony), two variants:
    *
@@ -343,27 +347,32 @@ export const SITE_PRESETS = {
    * The same cards appear as recommendations on the ad page and convert there
    * too.
    *
-   * Ad page (kufar.by/item/1085622050): see the `styles` rule.
+   * Car cards and ad pages: see the `styles` rules.
    */
   'kufar.by': {
     layout: LAYOUT.INLINE,
 
     priceSelector: [
       '[data-testid="card-price"]',
-      '[itemprop="offers"] [class$="__main"]:not(:has([class*="__discountContainer"]))',
-      '[itemprop="offers"] [class*="__discountContainer"] > [class$="__price"]',
+      '[data-name="av_right_sidebar"] [class$="__main"]:not(:has([class*="__discountContainer"]))',
+      '[data-name="av_right_sidebar"] [class*="__discountContainer"] > [class$="__price"]',
     ].join(', '),
     priceContainer: '[class*="__price_block"]',
 
     styles: [
       {
         /**
-         * The ad's own price in the right sidebar, inside a schema.org Offer:
+         * The ad's own price in the right sidebar, on both kufar.by/item/… and
+         * auto.kufar.by/vi/cars/…:
          *
-         *   <div itemprop="offers" itemscope itemtype="http://schema.org/Offer">
-         *     <meta itemprop="price" content="1650">
-         *     <div class="…__container …__brief_wrapper__price">
+         *   <div data-name="av_right_sidebar">
+         *     …
+         *     <div class="…__container …__price">
          *       <span class="…__main">1 650 р.</span>
+         *     </div>
+         *
+         * (On kufar.by the container also sits inside a schema.org Offer div;
+         * auto. has none, so the selector does not rely on it.)
          *
          * Discounted, the span holds old price, price and badge instead:
          *
@@ -377,15 +386,42 @@ export const SITE_PRESETS = {
          * takes the inner price div instead. `[class$="__price"]` alone would
          * also match the outer container, whose last class ends the same way.
          *
-         * Stacked, appended to the Offer div rather than the price container:
-         * that one is nowrap with overflow hidden.
+         * Stacked, right after the price container rather than inside it: that
+         * one is nowrap with overflow hidden. `[class*="__container"]` does not
+         * match "__discountContainer" — the C is uppercase there.
          *
          * The fixed footer that repeats the price while scrolling is left
          * alone — it is a one-line bar that stacked text would push open.
          */
-        selector: '[itemprop="offers"]',
+        selector: '[data-name="av_right_sidebar"]',
         layout: LAYOUT.BLOCK,
-        priceContainer: '[itemprop="offers"]',
+        priceContainer: '[class*="__container"]',
+        insertPosition: 'afterContainer',
+        // auto.kufar.by sets body line-height: 1, which squeezes the stack.
+        lineHeight: 1.4,
+      },
+      {
+        /**
+         * Car cards (auto.kufar.by/l/cars) and the car recommendations on a
+         * car ad page. The price shares a row with a gray secondary span:
+         *
+         *   <div class="…__info__price">          (flex row; on ad pages a
+         *     <span data-testid="card-price">40 800 р.</span>   clamped box)
+         *     <span></span>
+         *   </div>
+         *
+         * Neither row can take a stacked conversion, so it goes right after
+         * the row, under the BYN price and above the badges / parameters.
+         *
+         * Scoped to a card price whose PARENT's class ends in "__price". The
+         * generic cards never match: there the parent is "…__price_block" or
+         * "…__price__wrapper", and the price itself does not count.
+         */
+        selector: '[class$="__price"] > [data-testid="card-price"]',
+        layout: LAYOUT.BLOCK,
+        priceContainer: '[class$="__price"]',
+        insertPosition: 'afterContainer',
+        lineHeight: 1.4,
       },
     ],
   },
