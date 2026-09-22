@@ -314,6 +314,81 @@ export const SITE_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Classifieds. A Next.js site whose class names are CSS-module hashes
+   * ("styles-module-scss-module__eug91q__price") that change on redeploy, so
+   * selectors lean on data-testid, schema.org attributes, and the unhashed
+   * tail of a class name via [class*=…] / [class$=…].
+   *
+   * Listing cards (kufar.by/l/mobilnye-telefony), two variants:
+   *
+   *   <div class="…__price_block">
+   *     <p class="…__price" data-testid="card-price"><span>4 999 р.</span></p>
+   *   </div>
+   *
+   *   <div class="…__price_block">
+   *     <div class="…__wrapper">
+   *       <span class="…__old_price">4 800 р.</span>
+   *       <div class="…__price__wrapper">
+   *         <span class="…__price" data-testid="card-price">3 520 р.</span>
+   *         <span class="…__discount">-27%</span>
+   *
+   * The price <p> is line-clamped to two lines with overflow hidden, and the
+   * discounted price sits in an inline-flex row with its badge, so neither is
+   * a safe place to append. The conversion goes at the end of the price block
+   * in both cases, under the price. It inherits the card text's 14px regular.
+   * "Договорная" has no number and is skipped by the parser.
+   *
+   * The same cards appear as recommendations on the ad page and convert there
+   * too.
+   *
+   * Ad page (kufar.by/item/1085622050): see the `styles` rule.
+   */
+  'kufar.by': {
+    layout: LAYOUT.INLINE,
+
+    priceSelector: [
+      '[data-testid="card-price"]',
+      '[itemprop="offers"] [class$="__main"]:not(:has([class*="__discountContainer"]))',
+      '[itemprop="offers"] [class*="__discountContainer"] > [class$="__price"]',
+    ].join(', '),
+    priceContainer: '[class*="__price_block"]',
+
+    styles: [
+      {
+        /**
+         * The ad's own price in the right sidebar, inside a schema.org Offer:
+         *
+         *   <div itemprop="offers" itemscope itemtype="http://schema.org/Offer">
+         *     <meta itemprop="price" content="1650">
+         *     <div class="…__container …__brief_wrapper__price">
+         *       <span class="…__main">1 650 р.</span>
+         *
+         * Discounted, the span holds old price, price and badge instead:
+         *
+         *       <span class="…__main">
+         *         <div class="…__discountContainer">
+         *           <div class="…__oldPrice">7 290 р.</div>
+         *           <div class="…__price">5 990 р.</div>
+         *           <div class="…__discount">-18%</div>
+         *
+         * The span's text would then start with the old price, so the selector
+         * takes the inner price div instead. `[class$="__price"]` alone would
+         * also match the outer container, whose last class ends the same way.
+         *
+         * Stacked, appended to the Offer div rather than the price container:
+         * that one is nowrap with overflow hidden.
+         *
+         * The fixed footer that repeats the price while scrolling is left
+         * alone — it is a one-line bar that stacked text would push open.
+         */
+        selector: '[itemprop="offers"]',
+        layout: LAYOUT.BLOCK,
+        priceContainer: '[itemprop="offers"]',
+      },
+    ],
+  },
 };
 
 /**
