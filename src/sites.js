@@ -431,10 +431,13 @@ export const SITE_PRESETS = {
    * preset replaces the parent's selector and rules outright. Six-figure
    * prices, so no cents.
    *
-   * Both the price and the price per m² convert, each into its own stack right
-   * under it: two columns, currencies side by side. The same conversions are
-   * what Kufar hides behind the calculator icon's tooltip — the icon stays,
-   * the conversions are simply always visible.
+   * One stack under the price, a currency per line, each line carrying that
+   * currency's total AND its price per m²:
+   *
+   *   $190,822 · $2,589/м²
+   *
+   * The same conversions are what Kufar hides behind the calculator icon's
+   * tooltip — the icon stays, the conversions are simply always visible.
    *
    * Listing cards (re.kufar.by/l/belarus/kupit/kvartiru), a flex row:
    *
@@ -443,9 +446,13 @@ export const SITE_PRESETS = {
    *     <span class="…__price__meter">4 485 р./м²</span>
    *     <div class="…__calculator-icon">…</div>
    *
-   * The row is nowrap with overflow hidden, so each stack is appended INSIDE
-   * its own span (priceContainer ':scope' — closest() matches the element
+   * The row is nowrap with overflow hidden, so the stack is appended INSIDE
+   * the price span (priceContainer ':scope' — closest() matches the element
    * itself). Flex items are blockified, so the stack sits under the number.
+   *
+   * Map popup cards are a different component: same class tails, but the
+   * price span carries no data-testid and the spans are inline rather than a
+   * flex row. Hence the [class$="__price__byr"] selector, which covers both.
    *
    * Ad page (re.kufar.by/vi/minsk/kupit/kvartiru/1080759810), a flex row
    * aligned to the bottom:
@@ -455,11 +462,9 @@ export const SITE_PRESETS = {
    *     <div><span class="…__per_square_meter">7 586 р./м²</span></div>
    *     <div class="…__calculator-icon">…</div>
    *
-   * Same treatment. Both stacks use one explicit size and line height, so
-   * their rows line up across the two columns even though the prices above
-   * them differ in size (24px vs 14px here, 18px vs 14px on cards). Each
-   * stack keeps its price's weight and color: bold under the price, gray
-   * under the per-m² figure.
+   * Same treatment; the size and line height are set explicitly because the
+   * price above the stack differs in size from page to page (24px here, 18px
+   * on cards). The stack keeps the price's weight and color.
    *
    * Recommendations on the ad page, no data-testid:
    *
@@ -477,19 +482,60 @@ export const SITE_PRESETS = {
 
     priceSelector: [
       '[data-testid="card-price"]',
-      '[class$="__price__meter"]',
+      '[class$="__price__byr"]',
       '[class$="__adview_desktop_price"] [class$="__main"]',
-      '[class$="__per_square_meter"]',
       '[class$="__header"] > [class$="__price"] > span:first-child',
     ].join(', '),
     priceContainer: ':scope',
     fontSize: '14px',
     lineHeight: '20px',
 
+    /**
+     * The per-m² figure rides along on each line — "$190,822 · $2,589/м²" —
+     * rather than converting into a stack of its own. Two stacks only line up
+     * where the row is a flex row (list cards, ad page); in the map popup the
+     * spans are inline, so a separate stack would put all eight numbers in one
+     * column.
+     *
+     * Scope: the ad page's price and per-m² figure sit in different children
+     * of the price row, so they need a named common ancestor. On every card
+     * the two are siblings, the scope matches nothing, and the price's own
+     * parent is searched instead.
+     */
+    companion: {
+      scope: '[class$="__adview_desktop_price"]',
+      selector: '[class$="__price__meter"], [class$="__per_square_meter"]',
+      suffix: '/м²',
+      // Kufar prints every per-m² figure in gray; the converted ones match.
+      color: 'gray',
+    },
+
     styles: [
       {
-        selector: '[class$="__price__meter"], [class$="__per_square_meter"]',
-        suffix: '/м²',
+        /**
+         * The ad page's price row is aligned to the bottom, so a stack grown
+         * inside the price would drag Kufar's own per-m² figure down with it,
+         * away from the price. Below the whole row instead, leaving the row as
+         * the site drew it.
+         */
+        selector: '[class$="__adview_desktop_price"]',
+        priceContainer: '[class$="__adview_desktop_price"]',
+        insertPosition: 'afterContainer',
+      },
+      {
+        /**
+         * Map popup cards. Their price row is not a flex row — the price and
+         * the per-m² figure are inline spans on one line — so a stack inside
+         * the price would split that line and strand the per-m² figure below
+         * the conversion. Appended to the row instead, it lands after both and
+         * the site's own line stays intact.
+         *
+         * The row is the nearest ancestor whose class mentions "__price"; the
+         * price span itself ("…__price__byr") has to be excluded, because
+         * closest() would otherwise stop there.
+         */
+        selector: '[class$="__price__byr"]:not([data-testid])',
+        priceContainer: '[class*="__price"]:not([class$="__price__byr"])',
       },
     ],
   },
