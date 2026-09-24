@@ -314,6 +314,231 @@ export const SITE_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Classifieds, including auto.kufar.by. A Next.js site whose class names are
+   * CSS-module hashes ("styles-module-scss-module__eug91q__price") that change
+   * on redeploy, so selectors lean on data-testid, data-name, and the unhashed
+   * tail of a class name via [class*=…] / [class$=…].
+   *
+   * Everything lives on the parent domain: auto. reuses the same components,
+   * and the rules are scoped by element, so each only fires where its markup
+   * exists.
+   *
+   * Listing cards (kufar.by/l/mobilnye-telefony), two variants:
+   *
+   *   <div class="…__price_block">
+   *     <p class="…__price" data-testid="card-price"><span>4 999 р.</span></p>
+   *   </div>
+   *
+   *   <div class="…__price_block">
+   *     <div class="…__wrapper">
+   *       <span class="…__old_price">4 800 р.</span>
+   *       <div class="…__price__wrapper">
+   *         <span class="…__price" data-testid="card-price">3 520 р.</span>
+   *         <span class="…__discount">-27%</span>
+   *
+   * The price <p> is line-clamped to two lines with overflow hidden, and the
+   * discounted price sits in an inline-flex row with its badge, so neither is
+   * a safe place to append. The conversion goes at the end of the price block
+   * in both cases, under the price. It inherits the card text's 14px regular.
+   * "Договорная" has no number and is skipped by the parser.
+   *
+   * The same cards appear as recommendations on the ad page and convert there
+   * too.
+   *
+   * Car cards and ad pages: see the `styles` rules.
+   */
+  'kufar.by': {
+    layout: LAYOUT.INLINE,
+
+    priceSelector: [
+      '[data-testid="card-price"]',
+      '[data-name="av_right_sidebar"] [class$="__main"]:not(:has([class*="__discountContainer"]))',
+      '[data-name="av_right_sidebar"] [class*="__discountContainer"] > [class$="__price"]',
+    ].join(', '),
+    priceContainer: '[class*="__price_block"]',
+
+    styles: [
+      {
+        /**
+         * The ad's own price in the right sidebar, on both kufar.by/item/… and
+         * auto.kufar.by/vi/cars/…:
+         *
+         *   <div data-name="av_right_sidebar">
+         *     …
+         *     <div class="…__container …__price">
+         *       <span class="…__main">1 650 р.</span>
+         *     </div>
+         *
+         * (On kufar.by the container also sits inside a schema.org Offer div;
+         * auto. has none, so the selector does not rely on it.)
+         *
+         * Discounted, the span holds old price, price and badge instead:
+         *
+         *       <span class="…__main">
+         *         <div class="…__discountContainer">
+         *           <div class="…__oldPrice">7 290 р.</div>
+         *           <div class="…__price">5 990 р.</div>
+         *           <div class="…__discount">-18%</div>
+         *
+         * The span's text would then start with the old price, so the selector
+         * takes the inner price div instead. `[class$="__price"]` alone would
+         * also match the outer container, whose last class ends the same way.
+         *
+         * Stacked, right after the price container rather than inside it: that
+         * one is nowrap with overflow hidden. `[class*="__container"]` does not
+         * match "__discountContainer" — the C is uppercase there.
+         *
+         * The fixed footer that repeats the price while scrolling is left
+         * alone — it is a one-line bar that stacked text would push open.
+         */
+        selector: '[data-name="av_right_sidebar"]',
+        layout: LAYOUT.BLOCK,
+        priceContainer: '[class*="__container"]',
+        insertPosition: 'afterContainer',
+        // auto.kufar.by sets body line-height: 1, which squeezes the stack.
+        lineHeight: 1.4,
+      },
+      {
+        /**
+         * Car cards (auto.kufar.by/l/cars) and the car recommendations on a
+         * car ad page. The price shares a row with a gray secondary span:
+         *
+         *   <div class="…__info__price">          (flex row; on ad pages a
+         *     <span data-testid="card-price">40 800 р.</span>   clamped box)
+         *     <span></span>
+         *   </div>
+         *
+         * Neither row can take a stacked conversion, so it goes right after
+         * the row, under the BYN price and above the badges / parameters.
+         *
+         * Scoped to a card price whose PARENT's class ends in "__price". The
+         * generic cards never match: there the parent is "…__price_block" or
+         * "…__price__wrapper", and the price itself does not count.
+         */
+        selector: '[class$="__price"] > [data-testid="card-price"]',
+        layout: LAYOUT.BLOCK,
+        priceContainer: '[class$="__price"]',
+        insertPosition: 'afterContainer',
+        lineHeight: 1.4,
+      },
+    ],
+  },
+
+  /**
+   * Real estate. Own components, none of which the kufar.by rules fit, so this
+   * preset replaces the parent's selector and rules outright. Six-figure
+   * prices, so no cents.
+   *
+   * One stack under the price, a currency per line, each line carrying that
+   * currency's total AND its price per m²:
+   *
+   *   $190,822 · $2,589/м²
+   *
+   * The same conversions are what Kufar hides behind the calculator icon's
+   * tooltip — the icon stays, the conversions are simply always visible.
+   *
+   * Listing cards (re.kufar.by/l/belarus/kupit/kvartiru), a flex row:
+   *
+   *   <div class="…__price …__price__map">
+   *     <span class="…__price__byr" data-testid="card-price">178 008 р.</span>
+   *     <span class="…__price__meter">4 485 р./м²</span>
+   *     <div class="…__calculator-icon">…</div>
+   *
+   * The row is nowrap with overflow hidden, so the stack is appended INSIDE
+   * the price span (priceContainer ':scope' — closest() matches the element
+   * itself). Flex items are blockified, so the stack sits under the number.
+   *
+   * Map popup cards are a different component: same class tails, but the
+   * price span carries no data-testid and the spans are inline rather than a
+   * flex row. Hence the [class$="__price__byr"] selector, which covers both.
+   *
+   * Ad page (re.kufar.by/vi/minsk/kupit/kvartiru/1080759810), a flex row
+   * aligned to the bottom:
+   *
+   *   <div class="…__adview_desktop_price">
+   *     <div class="…__container …__price"><span class="…__main">559 107 р.</span></div>
+   *     <div><span class="…__per_square_meter">7 586 р./м²</span></div>
+   *     <div class="…__calculator-icon">…</div>
+   *
+   * Same treatment; the size and line height are set explicitly because the
+   * price above the stack differs in size from page to page (24px here, 18px
+   * on cards). The stack keeps the price's weight and color.
+   *
+   * Recommendations on the ad page, no data-testid:
+   *
+   *   <div class="…__header">
+   *     <p class="…__price"><span>483 552 р.</span><span></span></p>
+   *
+   * The <p> is nowrap with overflow hidden; the first span is inline-block,
+   * so the stack goes inside it like the others.
+   *
+   * The fixed footer bar repeating the price is left alone, as on kufar.by.
+   */
+  're.kufar.by': {
+    layout: LAYOUT.BLOCK,
+    decimals: 0,
+
+    priceSelector: [
+      '[data-testid="card-price"]',
+      '[class$="__price__byr"]',
+      '[class$="__adview_desktop_price"] [class$="__main"]',
+      '[class$="__header"] > [class$="__price"] > span:first-child',
+    ].join(', '),
+    priceContainer: ':scope',
+    fontSize: '14px',
+    lineHeight: '20px',
+
+    /**
+     * The per-m² figure rides along on each line — "$190,822 · $2,589/м²" —
+     * rather than converting into a stack of its own. Two stacks only line up
+     * where the row is a flex row (list cards, ad page); in the map popup the
+     * spans are inline, so a separate stack would put all eight numbers in one
+     * column.
+     *
+     * Scope: the ad page's price and per-m² figure sit in different children
+     * of the price row, so they need a named common ancestor. On every card
+     * the two are siblings, the scope matches nothing, and the price's own
+     * parent is searched instead.
+     */
+    companion: {
+      scope: '[class$="__adview_desktop_price"]',
+      selector: '[class$="__price__meter"], [class$="__per_square_meter"]',
+      suffix: '/м²',
+      // Kufar prints every per-m² figure in gray; the converted ones match.
+      color: 'gray',
+    },
+
+    styles: [
+      {
+        /**
+         * The ad page's price row is aligned to the bottom, so a stack grown
+         * inside the price would drag Kufar's own per-m² figure down with it,
+         * away from the price. Below the whole row instead, leaving the row as
+         * the site drew it.
+         */
+        selector: '[class$="__adview_desktop_price"]',
+        priceContainer: '[class$="__adview_desktop_price"]',
+        insertPosition: 'afterContainer',
+      },
+      {
+        /**
+         * Map popup cards. Their price row is not a flex row — the price and
+         * the per-m² figure are inline spans on one line — so a stack inside
+         * the price would split that line and strand the per-m² figure below
+         * the conversion. Appended to the row instead, it lands after both and
+         * the site's own line stays intact.
+         *
+         * The row is the nearest ancestor whose class mentions "__price"; the
+         * price span itself ("…__price__byr") has to be excluded, because
+         * closest() would otherwise stop there.
+         */
+        selector: '[class$="__price__byr"]:not([data-testid])',
+        priceContainer: '[class*="__price"]:not([class$="__price__byr"])',
+      },
+    ],
+  },
 };
 
 /**

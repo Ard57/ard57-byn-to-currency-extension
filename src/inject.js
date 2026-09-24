@@ -1,5 +1,5 @@
 import { findPrices } from './parse.js';
-import { formatPrices } from './format.js';
+import { priceRows, priceSeparator, DEFAULT_COMPANION_SEPARATOR } from './format.js';
 import { SOURCE_CURRENCY } from './settings.js';
 
 /**
@@ -14,7 +14,7 @@ import { SOURCE_CURRENCY } from './settings.js';
 const MARKER_ATTRIBUTE = 'data-byn-to-currency';
 
 /** Style fields that settings or a `styles` rule may set. */
-const STYLE_FIELDS = ['fontSize', 'fontWeight', 'fontFamily', 'color', 'opacity'];
+const STYLE_FIELDS = ['fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity'];
 
 /**
  * What was inserted for each price element, and for which source text.
@@ -36,6 +36,57 @@ function safeClosest(element, selector) {
   }
   try {
     return element.closest(selector);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The price element's text, minus any conversion inserted inside it.
+ *
+ * A preset may append the conversion into the price element itself (to stack
+ * it under the price inside a flex item). Its text must not count as part of
+ * the price, or every scan would see changed text and re-insert — forever,
+ * since each insertion triggers the next scan.
+ *
+ * @param {Element} element
+ * @returns {string}
+ */
+function priceText(element) {
+  if (!element.querySelector(`[${MARKER_ATTRIBUTE}]`)) {
+    return element.textContent;
+  }
+
+  let text = '';
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.parentElement.closest(`[${MARKER_ATTRIBUTE}]`)) {
+      text += node.data;
+    }
+  }
+  return text;
+}
+
+/**
+ * The element holding the companion price for a price, if the settings ask for
+ * one: a per-unit figure the site prints beside the price, e.g. "7 586 р./м²".
+ *
+ * `scope` names the ancestor the two share; when it matches nothing, the
+ * price's own parent is searched, which covers the common case of the two
+ * sitting side by side in one row.
+ *
+ * @param {Element} priceElement
+ * @param {Object} companion - { scope, selector }
+ * @returns {Element|null}
+ */
+function companionElement(priceElement, companion) {
+  if (!companion?.selector) {
+    return null;
+  }
+
+  const scope = safeClosest(priceElement, companion.scope) ?? priceElement.parentElement;
+  try {
+    return scope?.querySelector(companion.selector) ?? null;
   } catch {
     return null;
   }
@@ -71,14 +122,36 @@ function settingsForPrice(priceElement, settings) {
  * comes from its own classes rather than an ancestor, `className` borrows the
  * site's classes directly.
  *
- * @param {string} text - Output of formatPrices
+ * A companion figure gets its own span on each line, so it can keep the
+ * quieter color the site gives its own per-unit price (`companion.color`)
+ * while the converted price itself stays as prominent as the price above it.
+ *
+ * @param {Array<{ text: string, companion: string }>} rows - From priceRows()
  * @param {Object} settings - Settings for this price
  * @returns {HTMLElement}
  */
-function render(text, settings) {
+function render(rows, settings) {
   const node = document.createElement('div');
   node.setAttribute(MARKER_ATTRIBUTE, '');
-  node.textContent = text;
+
+  const separator = priceSeparator(settings);
+  const companionSeparator = settings.companion?.separator ?? DEFAULT_COMPANION_SEPARATOR;
+
+  rows.forEach((row, index) => {
+    if (index > 0) {
+      node.append(separator);
+    }
+    node.append(row.text);
+
+    if (row.companion) {
+      const companion = document.createElement('span');
+      companion.textContent = companionSeparator + row.companion;
+      if (settings.companion?.color) {
+        companion.style.color = settings.companion.color;
+      }
+      node.append(companion);
+    }
+  });
 
   if (typeof settings.className === 'string') {
     node.classList.add(...settings.className.split(' ').filter(Boolean));
@@ -130,7 +203,13 @@ export function annotatePrices(root, settings, rates) {
       continue;
     }
 
-    const source = priceElement.textContent;
+    const effective = settingsForPrice(priceElement, settings);
+    const companion = companionElement(priceElement, effective.companion);
+    const companionSource = companion ? priceText(companion) : '';
+
+    // The companion is part of what was rendered, so a change to it has to
+    // count as a change to this price.
+    const source = priceText(priceElement) + companionSource;
     const previous = inserted.get(priceElement);
 
     if (previous && previous.source === source && previous.node.isConnected) {
@@ -140,18 +219,22 @@ export function annotatePrices(root, settings, rates) {
     previous?.node.remove();
     inserted.delete(priceElement);
 
-    const [price] = findPrices(source);
+    const [price] = findPrices(priceText(priceElement));
     if (!price) {
       continue;
     }
 
-    const effective = settingsForPrice(priceElement, settings);
-    const text = formatPrices(price.amount, SOURCE_CURRENCY, effective.currencies, rates, effective);
-    if (!text) {
+    const [companionPrice] = findPrices(companionSource);
+    const forPrice = {
+      ...effective,
+      companion: { ...effective.companion, amount: companionPrice?.amount },
+    };
+    const rows = priceRows(price.amount, SOURCE_CURRENCY, effective.currencies, rates, forPrice);
+    if (!rows.length) {
       continue;
     }
 
-    const node = render(text, effective);
+    const node = render(rows, forPrice);
 
     if (effective.insertPosition === 'after') {
       priceElement.after(node);
@@ -160,7 +243,11 @@ export function annotatePrices(root, settings, rates) {
       if (!container) {
         continue;
       }
-      container.appendChild(node);
+      if (effective.insertPosition === 'afterContainer') {
+        container.after(node);
+      } else {
+        container.appendChild(node);
+      }
     }
 
     inserted.set(priceElement, { source, node });

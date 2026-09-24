@@ -35,8 +35,26 @@ export const DEFAULT_SETTINGS = {
    * 'append' — last child of priceContainer.
    * 'after'  — directly after the price element; priceContainer is ignored.
    * For a price followed by siblings that must stay below the conversion.
+   * 'afterContainer' — directly after priceContainer. For a container that
+   * cannot hold the conversion itself (a flex row, a clipped box) but whose
+   * following siblings should stay below it.
    */
   insertPosition: 'append',
+
+  /**
+   * A second amount belonging to the same price — a per-unit figure printed
+   * beside it, e.g. "7 586 р./м²" — rendered on the same line as each
+   * currency: "$190,822 · $2,589/м²".
+   *
+   *   { scope: '<closest ancestor holding both>',   // optional
+   *     selector: '<the companion, inside scope>',
+   *     suffix: '/м²',                              // optional
+   *     separator: ' · ' }                          // optional
+   *
+   * Without `scope` (or when it matches nothing) the price's own parent is
+   * searched. A price with no companion renders normally.
+   */
+  companion: null,
 
   /**
    * Space-separated classes added to the conversion. For prices styled by
