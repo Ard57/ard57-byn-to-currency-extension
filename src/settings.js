@@ -42,6 +42,21 @@ export const DEFAULT_SETTINGS = {
   insertPosition: 'append',
 
   /**
+   * A second amount belonging to the same price — a per-unit figure printed
+   * beside it, e.g. "7 586 р./м²" — rendered on the same line as each
+   * currency: "$190,822 · $2,589/м²".
+   *
+   *   { scope: '<closest ancestor holding both>',   // optional
+   *     selector: '<the companion, inside scope>',
+   *     suffix: '/м²',                              // optional
+   *     separator: ' · ' }                          // optional
+   *
+   * Without `scope` (or when it matches nothing) the price's own parent is
+   * searched. A price with no companion renders normally.
+   */
+  companion: null,
+
+  /**
    * Space-separated classes added to the conversion. For prices styled by
    * their own classes rather than an ancestor's, so borrowing the site's
    * classes is the way to match its look.
