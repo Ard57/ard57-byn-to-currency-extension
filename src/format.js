@@ -151,6 +151,65 @@ export function convertPrices(amount, fromCurrency, currencies, rates, options =
   return parts;
 }
 
+/** Between a converted price and its companion on the same line. */
+export const DEFAULT_COMPANION_SEPARATOR = ' · ';
+
+/**
+ * What separates one converted price from the next — a newline in BLOCK
+ * layout, " | " inline, unless the options name their own.
+ *
+ * @param {Object} [options] - See DEFAULT_OPTIONS
+ * @returns {string}
+ */
+export function priceSeparator(options = {}) {
+  const resolved = { ...DEFAULT_OPTIONS, ...options };
+  return resolved.separator ?? DEFAULT_SEPARATOR[resolved.layout] ?? ' ';
+}
+
+/**
+ * Converted prices as rows, one per currency, ready to be laid out.
+ *
+ * A second amount belonging to the same price — a per-unit figure the site
+ * shows next to it — rides along on each row instead of forming a stack of its
+ * own, in `companion`:
+ *
+ *   priceRows(100, 'BYN', ['USD'], rates, { companion: { amount: 2, suffix: '/м²' } })
+ *   // → [{ text: '$32.55', companion: '$0.65/м²' }]
+ *
+ * Rows rather than a finished string, because a caller may want the companion
+ * in its own element — the host site usually prints its per-unit figure in a
+ * quieter color, and matching that needs two elements, not one.
+ *
+ * @param {number} amount
+ * @param {string} fromCurrency
+ * @param {string[]} currencies - Ordered target currency codes
+ * @param {Object} rates - Rates map from getExchangeRates().rates
+ * @param {Object} [options] - See DEFAULT_OPTIONS, plus `companion`:
+ *   { amount, suffix } — the companion amount is in the SAME source currency.
+ * @returns {Array<{ currency: string, text: string, companion: string }>}
+ */
+export function priceRows(amount, fromCurrency, currencies, rates, options = {}) {
+  const resolved = { ...DEFAULT_OPTIONS, ...options };
+  const companion = resolved.companion ?? {};
+
+  // Keyed by currency rather than zipped by position: a currency missing from
+  // one list would otherwise shift every later pairing by one.
+  const companionParts = new Map(
+    Number.isFinite(companion.amount)
+      ? convertPrices(companion.amount, fromCurrency, currencies, rates, {
+        ...resolved,
+        suffix: companion.suffix ?? resolved.suffix,
+      }).map(part => [part.currency, part.text])
+      : []
+  );
+
+  return convertPrices(amount, fromCurrency, currencies, rates, resolved).map(part => ({
+    currency: part.currency,
+    text: part.text,
+    companion: companionParts.get(part.currency) ?? '',
+  }));
+}
+
 /**
  * Renders converted prices as a single string, laid out for the host site.
  *
@@ -161,18 +220,20 @@ export function convertPrices(amount, fromCurrency, currencies, rates, options =
  *   formatPrices(100, 'BYN', ['USD', 'EUR'], rates, { layout: LAYOUT.BLOCK })
  *   // → "$32.55\n€28.00"
  *
+ *   formatPrices(100, 'BYN', ['USD'], rates, { companion: { amount: 2, suffix: '/м²' } })
+ *   // → "$32.55 · $0.65/м²"
+ *
  * @param {number} amount
  * @param {string} fromCurrency
  * @param {string[]} currencies - Ordered target currency codes
  * @param {Object} rates - Rates map from getExchangeRates().rates
- * @param {Object} [options] - See DEFAULT_OPTIONS
+ * @param {Object} [options] - See DEFAULT_OPTIONS and priceRows()
  * @returns {string} Empty string when nothing could be converted
  */
 export function formatPrices(amount, fromCurrency, currencies, rates, options = {}) {
-  const resolved = { ...DEFAULT_OPTIONS, ...options };
-  const separator = resolved.separator ?? DEFAULT_SEPARATOR[resolved.layout] ?? ' ';
+  const companionSeparator = options.companion?.separator ?? DEFAULT_COMPANION_SEPARATOR;
 
-  return convertPrices(amount, fromCurrency, currencies, rates, resolved)
-    .map(part => part.text)
-    .join(separator);
+  return priceRows(amount, fromCurrency, currencies, rates, options)
+    .map(row => (row.companion ? `${row.text}${companionSeparator}${row.companion}` : row.text))
+    .join(priceSeparator(options));
 }
