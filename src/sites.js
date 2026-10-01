@@ -695,6 +695,15 @@ export const SITE_PRESETS = {
     layout: LAYOUT.INLINE,
     decimals: 0,
 
+    /**
+     * Every price here sits in a flex row of some kind, and several of those
+     * rows wrap, so a short conversion next to a short price would sit on the
+     * price's own line — "1 800 ƃ/мес. $614 | €524 | 50,007 ₽" on a rental ad,
+     * where a six-figure sale price happened to push it onto its own line. A
+     * full basis keeps the conversion under the price whatever their lengths.
+     */
+    flexBasis: '100%',
+
     priceSelector: [
       'span[class*="bg-primary-300"]',
       'span[class*="font-semibold"][class*="text-info-500"]',
