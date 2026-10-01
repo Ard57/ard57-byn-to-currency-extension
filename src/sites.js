@@ -539,6 +539,105 @@ export const SITE_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Short-term rentals. Nightly rates and stay totals — three figures at most,
+   * so cents stay on, unlike the property and vehicle sites.
+   *
+   * The listing mixes two kinds of card. Excursions and the like are the plain
+   * kufar.by cards, already covered by the parent preset's data-testid and
+   * inherited whole: one line inside the price block. The rentals are booking
+   * cards, whose price shares a bottom-aligned flex row with the nights label
+   * and a tooltip button:
+   *
+   *   <div class="…__priceContainer">
+   *     <div class="…__price">137,75 р.</div>
+   *     <div class="…__nights">за 1 ночь</div>
+   *     <button class="…__tooltip">…</button>
+   *
+   * The conversion goes under the whole row, so "за 1 ночь" stays beside the
+   * price it belongs to. The map variant of the card reuses these classes, so
+   * the popup is covered too.
+   *
+   * Hotel pages list rooms and their rates; see the `styles` rules.
+   *
+   * Ad page (travel.kufar.by/vi/grodno/1080983481) — the booking widget's
+   * total, which is "от 75 р." until dates are picked and the real total once
+   * they are:
+   *
+   *   <div class="…__priceBlock">
+   *     <div class="…__row …__row_l">
+   *       <div class="…__key …__key_bold">Итого</div>
+   *       <div class="…__separator"></div>
+   *       <div class="…__value_bold">600 р.</div>
+   *
+   * The row is a flex row with a dashed separator that stretches, so the stack
+   * goes inside the value itself and grows down from the total. Rows are
+   * matched by class rather than by position, so any further rows a booking
+   * breakdown adds convert the same way.
+   *
+   * Recommendations at the bottom are the re.kufar.by card, same markup.
+   *
+   * The bar that slides up from the bottom of the ad page repeats the total;
+   * left alone, like every other fixed bar on Kufar.
+   */
+  'travel.kufar.by': {
+    priceSelector: [
+      '[data-testid="card-price"]',
+      '[class$="__priceContainer"] > [class$="__price"]',
+      '[class$="__priceBlock"] [class*="__value"]',
+      '[class$="__variant__info"] [class$="__price"]',
+      '[class$="__header"] > [class$="__price"] > span:first-child',
+    ].join(', '),
+
+    styles: [
+      {
+        // One line under the price row: the cards are wide enough for it, and
+        // the site's own line stays whole.
+        selector: '[class$="__priceContainer"] > [class$="__price"]',
+        priceContainer: '[class$="__priceContainer"]',
+        insertPosition: 'afterContainer',
+      },
+      {
+        /**
+         * Hotel page (travel.kufar.by/hotel/minsk/1086103505): each room lists
+         * its rates, and every rate carries its own nightly price:
+         *
+         *   <div class="…__variant__info">
+         *     <div>                                  (right-aligned column)
+         *       <div class="…__price">200 р.</div>
+         *       <div class="…__nights">за 1 ночь</div>
+         *     </div>
+         *     <a …>Забронировать</a>
+         *
+         * The price and its nights label are already a column of their own, so
+         * the stack joins them there, right-aligned with them. The classless
+         * div is addressed through its parent.
+         *
+         * The bar at the bottom of the page is left alone, as everywhere else.
+         */
+        selector: '[class$="__variant__info"] [class$="__price"]',
+        layout: LAYOUT.BLOCK,
+        priceContainer: '[class$="__variant__info"] > div',
+      },
+      {
+        selector: '[class$="__priceBlock"] [class*="__value"]',
+        layout: LAYOUT.BLOCK,
+        priceContainer: ':scope',
+        // The total is 18px bold; the stack under it is quieter than that.
+        fontSize: '14px',
+        fontWeight: 'normal',
+        lineHeight: '20px',
+      },
+      {
+        selector: '[class$="__header"] > [class$="__price"] > span:first-child',
+        layout: LAYOUT.BLOCK,
+        priceContainer: ':scope',
+        fontSize: '14px',
+        lineHeight: '20px',
+      },
+    ],
+  },
 };
 
 /**
