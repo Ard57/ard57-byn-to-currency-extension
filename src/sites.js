@@ -638,6 +638,82 @@ export const SITE_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Real estate. Prices are written with onliner's "ƃ", and run to six
+   * figures, so no cents. The price per m² converts too, on its own line.
+   *
+   * Unlike the other sites here, the markup carries no classes of its own:
+   * it is Tailwind utilities all the way down, with no data-testid, no
+   * schema.org attributes, nothing stable to name. Selectors therefore pick
+   * out distinctive utility fragments, which is as firm a hold as this markup
+   * offers and will need revisiting if the design changes. The parser is what
+   * keeps that loose aim safe — an element without a BYN marker in it is
+   * skipped, so matching a few extra elements costs nothing. Counted on the
+   * saved pages: the listing's badge class matches its 20 card prices and
+   * nothing else; on an ad page the heading matches the price and the span
+   * matches the per-m² line, each three times (see below).
+   *
+   * Listing cards (realt.by/sale/flats/), the price in a yellow badge:
+   *
+   *   <div class="… md:flex-row … flex flex-col flex-wrap …">   (the row)
+   *     <span class="md:mr-0 flex items-center mr-1">
+   *       <span class="… bg-primary-300 …">800 486 ƃ</span>
+   *       <div class="ml-2 mr-1">…tooltip button…</div>
+   *
+   * The conversion goes after the whole row, not after the badge: that row is
+   * a column on phones but a ROW from md up, where anything appended inside it
+   * would land beside the price instead of under it.
+   *
+   * Ad page (realt.by/sale-flats/object/4164866/):
+   *
+   *   <div class="flex items-center mt-0">
+   *     <div class="inline-flex items-center">
+   *       <h2 class="… font-raleway font-bold …">403 263 ƃ</h2>
+   *       <span>…triangle…</span>
+   *   <p class="w-full">
+   *     <span class="mr-1 text-subhead sm:text-body text-basic">6 271 ƃ за м²</span>
+   *
+   * The price sits in a flex row with a marker and a tooltip, so its line goes
+   * after that row. The per-m² span is plain inline text, so its line is
+   * appended inside it, where a block simply breaks the line.
+   *
+   * The page holds three copies of this block — phone, tablet and desktop —
+   * with all but one hidden by CSS. All three convert; only the visible one
+   * shows, and a hidden copy would otherwise appear unconverted the moment the
+   * window is resized across a breakpoint.
+   *
+   * The "Подать за 0 ƃ" button in the header is not matched by any of these.
+   */
+  'realt.by': {
+    layout: LAYOUT.INLINE,
+    decimals: 0,
+
+    priceSelector: [
+      'span[class*="bg-primary-300"]',
+      'h2[class*="font-raleway"]',
+      'p > span[class*="text-subhead"][class*="text-basic"]',
+    ].join(', '),
+
+    styles: [
+      {
+        selector: 'span[class*="bg-primary-300"]',
+        priceContainer: 'div[class*="md:flex-row"]',
+        insertPosition: 'afterContainer',
+      },
+      {
+        selector: 'h2[class*="font-raleway"]',
+        priceContainer: 'div[class*="mt-0"]',
+        insertPosition: 'afterContainer',
+      },
+      {
+        // "6 271 ƃ за м²" → "$2,141/м² | €1,826/м² | 174,290 ₽/м²"
+        selector: 'p > span[class*="text-subhead"][class*="text-basic"]',
+        priceContainer: ':scope',
+        suffix: '/м²',
+      },
+    ],
+  },
 };
 
 /**
