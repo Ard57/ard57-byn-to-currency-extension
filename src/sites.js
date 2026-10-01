@@ -665,6 +665,12 @@ export const SITE_PRESETS = {
    * a column on phones but a ROW from md up, where anything appended inside it
    * would land beside the price instead of under it.
    *
+   * The same card prints some prices plain and blue instead of in the badge —
+   * the home page's "ТОП Дня" pair, for one — so the blue variant is matched
+   * as well. The row around it is identical, so both share a rule. Only the
+   * weight keeps "font-semibold text-info-500" off ordinary blue links, of
+   * which these pages have plenty.
+   *
    * Ad page (realt.by/sale-flats/object/4164866/):
    *
    *   <div class="flex items-center mt-0">
@@ -691,13 +697,14 @@ export const SITE_PRESETS = {
 
     priceSelector: [
       'span[class*="bg-primary-300"]',
+      'span[class*="font-semibold"][class*="text-info-500"]',
       'h2[class*="font-raleway"]',
       'p > span[class*="text-subhead"][class*="text-basic"]',
     ].join(', '),
 
     styles: [
       {
-        selector: 'span[class*="bg-primary-300"]',
+        selector: 'span[class*="bg-primary-300"], span[class*="font-semibold"][class*="text-info-500"]',
         priceContainer: 'div[class*="md:flex-row"]',
         insertPosition: 'afterContainer',
       },
