@@ -13,8 +13,15 @@ import { SOURCE_CURRENCY } from './settings.js';
 /** Marks every element this extension inserts. */
 const MARKER_ATTRIBUTE = 'data-byn-to-currency';
 
-/** Style fields that settings or a `styles` rule may set. */
-const STYLE_FIELDS = ['fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity'];
+/**
+ * Style fields that settings or a `styles` rule may set.
+ *
+ * `flexBasis` is here for one job: the conversion is a block, which already
+ * takes a line of its own in ordinary flow, but a flex container lays its
+ * children out side by side instead. `flexBasis: '100%'` fills the line in a
+ * wrapping flex row, putting the conversion back under the price.
+ */
+const STYLE_FIELDS = ['fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity', 'flexBasis'];
 
 /**
  * What was inserted for each price element, and for which source text.
