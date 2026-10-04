@@ -818,6 +818,9 @@ export const SITE_PRESETS = {
    *   <div class="listing-top__prices">         (flex row, wraps, 276px)
    *     <div class="listing-top__price-primary"><span>35 160</span><small>руб.</small></div>
    *
+   * The ad cards on av.by itself (.listing-index__price) are about the same
+   * width as those, so they take one line too.
+   *
    * The dealer promo strip at the top of a search page ("Новые авто на
    * salon.av.by", .salon-listing-top__prices) is deliberately not converted:
    * those cards print their price over the photo, where a conversion lands on
@@ -833,6 +836,7 @@ export const SITE_PRESETS = {
       '.listing-item__price-primary',
       '.card__price-primary',
       '.listing-top__price-primary',
+      '.listing-index__price',
     ].join(', '),
 
     styles: [
@@ -844,6 +848,20 @@ export const SITE_PRESETS = {
       {
         selector: '.listing-top__price-primary',
         layout: LAYOUT.INLINE,
+      },
+      {
+        /**
+         * Cards on av.by itself. Their summary is a grid that declares no
+         * rows: the price is pinned to row 1 and every other child is
+         * auto-placed into the rows below, in document order. A conversion
+         * inserted after the price is auto-placed too, so it would queue up
+         * behind the parameters — or, on a card with more children, behind
+         * the description. A negative order places it first instead, in the
+         * row directly under the price.
+         */
+        selector: '.listing-index__price',
+        layout: LAYOUT.INLINE,
+        order: -1,
       },
     ],
   },
