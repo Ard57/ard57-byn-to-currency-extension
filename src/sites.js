@@ -782,6 +782,71 @@ export const SITE_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Cars. Whole numbers, as on the other vehicle sites. The site shows one
+   * currency at a time (a header switcher); these selectors read whatever it
+   * prints, and when that is not BYN the parser simply finds nothing.
+   *
+   * Only each ad's own asking price converts. Leasing lines are left alone —
+   * "Лизинг от 921 руб. в месяц" on cards, "921 руб. в месяц" in the финансы
+   * panel on an ad — as is the "средняя цена" figure above Похожие
+   * объявления, which is a statistic rather than a price and already prints
+   * its own "≈ 7 785 $".
+   *
+   * Search results (cars.av.by/bmw), wide cards, stacked:
+   *
+   *   <div class="listing-item__prices">        (flex column, 201px)
+   *     <div class="listing-item__price-primary"><span>35 160</span><small>руб.</small></div>
+   *     <div class="listing-item__finance">Лизинг от 921 руб. в месяц</div>
+   *
+   * Inserted right after the price, so the stack sits between the price and
+   * the leasing line rather than below it.
+   *
+   * Ad page (cars.av.by/bmw/5-seriya/139092233), stacked, after the button
+   * holding the price — inside it the stack would join a flex row and become
+   * part of the clickable area:
+   *
+   *   <div class="card__price">
+   *     <button class="card__price-button">
+   *       <span class="card__price-primary">35 160<small>руб.</small></span>
+   *
+   * Похожие объявления further down are narrower cards and take one line, as
+   * their price row is flex: the full basis is what puts that line under the
+   * price instead of beside it.
+   *
+   *   <div class="listing-top__prices">         (flex row, wraps, 276px)
+   *     <div class="listing-top__price-primary"><span>35 160</span><small>руб.</small></div>
+   *
+   * The dealer promo strip at the top of a search page ("Новые авто на
+   * salon.av.by", .salon-listing-top__prices) is deliberately not converted:
+   * those cards print their price over the photo, where a conversion lands on
+   * the image itself and reads badly against whatever is behind it.
+   */
+  'av.by': {
+    layout: LAYOUT.BLOCK,
+    decimals: 0,
+    insertPosition: 'after',
+    flexBasis: '100%',
+
+    priceSelector: [
+      '.listing-item__price-primary',
+      '.card__price-primary',
+      '.listing-top__price-primary',
+    ].join(', '),
+
+    styles: [
+      {
+        selector: '.card__price-primary',
+        priceContainer: '.card__price-button',
+        insertPosition: 'afterContainer',
+      },
+      {
+        selector: '.listing-top__price-primary',
+        layout: LAYOUT.INLINE,
+      },
+    ],
+  },
 };
 
 /**
