@@ -26,7 +26,7 @@ const MARKER_ATTRIBUTE = 'data-byn-to-currency';
  * conversion the first of those, so it lands in the row right below the price
  * instead of behind whatever the markup happens to list next.
  */
-const STYLE_FIELDS = ['fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity', 'flexBasis', 'order'];
+const STYLE_FIELDS = ['fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity', 'flexBasis', 'order', 'margin'];
 
 /**
  * What was inserted for each price element, and for which source text.
