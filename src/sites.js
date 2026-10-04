@@ -730,6 +730,58 @@ export const SITE_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Cottages and houses by the day. Nightly rates and booking totals in the
+   * low hundreds, so cents stay on. Classes are the site's own and read like
+   * names, which makes this the plainest preset here.
+   *
+   * Search results (flatby.by/?city=min&…), one price per card:
+   *
+   *   <div class="ahc_txt_right">            (flex column, 192px)
+   *     <div class="ahc_price_wrap">
+   *       <div class="ahc_price_txt"><span>За сутки</span></div>
+   *       <div class="ahc_price"><span>300 BYN</span></div>
+   *     </div>
+   *     <a class="ahc_lnk">Подробнее</a>
+   *
+   * The price block is only as wide as the price, so the line goes after it,
+   * into the column, where it has the full 192px and lands between the price
+   * and the "Подробнее" button.
+   *
+   * Ad page (flatby.by/kottedzh-3/): nothing is priced until dates and guests
+   * are chosen — the nightly rate appears only in the page title. What the
+   * booking form then fills in is the total, and the prepayment beside it:
+   *
+   *   <div class="single_order_results">     (flex row, wraps)
+   *     <div class="single_order_res_title">Стоимость: </div>
+   *     <div class="single_order_res_price">550 BYN</div>
+   *     <div class="single_order_prepay">Внести предоплату: <span>…</span></div>
+   *
+   * Both convert, each on its own line directly below its price — hence the
+   * full basis, without which a short total and a short conversion would share
+   * the row. Until dates are picked both read "0 BYN", which the injector now
+   * skips everywhere: zero converts to zero.
+   *
+   * The description prose quotes its own prices ("Баня — 150 руб/4 часа") and
+   * is left alone; a block of converted currencies mid-paragraph would break
+   * the sentence it sits in.
+   */
+  'flatby.by': {
+    layout: LAYOUT.INLINE,
+    insertPosition: 'after',
+    flexBasis: '100%',
+
+    priceSelector: '.ahc_price, .single_order_res_price, .single_order_prepay span',
+
+    styles: [
+      {
+        selector: '.ahc_price',
+        priceContainer: '.ahc_price_wrap',
+        insertPosition: 'afterContainer',
+      },
+    ],
+  },
 };
 
 /**
