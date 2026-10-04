@@ -951,6 +951,13 @@ export const SITE_PRESETS = {
         selector: '.salon-card__price-primary',
         priceContainer: '.salon-card__header-inner',
         insertPosition: 'afterContainer',
+        /**
+         * That row carries the header's padding (24px, 20px on the left), so
+         * the line would otherwise start at the card's edge and sit below the
+         * padding, against the gallery. The margin aligns it with the price
+         * and lifts it back into the padding, right under the price.
+         */
+        margin: '-18px 0 6px 20px',
       },
     ],
   },
