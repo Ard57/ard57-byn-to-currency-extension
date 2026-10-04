@@ -226,8 +226,11 @@ export function annotatePrices(root, settings, rates) {
     previous?.node.remove();
     inserted.delete(priceElement);
 
+    // Zero converts to zero in every currency, so there is nothing to show.
+    // Booking forms print a "0 BYN" total until dates are picked, and sites
+    // put "0 ƃ" on "list your ad for free" buttons.
     const [price] = findPrices(priceText(priceElement));
-    if (!price) {
+    if (!price || price.amount === 0) {
       continue;
     }
 
