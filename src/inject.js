@@ -20,8 +20,13 @@ const MARKER_ATTRIBUTE = 'data-byn-to-currency';
  * takes a line of its own in ordinary flow, but a flex container lays its
  * children out side by side instead. `flexBasis: '100%'` fills the line in a
  * wrapping flex row, putting the conversion back under the price.
+ *
+ * `order` serves the same end in a grid: where the price is pinned to a row
+ * of its own and everything else is auto-placed, a negative order makes the
+ * conversion the first of those, so it lands in the row right below the price
+ * instead of behind whatever the markup happens to list next.
  */
-const STYLE_FIELDS = ['fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity', 'flexBasis'];
+const STYLE_FIELDS = ['fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity', 'flexBasis', 'order', 'margin'];
 
 /**
  * What was inserted for each price element, and for which source text.

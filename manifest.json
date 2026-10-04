@@ -16,7 +16,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*"],
+      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*", "https://*.av.by/*"],
       "js": ["src/content.js"],
       "run_at": "document_idle"
     }
@@ -24,7 +24,7 @@
   "web_accessible_resources": [
     {
       "resources": ["src/*.js"],
-      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*"]
+      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*", "https://*.av.by/*"]
     }
   ],
   "icons": {

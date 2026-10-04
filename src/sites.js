@@ -782,6 +782,185 @@ export const SITE_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Cars. Whole numbers, as on the other vehicle sites. The site shows one
+   * currency at a time (a header switcher); these selectors read whatever it
+   * prints, and when that is not BYN the parser simply finds nothing.
+   *
+   * Only each ad's own asking price converts. Leasing lines are left alone —
+   * "Лизинг от 921 руб. в месяц" on cards, "921 руб. в месяц" in the финансы
+   * panel on an ad — as is the "средняя цена" figure above Похожие
+   * объявления, which is a statistic rather than a price and already prints
+   * its own "≈ 7 785 $".
+   *
+   * Search results (cars.av.by/bmw), wide cards, stacked:
+   *
+   *   <div class="listing-item__prices">        (flex column, 201px)
+   *     <div class="listing-item__price-primary"><span>35 160</span><small>руб.</small></div>
+   *     <div class="listing-item__finance">Лизинг от 921 руб. в месяц</div>
+   *
+   * Inserted right after the price, so the stack sits between the price and
+   * the leasing line rather than below it.
+   *
+   * Ad page (cars.av.by/bmw/5-seriya/139092233), stacked, after the button
+   * holding the price — inside it the stack would join a flex row and become
+   * part of the clickable area:
+   *
+   *   <div class="card__price">
+   *     <button class="card__price-button">
+   *       <span class="card__price-primary">35 160<small>руб.</small></span>
+   *
+   * Похожие объявления further down are narrower cards and take one line, as
+   * their price row is flex: the full basis is what puts that line under the
+   * price instead of beside it.
+   *
+   *   <div class="listing-top__prices">         (flex row, wraps, 276px)
+   *     <div class="listing-top__price-primary"><span>35 160</span><small>руб.</small></div>
+   *
+   * The ad cards on av.by itself (.listing-index__price) are about the same
+   * width as those, so they take one line too.
+   *
+   * The dealer promo strip at the top of a search page ("Новые авто на
+   * salon.av.by", .salon-listing-top__prices) is deliberately not converted:
+   * those cards print their price over the photo, where a conversion lands on
+   * the image itself and reads badly against whatever is behind it.
+   */
+  'av.by': {
+    layout: LAYOUT.BLOCK,
+    decimals: 0,
+    insertPosition: 'after',
+    flexBasis: '100%',
+
+    priceSelector: [
+      '.listing-item__price-primary',
+      '.card__price-primary',
+      '.listing-top__price-primary',
+      '.listing-index__price',
+    ].join(', '),
+
+    styles: [
+      {
+        selector: '.card__price-primary',
+        priceContainer: '.card__price-button',
+        insertPosition: 'afterContainer',
+      },
+      {
+        selector: '.listing-top__price-primary',
+        layout: LAYOUT.INLINE,
+      },
+      {
+        /**
+         * Cards on av.by itself. Their summary is a grid that declares no
+         * rows: the price is pinned to row 1 and every other child is
+         * auto-placed into the rows below, in document order. A conversion
+         * inserted after the price is auto-placed too, so it would queue up
+         * behind the parameters — or, on a card with more children, behind
+         * the description. A negative order places it first instead, in the
+         * row directly under the price.
+         */
+        selector: '.listing-index__price',
+        layout: LAYOUT.INLINE,
+        order: -1,
+      },
+    ],
+  },
+
+  /**
+   * New cars from dealers. Its own components — none of the cars.av.by or
+   * av.by selectors appear here — but the same whole numbers, the same
+   * insertion after the price, and the same silence about leasing
+   * (.listing-item__finance sits right beside the price on a model page).
+   *
+   * One line everywhere except the wide offer cards.
+   *
+   * Home page, cards whose text block is laid over the photo:
+   *
+   *   <div class="salon-listing-top__desc">        (absolute, 171px)
+   *     <div class="salon-listing-top__prices">от 46 579 руб.</div>
+   *
+   * Narrow, and the line only just fits; it is kept at full opacity because
+   * it sits on a photograph rather than a flat background. This is the same
+   * component as the promo strip on a cars.av.by search page, which stays
+   * unconverted — there it is a sideshow among ordinary cards, here it is
+   * what the page is made of.
+   *
+   * Brand page (salon.av.by/bmw), tiles in a subgrid:
+   *
+   *   <li class="salon-listing-tile__item">        (subgrid, 6 rows)
+   *     …photo, title…
+   *     <div class="salon-listing-tile__item-price">348 081<small> руб.</small></div>
+   *     …params, button…
+   *
+   * The price itself is a nowrap flex row, so the line goes after it as a
+   * grid item of its own, taking the row the tile's spare track leaves.
+   *
+   * A model page also opens with a banner quoting the starting price:
+   *
+   *   <div class="salon-listing-model__banner-desc">        (block, 700px)
+   *     <div class="salon-listing-model__banner-priсe">от 120 201 руб.</div>
+   *
+   * That class is matched on "__banner-pri" because the site spells the rest
+   * of it with a Cyrillic "с" — searching the markup for "price" never finds
+   * it, which is how it went missing the first time round.
+   *
+   * Model page (salon.av.by/bmw_5-seriya), the wide offer cards under
+   * "N предложений в продаже" — stacked, the one exception here:
+   *
+   *   <div class="salon-listing-items__item-prices">
+   *     <div class="salon-listing-items__item-price-byn">348 081<span> руб.</span></div>
+   *     <div class="listing-item__finance">Лизинг от 4 605 руб. в месяц</div>
+   *
+   * Inserted after the price, so the stack separates it from the leasing
+   * line rather than following both.
+   */
+  'salon.av.by': {
+    layout: LAYOUT.INLINE,
+
+    priceSelector: [
+      '.salon-listing-top__prices',
+      '.salon-listing-tile__item-price',
+      '.salon-listing-items__item-price-byn',
+      'div[class*="__banner-pri"]',
+      '.salon-card__price-primary',
+    ].join(', '),
+
+    styles: [
+      {
+        selector: '.salon-listing-items__item-price-byn',
+        layout: LAYOUT.BLOCK,
+      },
+      {
+        /**
+         * Each of these cards is one big <a>, so the conversion inherits the
+         * link blue while the price sets white on itself — the one place on
+         * this site where inheritance gives the wrong color. The site's own
+         * token for text over a photo puts it back, and follows the theme.
+         */
+        selector: '.salon-listing-top__prices',
+        opacity: 1,
+        color: 'var(--color-text-static-white, #fff)',
+      },
+      {
+        /**
+         * An ad page's price shares a nowrap flex row with the leasing panel,
+         * and that row shares another with the действие button, so the line
+         * goes under the whole row — where it still lands under the price,
+         * the row's leftmost item.
+         */
+        selector: '.salon-card__price-primary',
+        priceContainer: '.salon-card__header-inner',
+        insertPosition: 'afterContainer',
+        /**
+         * That row carries the header's padding (24px, 20px on the left), so
+         * the line would otherwise start at the card's edge and sit below the
+         * padding, against the gallery. The margin aligns it with the price
+         * and lifts it back into the padding, right under the price.
+         */
+        margin: '-18px 0 6px 20px',
+      },
+    ],
+  },
 };
 
 /**
