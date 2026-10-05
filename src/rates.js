@@ -1,4 +1,4 @@
-import { lastUpdateAt } from './schedule.js';
+import { lastUpdateAt, updateOffsetMs } from './schedule.js';
 
 const API_BASE_URL = 'https://api.frankfurter.dev/v2/rates';
 const CACHE_KEY = 'exchangeRates';
@@ -109,10 +109,11 @@ async function readCache() {
  * yesterday's are obsolete the moment today's go out. See schedule.js.
  *
  * @param {Object|null} cached
+ * @param {number} offsetMs - This installation's refresh minute
  * @returns {boolean}
  */
-function isFresh(cached) {
-  return Boolean(cached) && cached.fetchedAt >= lastUpdateAt();
+function isFresh(cached, offsetMs) {
+  return Boolean(cached) && cached.fetchedAt >= lastUpdateAt(Date.now(), offsetMs);
 }
 
 /**
@@ -214,7 +215,7 @@ export async function getExchangeRates(currencies) {
   const wanted = normalizeCurrencies(currencies);
   const cached = await readCache();
 
-  if (isFresh(cached) && covers(cached, wanted)) {
+  if (isFresh(cached, await updateOffsetMs()) && covers(cached, wanted)) {
     return cached;
   }
 
