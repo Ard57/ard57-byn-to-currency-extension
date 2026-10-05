@@ -231,15 +231,17 @@ export function annotatePrices(root, settings, rates) {
     previous?.node.remove();
     inserted.delete(priceElement);
 
+    const parseOptions = { requireMarker: !effective.markerOptional };
+
     // Zero converts to zero in every currency, so there is nothing to show.
     // Booking forms print a "0 BYN" total until dates are picked, and sites
     // put "0 ƃ" on "list your ad for free" buttons.
-    const [price] = findPrices(priceText(priceElement));
+    const [price] = findPrices(priceText(priceElement), parseOptions);
     if (!price || price.amount === 0) {
       continue;
     }
 
-    const [companionPrice] = findPrices(companionSource);
+    const [companionPrice] = findPrices(companionSource, parseOptions);
     const forPrice = {
       ...effective,
       companion: { ...effective.companion, amount: companionPrice?.amount },
