@@ -42,6 +42,15 @@ export const DEFAULT_SETTINGS = {
   insertPosition: 'append',
 
   /**
+   * Accept a bare number as a price, for sites that draw the currency sign
+   * rather than writing it (abw.by ends each price with an icon element, so
+   * its text is just "48 082"). Safe only where `priceSelector` names the
+   * price element itself: with this on, the first number in that element is
+   * taken as a BYN price, whatever surrounds it.
+   */
+  markerOptional: false,
+
+  /**
    * A second amount belonging to the same price — a per-unit figure printed
    * beside it, e.g. "7 586 р./м²" — rendered on the same line as each
    * currency: "$190,822 · $2,589/м²".
