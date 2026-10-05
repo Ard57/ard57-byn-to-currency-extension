@@ -961,6 +961,54 @@ export const SITE_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Cars, parts and everything else. Whole numbers, stacked everywhere.
+   *
+   * This site draws the ruble sign instead of writing it:
+   *
+   *   <span class="price-byn">51 988 <span class="nbrb-icon"></span></span>
+   *
+   * so a price reads as a bare "51 988" and the parser's marker rule would
+   * throw it away. `markerOptional` lifts that rule — safe here because every
+   * selector below names a price element and nothing else.
+   *
+   * Search results (abw.by/cars/brand_bmw), one price per card, in a block of
+   * its own:
+   *
+   *   <div class="price"><span class="price-byn">51 988 …</span></div>
+   *   <a class="leasing-offer">Лизинг от 649 р./мес</a>
+   *
+   * The leasing line below it is a monthly payment and stays as it is, here
+   * and on the ad page ("В лизинг от 601 р./мес", "Аванс от 0 руб").
+   *
+   * Ad page (abw.by/cars/detail/bmw/5er/26422270):
+   *
+   *   <ul class="price"><li class="byn">48 082 <span class="nbrb-icon"></span>
+   *     …currency-converter tooltip…
+   *
+   * The tooltip's text sits inside the same <li>, but the number comes first
+   * and only the first price in an element is taken.
+   *
+   * Parts offered under the ad are their own cards, and their price block is
+   * a wrapping flex row, so the stack needs a full basis to clear the price:
+   *
+   *   <div class="card__price"><div class="card__price_byn">1 150 …</div></div>
+   *
+   * Two prices are deliberately left alone: the one in the bar that appears
+   * at the top of an ad page while scrolling, which a stack would push open,
+   * and "Стоимость: 48 082 BYN" inside the leasing promo, which repeats the
+   * price already converted at the top of the page.
+   */
+  'abw.by': {
+    layout: LAYOUT.BLOCK,
+    decimals: 0,
+    markerOptional: true,
+    insertPosition: 'after',
+    flexBasis: '100%',
+
+    priceSelector: '.price-byn, li.byn, .card__price_byn',
+  },
 };
 
 /**

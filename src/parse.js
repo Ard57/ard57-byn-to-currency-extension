@@ -121,13 +121,21 @@ export function parseAmount(raw) {
  * A bare number is never a price — without a currency marker on one side or
  * the other, annotating it would rewrite dates, quantities and model numbers.
  *
+ * `requireMarker: false` lifts that rule, for sites that draw the sign instead
+ * of writing it: abw.by ends every price with <span class="nbrb-icon">, which
+ * leaves nothing in the text to match. Only a selector that picks out the
+ * price element itself can be trusted that far — see `markerOptional` in
+ * settings.js.
+ *
  * Offsets are returned so a caller can splice the original text node rather
  * than rebuild it, keeping the surrounding markup intact.
  *
  * @param {string} text - Text to scan, typically one text node
+ * @param {Object} [options]
+ * @param {boolean} [options.requireMarker=true] - Demand a currency marker
  * @returns {Array<{ index: number, length: number, amount: number, raw: string }>}
  */
-export function findPrices(text) {
+export function findPrices(text, { requireMarker = true } = {}) {
   if (typeof text !== 'string' || !text) {
     return [];
   }
@@ -139,7 +147,7 @@ export function findPrices(text) {
   for (const match of text.matchAll(PRICE_PATTERN)) {
     const { prefix, suffix, number } = match.groups;
 
-    if (!prefix && !suffix) {
+    if (!prefix && !suffix && requireMarker) {
       continue;
     }
 
