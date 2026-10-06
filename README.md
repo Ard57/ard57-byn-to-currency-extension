@@ -1,9 +1,10 @@
 # BYN prices in USD/EUR/RUB
 
-Belarusian marketplaces price everything in Belarusian rubles, and comparing an offer on
-one site with an offer on another means reaching for a converter every time.
-This extension does it for you: every BYN price gets its equivalent in USD,
-EUR and RUB printed right underneath, on every page you already visit.
+Belarusian marketplaces price everything in Belarusian rubles, and comparing
+an offer on one site with an offer on another means reaching for a converter
+every time. This extension does it for you: every BYN price gets its
+equivalent in USD, EUR and RUB printed right underneath, on every page you
+already visit.
 
 For comparison only
 -------------------
