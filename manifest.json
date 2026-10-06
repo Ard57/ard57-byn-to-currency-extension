@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "BYN to Currency",
-  "version": "0.1.0",
-  "description": "Display BYN prices in USD, EUR and RUB",
+  "name": "BYN prices in USD/EUR/RUB",
+  "version": "1.0.0",
+  "description": "Automatically converts BYN prices into USD, EUR and RUB on Belarusian websites. No manual conversion needed.",
   "permissions": [
     "storage",
     "alarms"
