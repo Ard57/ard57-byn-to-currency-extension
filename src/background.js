@@ -1,6 +1,6 @@
 import { getExchangeRates, convertAmount } from './rates.js';
 import { formatPrices, convertPrices, LAYOUT } from './format.js';
-import { nextUpdateAt } from './schedule.js';
+import { nextUpdateAt, updateOffsetMs } from './schedule.js';
 import {
   resolveSettings,
   getSettingsForUrl,
@@ -28,23 +28,26 @@ function getConfiguredRates() {
 const REFRESH_ALARM = 'refresh-rates';
 
 /**
- * Arms a one-shot alarm for the next scheduled publication.
+ * Arms a one-shot alarm for this installation's refresh time — its own minute
+ * between 17:15 and 17:30 CET, an hour or so after the rates are published.
  *
- * One-shot rather than periodic: a fixed period would drift off 17:00 twice a
- * year when the clocks move, and would keep firing through the weekend. Each
- * run arms the next, so the schedule is recomputed every time.
+ * One-shot rather than periodic: a fixed period would drift off that time
+ * twice a year when the clocks move, and would keep firing through the
+ * weekend. Each run arms the next, so the schedule is recomputed every time.
  *
  * Creating an alarm under an existing name replaces it, so calling this more
  * often than needed is harmless.
  *
  * @returns {Promise<void>}
  */
-function scheduleRefresh() {
-  return chrome.alarms.create(REFRESH_ALARM, { when: nextUpdateAt() });
+async function scheduleRefresh() {
+  return chrome.alarms.create(REFRESH_ALARM, {
+    when: nextUpdateAt(Date.now(), await updateOffsetMs()),
+  });
 }
 
 // Alarms survive a browser restart, but not an extension install or update —
-// and a browser that was closed at 17:00 needs the schedule moved on.
+// and a browser that was closed at refresh time needs the schedule moved on.
 chrome.runtime.onInstalled.addListener(scheduleRefresh);
 chrome.runtime.onStartup.addListener(scheduleRefresh);
 
@@ -121,5 +124,6 @@ globalThis.collectCurrencies = collectCurrencies;
 globalThis.getAllCurrencies = getAllCurrencies;
 globalThis.getConfiguredRates = getConfiguredRates;
 globalThis.nextUpdateAt = nextUpdateAt;
+globalThis.updateOffsetMs = updateOffsetMs;
 globalThis.scheduleRefresh = scheduleRefresh;
 
