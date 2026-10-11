@@ -932,6 +932,54 @@ export const SITE_PRESETS = {
       },
       {
         /**
+         * Brand page tiles. Each tile is `grid-row: span 5` over a subgrid,
+         * so it has exactly five tracks for its five children — photo, title,
+         * price, parameters, button. A conversion added as a sixth child has
+         * no track to go in: subgrid cannot create one, so it is clamped into
+         * the last track and lands on top of the "N предложений" button.
+         *
+         * The tracks themselves size to their content, so the way to make
+         * room is to put the line inside a child that already has a track.
+         * The parameters text is the one below the price, and it is a plain
+         * block, so the line sits under the body type and the row grows to
+         * fit. The price itself is a nowrap flex row and would only put the
+         * line beside the number.
+         */
+        selector: '.salon-listing-tile__item-price',
+        priceContainer: {
+          scope: '.salon-listing-tile__item',
+          selector: '.salon-listing-tile__item-params-text',
+        },
+
+        /**
+         * First inside that text, so the stack reads directly under the
+         * price, with the body type below it.
+         *
+         * Floating it full width is what keeps the site's own text intact.
+         * That element carries `::first-letter { text-transform: uppercase }`,
+         * and an ordinary first child would take that pseudo-element for
+         * itself, leaving the body type reading "седан" instead of "Седан".
+         * A float is out of flow, so the first formatted line — and the
+         * capital — stays with the site's text, which the full width then
+         * pushes below the conversion. The float cannot escape the box
+         * either: the parameters text is a flex item, so it contains it.
+         */
+        insertPosition: 'prepend',
+        float: 'left',
+        width: '100%',
+
+        /**
+         * Stacked, unlike the rest of the site. That text is only as wide as
+         * its own words, and the colour swatches sit at the far end of the
+         * row, so one line would have to run the width of the card — past
+         * the swatches on the widest tiles, or shrunk small enough to squeeze
+         * under them. A currency per line needs none of that room, and the
+         * tile simply grows to fit: these tracks size to their content.
+         */
+        layout: LAYOUT.BLOCK,
+      },
+      {
+        /**
          * Each of these cards is one big <a>, so the conversion inherits the
          * link blue while the price sets white on itself — the one place on
          * this site where inheritance gives the wrong color. The site's own
