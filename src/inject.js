@@ -26,7 +26,10 @@ const MARKER_ATTRIBUTE = 'data-byn-to-currency';
  * conversion the first of those, so it lands in the row right below the price
  * instead of behind whatever the markup happens to list next.
  */
-const STYLE_FIELDS = ['fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity', 'flexBasis', 'order', 'margin'];
+const STYLE_FIELDS = [
+  'fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity',
+  'flexBasis', 'order', 'margin', 'whiteSpace', 'float', 'width',
+];
 
 /**
  * What was inserted for each price element, and for which source text.
@@ -102,6 +105,35 @@ function companionElement(priceElement, companion) {
   } catch {
     return null;
   }
+}
+
+/**
+ * Where a conversion is inserted, from `priceContainer`.
+ *
+ * A plain selector names an ancestor of the price, which covers almost every
+ * site. An { scope, selector } pair instead names a card and an element
+ * inside it, for the rare layout where the only place a line fits is a
+ * sibling subtree rather than anything above the price — see the tiles in
+ * sites.js under salon.av.by.
+ *
+ * Either way, a selector that matches nothing falls back to the price's own
+ * parent rather than dropping the conversion.
+ *
+ * @param {Element} priceElement
+ * @param {string|{scope: string, selector: string}|null} container
+ * @returns {Element|null}
+ */
+function containerFor(priceElement, container) {
+  if (container && typeof container === 'object') {
+    const scope = safeClosest(priceElement, container.scope);
+    try {
+      return scope?.querySelector(container.selector) ?? priceElement.parentElement;
+    } catch {
+      return priceElement.parentElement;
+    }
+  }
+
+  return safeClosest(priceElement, container) ?? priceElement.parentElement;
 }
 
 /**
@@ -256,12 +288,14 @@ export function annotatePrices(root, settings, rates) {
     if (effective.insertPosition === 'after') {
       priceElement.after(node);
     } else {
-      const container = safeClosest(priceElement, effective.priceContainer) ?? priceElement.parentElement;
+      const container = containerFor(priceElement, effective.priceContainer);
       if (!container) {
         continue;
       }
       if (effective.insertPosition === 'afterContainer') {
         container.after(node);
+      } else if (effective.insertPosition === 'prepend') {
+        container.prepend(node);
       } else {
         container.appendChild(node);
       }
