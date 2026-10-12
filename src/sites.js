@@ -457,9 +457,9 @@ export const SITE_PRESETS = {
    * Ad page (re.kufar.by/vi/minsk/kupit/kvartiru/1080759810), a flex row
    * aligned to the bottom:
    *
-   *   <div class="…__adview_desktop_price">
+   *   <div class="…__adview_price">
    *     <div class="…__container …__price"><span class="…__main">559 107 р.</span></div>
-   *     <div><span class="…__per_square_meter">7 586 р./м²</span></div>
+   *     <span class="…__per_square_meter">7 586 р./м²</span>
    *     <div class="…__calculator-icon">…</div>
    *
    * Same treatment; the size and line height are set explicitly because the
@@ -483,7 +483,7 @@ export const SITE_PRESETS = {
     priceSelector: [
       '[data-testid="card-price"]',
       '[class$="__price__byr"]',
-      '[class$="__adview_desktop_price"] [class$="__main"]',
+      '[class$="__adview_price"] [class$="__main"]',
       '[class$="__header"] > [class$="__price"] > span:first-child',
     ].join(', '),
     priceContainer: ':scope',
@@ -503,7 +503,7 @@ export const SITE_PRESETS = {
      * parent is searched instead.
      */
     companion: {
-      scope: '[class$="__adview_desktop_price"]',
+      scope: '[class$="__adview_price"]',
       selector: '[class$="__price__meter"], [class$="__per_square_meter"]',
       suffix: '/м²',
       // Kufar prints every per-m² figure in gray; the converted ones match.
@@ -518,8 +518,8 @@ export const SITE_PRESETS = {
          * away from the price. Below the whole row instead, leaving the row as
          * the site drew it.
          */
-        selector: '[class$="__adview_desktop_price"]',
-        priceContainer: '[class$="__adview_desktop_price"]',
+        selector: '[class$="__adview_price"]',
+        priceContainer: '[class$="__adview_price"]',
         insertPosition: 'afterContainer',
       },
       {
