@@ -238,9 +238,9 @@ export const SITE_PRESETS = {
    * generation listings like /audi/a6/4gc7-restayling and strip their card
    * conversions.
    *
-   * Stacked on the listing: in the narrow price column none of the cards fit
-   * all three currencies on one line. The ad page has room, so its rule keeps
-   * the conversion inline.
+   * Stacked on both page kinds: in the listing's narrow price column none of
+   * the cards fit all three currencies on one line, and on the ad page the
+   * line does not reliably fit either (ab.onliner.by/bmw/x5/5083041).
    */
   'ab.onliner.by': {
     layout: LAYOUT.BLOCK,
@@ -254,7 +254,6 @@ export const SITE_PRESETS = {
     styles: [
       {
         selector: '.jest-price-byn',
-        layout: LAYOUT.INLINE,
         className: 'vehicle-form__description vehicle-form__description_primary vehicle-form__description_base-alter vehicle-form__description_font-weight_semibold',
       },
     ],
