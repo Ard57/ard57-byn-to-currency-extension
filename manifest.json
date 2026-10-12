@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BYN prices in USD/EUR/RUB",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "default_locale": "en",
   "description": "__MSG_extensionDescription__",
   "permissions": [
@@ -11,6 +11,14 @@
   "host_permissions": [
     "https://api.frankfurter.dev/*"
   ],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
   "background": {
     "service_worker": "src/background.js",
     "type": "module"

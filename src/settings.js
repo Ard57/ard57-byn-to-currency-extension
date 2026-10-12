@@ -13,7 +13,35 @@ export const SOURCE_CURRENCY = 'BYN';
  * Global fallback, used for any site the user has not configured.
  */
 export const DEFAULT_SETTINGS = {
+  /** Shown beside a price, in this order. */
   currencies: ['USD', 'EUR', 'RUB'],
+
+  /**
+   * Every currency the popup offers, in the order it lists them — including
+   * the ones not currently shown, so unticking a currency and ticking it
+   * again puts it back where it was rather than at the end.
+   *
+   * `currencies` is this list filtered down to what is ticked, which is why
+   * the two always agree about order. Only ticked ones are ever fetched (see
+   * collectCurrencies), so the length of this list costs nothing.
+   *
+   * Grouped by how close to home they are rather than alphabetically: the
+   * four in daily use, then the neighbours, then the rest of Europe, the
+   * Balkans, the Caucasus, Central Asia, the Gulf, and finally the wider
+   * world. Every code here is quoted by the rates API — one that is not
+   * would fail the whole request, not just its own line.
+   */
+  currencyOrder: [
+    'USD', 'EUR', 'RUB', 'BYN',
+    'UAH', 'PLN', 'CZK', 'HUF', 'RON', 'MDL',
+    'GBP', 'CHF', 'NOK', 'SEK', 'DKK', 'ISK',
+    'RSD', 'MKD', 'BAM', 'ALL', 'TRY',
+    'GEL', 'AMD', 'AZN',
+    'KZT', 'UZS', 'KGS', 'TJS', 'TMT',
+    'AED', 'SAR',
+    'INR', 'CNY', 'JPY', 'THB', 'IDR', 'AUD', 'CAD',
+  ],
+
   layout: LAYOUT.INLINE,
   display: 'symbol',
   decimals: { default: 2, RUB: 0 },
@@ -328,6 +356,22 @@ export async function saveSettings(settings) {
  */
 export async function getSettingsForUrl(url) {
   return resolveSettings(url, await loadSettings());
+}
+
+/**
+ * Updates the user's global defaults — the layer under every site preset,
+ * and what the popup writes.
+ *
+ * @param {Object} patch - Fields to merge, e.g. { currencies: ["USD"] }
+ * @returns {Promise<Object>} The updated settings object
+ */
+export async function setDefaults(patch) {
+  const settings = await loadSettings();
+
+  settings.defaults = { ...(settings.defaults ?? {}), ...patch };
+
+  await saveSettings(settings);
+  return settings;
 }
 
 /**

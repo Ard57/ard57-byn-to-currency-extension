@@ -1,5 +1,5 @@
 import { loadSettings, resolveSettings } from './settings.js';
-import { annotatePrices } from './inject.js';
+import { annotatePrices, removeConversions } from './inject.js';
 
 /**
  * Content script entry point, loaded by content.js.
@@ -39,6 +39,12 @@ async function start() {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.siteSettings) {
       stored = changes.siteSettings.newValue ?? {};
+
+      // What changed is how prices should read, not the prices, so a plain
+      // rescan would skip every one of them as already converted. Clearing
+      // first is also what empties the page when the new settings ask for no
+      // currencies at all.
+      removeConversions(document);
       scan();
     }
   });

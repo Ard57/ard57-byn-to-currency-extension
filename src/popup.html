@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <h1 id="extension-name"></h1>
+
+  <details class="section" open>
+    <summary data-i18n="popupGlobalSettings">Global settings</summary>
+
+    <div class="section__body">
+      <fieldset class="field">
+        <legend data-i18n="popupCurrencies">Currencies</legend>
+        <ul id="currencies" class="options"></ul>
+      </fieldset>
+    </div>
+  </details>
+
+  <p id="status" class="status" role="status" aria-live="polite"></p>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

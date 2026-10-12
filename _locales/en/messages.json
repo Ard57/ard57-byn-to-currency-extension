@@ -1,6 +1,24 @@
 {
   "extensionDescription": {
-    "message": "Automatically converts BYN prices into USD, EUR and RUB on Belarusian websites. No manual conversion needed.",
+    "message": "Automatically converts BYN prices into USD, EUR, RUB and 30+ more currencies on Belarusian websites. No manual conversion needed.",
     "description": "Shown in the Chrome Web Store listing and on chrome://extensions. Max 132 characters."
+  },
+  "popupGlobalSettings": {
+    "message": "Global settings",
+    "description": "Heading of the popup's only section, open by default."
+  },
+  "popupCurrencies": {
+    "message": "Currencies",
+    "description": "Label above the currency checkboxes."
+  },
+  "popupSaved": {
+    "message": "Saved"
+  },
+  "popupOff": {
+    "message": "Conversions off"
+  },
+  "popupSourceHint": {
+    "message": "Prices are already in this currency on the sites supported so far",
+    "description": "Tooltip on the source currency row in the popup."
   }
 }
