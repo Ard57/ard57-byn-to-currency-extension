@@ -331,6 +331,22 @@ export async function getSettingsForUrl(url) {
 }
 
 /**
+ * Updates the user's global defaults — the layer under every site preset,
+ * and what the popup writes.
+ *
+ * @param {Object} patch - Fields to merge, e.g. { currencies: ["USD"] }
+ * @returns {Promise<Object>} The updated settings object
+ */
+export async function setDefaults(patch) {
+  const settings = await loadSettings();
+
+  settings.defaults = { ...(settings.defaults ?? {}), ...patch };
+
+  await saveSettings(settings);
+  return settings;
+}
+
+/**
  * Updates site-level settings (currency order, site default layout).
  *
  * @param {string} url - Any URL on the site
