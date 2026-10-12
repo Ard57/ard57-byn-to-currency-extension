@@ -215,6 +215,31 @@ function render(rows, settings) {
 }
 
 /**
+ * Removes every conversion this extension has inserted under `root`.
+ *
+ * For when the settings change rather than the page: the prices themselves
+ * are untouched, so annotatePrices() would skip each one as already done and
+ * the old currencies would stay on screen. Clearing first has the next scan
+ * render them afresh — and leaves the page as the site wrote it when the new
+ * settings convert nothing at all.
+ *
+ * The record of what was inserted needs no clearing: those nodes are now
+ * disconnected, which is itself the signal to insert again.
+ *
+ * @param {ParentNode} [root] - Where to look, usually `document`
+ * @returns {number} How many conversions were removed
+ */
+export function removeConversions(root = document) {
+  const nodes = root.querySelectorAll(`[${MARKER_ATTRIBUTE}]`);
+
+  for (const node of nodes) {
+    node.remove();
+  }
+
+  return nodes.length;
+}
+
+/**
  * Adds converted prices next to every price matched by `settings.priceSelector`.
  *
  * Safe to call repeatedly — it is what the MutationObserver calls on every

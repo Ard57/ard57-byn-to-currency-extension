@@ -1,6 +1,24 @@
 {
   "extensionDescription": {
-    "message": "Автоматически пересчитывает цены в BYN в USD, EUR и RUB на белорусских сайтах. Считать вручную не нужно.",
+    "message": "Автоматически пересчитывает цены в BYN в USD, EUR, RUB и ещё 30+ валют на белорусских сайтах. Считать вручную не нужно.",
     "description": "Shown in the Chrome Web Store listing and on chrome://extensions. Max 132 characters."
+  },
+  "popupGlobalSettings": {
+    "message": "Общие настройки",
+    "description": "Heading of the popup's only section, open by default."
+  },
+  "popupCurrencies": {
+    "message": "Валюты",
+    "description": "Label above the currency checkboxes."
+  },
+  "popupSaved": {
+    "message": "Сохранено"
+  },
+  "popupOff": {
+    "message": "Пересчёт выключен"
+  },
+  "popupSourceHint": {
+    "message": "На поддерживаемых сайтах цены и так в этой валюте",
+    "description": "Tooltip on the source currency row in the popup."
   }
 }
