@@ -16,5 +16,9 @@
   },
   "popupOff": {
     "message": "Conversions off"
+  },
+  "popupSourceHint": {
+    "message": "Prices are already in this currency on the sites supported so far",
+    "description": "Tooltip on the source currency row in the popup."
   }
 }

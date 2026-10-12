@@ -80,19 +80,54 @@ legend {
   color: var(--muted);
 }
 
-/* Currencies sit in two columns: six fit without scrolling. */
+/* One currency per row, in the order they are printed beside a price. */
 .options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px 8px;
-  margin-top: 4px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.options li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 0;
 }
 
 .options label {
   display: flex;
+  flex: 1;
   align-items: center;
   gap: 6px;
   cursor: pointer;
+}
+
+.move {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.move:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.move:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.move:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 input[type="checkbox"] {

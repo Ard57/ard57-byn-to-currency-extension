@@ -16,5 +16,9 @@
   },
   "popupOff": {
     "message": "Пересчёт выключен"
+  },
+  "popupSourceHint": {
+    "message": "На поддерживаемых сайтах цены и так в этой валюте",
+    "description": "Tooltip on the source currency row in the popup."
   }
 }

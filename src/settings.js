@@ -13,7 +13,19 @@ export const SOURCE_CURRENCY = 'BYN';
  * Global fallback, used for any site the user has not configured.
  */
 export const DEFAULT_SETTINGS = {
+  /** Shown beside a price, in this order. */
   currencies: ['USD', 'EUR', 'RUB'],
+
+  /**
+   * Every currency the popup offers, in the order it lists them — including
+   * the ones not currently shown, so unticking a currency and ticking it
+   * again puts it back where it was rather than at the end.
+   *
+   * `currencies` is this list filtered down to what is ticked, which is why
+   * the two always agree about order.
+   */
+  currencyOrder: ['USD', 'EUR', 'RUB', 'BYN', 'PLN', 'GBP', 'CNY'],
+
   layout: LAYOUT.INLINE,
   display: 'symbol',
   decimals: { default: 2, RUB: 0 },
