@@ -80,11 +80,20 @@ legend {
   color: var(--muted);
 }
 
-/* One currency per row, in the order they are printed beside a price. */
+/**
+ * One currency per row, in the order they are printed beside a price.
+ *
+ * The list is longer than a popup can be, so it scrolls — cut mid-row on
+ * purpose, since a row half in view says there is more below far better
+ * than a flush edge does.
+ */
 .options {
+  max-height: 232px;
   margin: 4px 0 0;
   padding: 0;
+  overflow-y: auto;
   list-style: none;
+  overscroll-behavior: contain;
 }
 
 .options li {

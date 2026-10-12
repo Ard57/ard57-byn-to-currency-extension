@@ -22,9 +22,25 @@ export const DEFAULT_SETTINGS = {
    * again puts it back where it was rather than at the end.
    *
    * `currencies` is this list filtered down to what is ticked, which is why
-   * the two always agree about order.
+   * the two always agree about order. Only ticked ones are ever fetched (see
+   * collectCurrencies), so the length of this list costs nothing.
+   *
+   * Grouped by how close to home they are rather than alphabetically: the
+   * four in daily use, then the neighbours, then the rest of Europe, the
+   * Balkans, the Caucasus, Central Asia, the Gulf, and finally the wider
+   * world. Every code here is quoted by the rates API — one that is not
+   * would fail the whole request, not just its own line.
    */
-  currencyOrder: ['USD', 'EUR', 'RUB', 'BYN', 'PLN', 'GBP', 'CNY'],
+  currencyOrder: [
+    'USD', 'EUR', 'RUB', 'BYN',
+    'UAH', 'PLN', 'CZK', 'HUF', 'RON', 'MDL',
+    'GBP', 'CHF', 'NOK', 'SEK', 'DKK', 'ISK',
+    'RSD', 'MKD', 'BAM', 'ALL', 'TRY',
+    'GEL', 'AMD', 'AZN',
+    'KZT', 'UZS', 'KGS', 'TJS', 'TMT',
+    'AED', 'SAR',
+    'INR', 'CNY', 'JPY', 'THB', 'IDR', 'AUD', 'CAD',
+  ],
 
   layout: LAYOUT.INLINE,
   display: 'symbol',
