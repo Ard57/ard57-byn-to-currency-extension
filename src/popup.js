@@ -96,18 +96,29 @@ function describe(code) {
 }
 
 /**
- * One row per currency: a checkbox, the code with its symbol and name, and
- * the two buttons that move it. The source currency is listed like any other — a price is never
- * converted into the currency it is already in, so ticking it shows nothing
- * today, but it will once prices in other currencies are read too.
+ * One row per currency: a drag handle, a checkbox, the code with its symbol
+ * and name, and the two buttons that move it. The source currency is listed
+ * like any other — a price is never converted into the currency it is already
+ * in, so ticking it shows nothing today, but it will once prices in other
+ * currencies are read too.
  *
  * @param {string[]} chosen - The ticked currencies
  */
 function render(chosen) {
   els.currencies.replaceChildren(...order.map((code, index) => {
     const row = document.createElement('li');
+    const handle = document.createElement('span');
     const label = document.createElement('label');
     const box = document.createElement('input');
+
+    row.draggable = true;
+    row.dataset.code = code;
+
+    // The whole row drags; the handle only says so. The buttons stay the way
+    // to reorder from the keyboard.
+    handle.className = 'handle';
+    handle.textContent = '⋮⋮';
+    handle.setAttribute('aria-hidden', 'true');
 
     box.type = 'checkbox';
     box.value = code;
@@ -124,7 +135,7 @@ function render(chosen) {
       label.append(extra);
     }
 
-    row.append(label, moveButton(code, index, -1), moveButton(code, index, 1));
+    row.append(handle, label, moveButton(code, index, -1), moveButton(code, index, 1));
 
     // Long names are cut short to fit the popup, so the row's tooltip spells
     // them out — except on the source row, whose tooltip has more to say.
@@ -188,19 +199,102 @@ function move(code, step) {
     return;
   }
 
-  const ticked = chosen();
-  [order[index], order[target]] = [order[target], order[index]];
-  render(ticked);
+  const next = [...order];
+  [next[index], next[target]] = [next[target], next[index]];
+  reorder(next);
 
   // Keep the keyboard where it was: on the button that just moved this row.
   els.currencies
     .querySelector(`button[data-code="${code}"][data-step="${step}"]`)
     ?.focus();
+}
+
+/**
+ * Adopts a new order, redraws and saves it. The ticked currencies are saved
+ * in the new order too, since that is the order they are printed in.
+ *
+ * @param {string[]} next
+ */
+function reorder(next) {
+  const ticked = chosen();
+
+  order = next;
+  render(ticked);
 
   save(
     { currencyOrder: [...order], currencies: order.filter(c => ticked.includes(c)) },
     chrome.i18n.getMessage('popupSaved') || 'Saved',
   );
+}
+
+/** The row being dragged, while a drag is under way. */
+let dragged = null;
+
+/**
+ * Drag and drop, wired once on the list rather than per row, since every
+ * move redraws the rows.
+ *
+ * The dragged row moves through the list as the pointer passes the middle of
+ * another row, so the list shows the new order before the drop. Only the drop
+ * saves it; a drag cancelled with Escape or released outside the list puts
+ * the rows back as they were.
+ */
+function enableDragging() {
+  const list = els.currencies;
+
+  list.addEventListener('dragstart', event => {
+    dragged = event.target.closest('li');
+    if (!dragged) {
+      return;
+    }
+
+    dragged.classList.add('dragging');
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', dragged.dataset.code);
+  });
+
+  list.addEventListener('dragover', event => {
+    if (!dragged) {
+      return;
+    }
+
+    // Marks the list as a drop target; without it the drop never fires.
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+
+    const row = event.target.closest('li');
+    if (!row || row === dragged) {
+      return;
+    }
+
+    const { top, height } = row.getBoundingClientRect();
+    if (event.clientY > top + height / 2) {
+      row.after(dragged);
+    } else {
+      row.before(dragged);
+    }
+  });
+
+  list.addEventListener('drop', event => {
+    event.preventDefault();
+  });
+
+  list.addEventListener('dragend', event => {
+    if (!dragged) {
+      return;
+    }
+
+    dragged.classList.remove('dragging');
+    dragged = null;
+
+    const next = [...list.children].map(row => row.dataset.code);
+
+    if (event.dataTransfer.dropEffect === 'none') {
+      render(chosen());
+    } else if (next.some((code, index) => code !== order[index])) {
+      reorder(next);
+    }
+  });
 }
 
 /**
@@ -249,6 +343,7 @@ async function start() {
 
   order = usableOrder(settings.currencyOrder);
   render(settings.currencies ?? []);
+  enableDragging();
 }
 
 start().catch(error => {

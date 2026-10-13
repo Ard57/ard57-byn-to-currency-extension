@@ -103,6 +103,22 @@ legend {
   padding: 1px 0;
 }
 
+/**
+ * Every row can be dragged; the grip is just where it shows. The row being
+ * dragged fades, marking the gap it will drop into.
+ */
+.handle {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: -2px;
+  cursor: grab;
+  user-select: none;
+}
+
+.options li.dragging {
+  opacity: 0.4;
+}
+
 .options label {
   display: flex;
   flex: 1;
