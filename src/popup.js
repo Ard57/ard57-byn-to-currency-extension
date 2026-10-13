@@ -18,6 +18,15 @@ import { DEFAULT_SETTINGS, SOURCE_CURRENCY, loadSettings, setDefaults } from './
 /** How long a status message stays on screen. */
 const STATUS_MS = 1200;
 
+/** Chrome's own limit on a popup's height; anything taller is cut off. */
+const POPUP_MAX_HEIGHT = 600;
+
+/** The share of the browser window's height the popup may take up. */
+const WINDOW_SHARE = 0.75;
+
+/** The list never shrinks below this, however small the window. */
+const LIST_MIN_HEIGHT = 120;
+
 const els = {
   name: document.getElementById('extension-name'),
   currencies: document.getElementById('currencies'),
@@ -334,6 +343,36 @@ function save(patch, message) {
   return writes;
 }
 
+/**
+ * Lets the currency list grow as tall as the popup can be: 75% of the
+ * browser window, but never past Chrome's 600px cap, minus whatever else the
+ * popup shows. Only what is left over scrolls.
+ *
+ * The stylesheet's max-height stays as the fallback for when the window
+ * cannot be measured.
+ */
+async function fitList() {
+  let limit = POPUP_MAX_HEIGHT;
+
+  try {
+    const { height } = await chrome.windows.getCurrent();
+    if (height) {
+      limit = Math.min(limit, Math.floor(height * WINDOW_SHARE));
+    }
+  } catch {
+    // Keep Chrome's cap as the limit.
+  }
+
+  // Rounded up, so a fraction of a pixel cannot tip the popup over its limit
+  // and bring up a scrollbar of its own.
+  const list = els.currencies;
+  const rest = Math.ceil(
+    document.documentElement.getBoundingClientRect().height - list.getBoundingClientRect().height,
+  );
+
+  list.style.maxHeight = `${Math.max(LIST_MIN_HEIGHT, limit - rest)}px`;
+}
+
 async function start() {
   localize();
   els.name.textContent = chrome.runtime.getManifest().name;
@@ -344,6 +383,7 @@ async function start() {
   order = usableOrder(settings.currencyOrder);
   render(settings.currencies ?? []);
   enableDragging();
+  await fitList();
 }
 
 start().catch(error => {

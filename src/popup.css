@@ -83,9 +83,10 @@ legend {
 /**
  * One currency per row, in the order they are printed beside a price.
  *
- * The list is longer than a popup can be, so it scrolls — cut mid-row on
- * purpose, since a row half in view says there is more below far better
- * than a flush edge does.
+ * The list is longer than a popup can be, so it scrolls. popup.js stretches
+ * it to the room the popup has; this max-height is only the fallback, cut
+ * mid-row on purpose, since a row half in view says there is more below far
+ * better than a flush edge does.
  */
 .options {
   max-height: 232px;
@@ -173,9 +174,17 @@ input[type="checkbox"] {
   accent-color: var(--accent);
 }
 
+/**
+ * Holds exactly one line whether or not it has anything to say, so a message
+ * appearing never makes the popup taller than popup.js measured it.
+ */
 .status {
-  min-height: 1.2em;
+  height: 16px;
   margin: 0;
+  overflow: hidden;
+  line-height: 16px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--muted);
   font-size: 11px;
 }
