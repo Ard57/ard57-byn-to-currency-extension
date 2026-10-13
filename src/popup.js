@@ -58,8 +58,46 @@ function usableOrder(stored) {
 }
 
 /**
- * One row per currency: a checkbox, the code, and the two buttons that move
- * it. The source currency is listed like any other — a price is never
+ * The symbol and full name that follow a code in the popup list — "$, US
+ * Dollar" — always in English, from the browser's own currency data rather
+ * than a table of ours that would trail the currency list.
+ *
+ * The symbol is the narrow one ("$", not "US$"), since the code beside it
+ * already says which dollar. A currency with no symbol of its own gets its
+ * code back, which would only repeat itself, so it is left out.
+ *
+ * @param {string} code
+ * @returns {string} Empty when the browser knows neither
+ */
+function describe(code) {
+  const locale = 'en';
+  const parts = [];
+
+  try {
+    const symbol = new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: code,
+      currencyDisplay: 'narrowSymbol',
+    }).formatToParts(0).find(part => part.type === 'currency')?.value;
+
+    if (symbol && symbol !== code) {
+      parts.push(symbol);
+    }
+
+    const name = new Intl.DisplayNames([locale], { type: 'currency' }).of(code);
+    if (name && name !== code) {
+      parts.push(name);
+    }
+  } catch {
+    // An engine without this data still lists the code on its own.
+  }
+
+  return parts.join(', ');
+}
+
+/**
+ * One row per currency: a checkbox, the code with its symbol and name, and
+ * the two buttons that move it. The source currency is listed like any other — a price is never
  * converted into the currency it is already in, so ticking it shows nothing
  * today, but it will once prices in other currencies are read too.
  *
@@ -76,11 +114,24 @@ function render(chosen) {
     box.checked = chosen.includes(code);
     box.addEventListener('change', onToggle);
 
+    const details = describe(code);
     label.append(box, code);
+
+    if (details) {
+      const extra = document.createElement('span');
+      extra.className = 'details';
+      extra.textContent = details;
+      label.append(extra);
+    }
+
     row.append(label, moveButton(code, index, -1), moveButton(code, index, 1));
 
+    // Long names are cut short to fit the popup, so the row's tooltip spells
+    // them out — except on the source row, whose tooltip has more to say.
     if (code === SOURCE_CURRENCY) {
       row.title = chrome.i18n.getMessage('popupSourceHint') || '';
+    } else if (details) {
+      row.title = `${code} (${details})`;
     }
 
     return row;

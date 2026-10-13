@@ -108,7 +108,20 @@ legend {
   flex: 1;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   cursor: pointer;
+}
+
+/**
+ * The symbol and name after a code. Secondary to the code, and cut short
+ * rather than wrapped, so every row stays one line high and the move buttons
+ * stay in one column. The row's tooltip carries the whole name.
+ */
+.details {
+  overflow: hidden;
+  color: var(--muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .move {
