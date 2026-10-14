@@ -105,6 +105,7 @@ const els = {
   previewSource: document.getElementById('preview-source'),
   previewPrices: document.getElementById('preview-prices'),
   previewDate: document.getElementById('preview-date'),
+  hero: document.querySelector('.hero'),
   convertAmount: document.getElementById('convert-amount'),
   convertFrom: document.getElementById('convert-from'),
   convertTo: document.getElementById('convert-to'),
@@ -445,6 +446,10 @@ function closePicker() {
   els.picker.hidden = true;
   els.main.hidden = false;
   els.add.focus();
+
+  // The card was measured while hidden, at no height at all; picks made in
+  // the picker may also have changed what it holds.
+  preview();
   fitList();
 }
 
@@ -700,10 +705,11 @@ async function loadRates() {
  * converter whatever is being converted there, so the card shows the same
  * amount in every chosen currency at once.
  *
+ * @param {string} [tab] - The tab to ask about; the open one by default
  * @returns {{ amount: number|null, from: string }}
  */
-function previewSubject() {
-  return state.tab === 'converter'
+function previewSubject(tab = state.tab) {
+  return tab === 'converter'
     ? { amount: parseAmount(state.amount), from: state.from }
     : { amount: PREVIEW_AMOUNT, from: SOURCE_CURRENCY };
 }
@@ -723,6 +729,12 @@ let lastRates;
  * Converting from anything but BYN, BYN itself leads the list when it is not
  * chosen: rubles are what every price on the supported sites is in.
  *
+ * The card is as tall as the taller of the two tabs' versions of it, so
+ * switching tabs never moves the tabs below it: the converter can show one or
+ * two prices more than the currencies tab, enough to wrap onto another line.
+ * The other tab's version is drawn first, only to be measured — both draws
+ * happen before the browser paints, so it is never seen.
+ *
  * @param {Object|null} [data] - A GET_RATES answer; omitted, the last one
  */
 function preview(data = lastRates) {
@@ -734,7 +746,26 @@ function preview(data = lastRates) {
     return;
   }
 
-  const { amount, from } = previewSubject();
+  const hero = els.hero;
+  const other = state.tab === 'converter' ? 'currencies' : 'converter';
+
+  hero.style.minHeight = '';
+  drawPreview(previewSubject(other), data);
+  const otherHeight = hero.offsetHeight;
+
+  drawPreview(previewSubject(), data);
+  hero.style.minHeight = `${Math.max(otherHeight, hero.offsetHeight)}px`;
+
+  fitList();
+}
+
+/**
+ * Fills the card for one amount: the amount, its conversions and the date.
+ *
+ * @param {{ amount: number|null, from: string }} subject
+ * @param {Object|null} data - A GET_RATES answer
+ */
+function drawPreview({ amount, from }, data) {
   const home = from === SOURCE_CURRENCY || chosen.includes(SOURCE_CURRENCY) ? [] : [SOURCE_CURRENCY];
   const currencies = [...home, ...chosen].filter(code => code !== from);
   const prices = els.previewPrices;
@@ -759,7 +790,6 @@ function preview(data = lastRates) {
       prices.textContent = t('popupPreviewNoRates', 'Rates are not loaded yet');
     }
     date.textContent = '';
-    fitList();
     return;
   }
 
@@ -782,8 +812,6 @@ function preview(data = lastRates) {
       [formatDate(data.date)],
     )
     : '';
-
-  fitList();
 }
 
 /**
