@@ -78,9 +78,51 @@ export const SITE_PRESETS = {
      * Appended inside the price-value div, which carries the price's 20px
      * bold, so the conversion inherits it with no borrowed classes. The
      * column is 180px, so the ruble amount wraps to a second line.
+     *
+     * Product cards in news articles, a different widget, e.g.
+     * people.onliner.by/2026/10/07/idei-na-den-materi. The primary and
+     * secondary variants are both the product's own price:
+     *
+     *   <a class="news-product__price news-product__price_primary">
+     *     <span class="news-product__price-prefix">от</span>
+     *     <span class="news-product__price-value">49,00 ƃ</span>
+     *   </a>
+     *   <a class="news-product__monthly">…от 1,55 ƃ/мес…</a>
+     *
+     * The value span alone is parsed. The monthly installment is a sibling
+     * and never matched. See the styles rule for where the conversion goes.
      */
-    priceSelector: '.news-widget__price-value_primary > .news-widget__link',
+    priceSelector: [
+      '.news-widget__price-value_primary > .news-widget__link',
+      '.news-product__price > .news-product__price-value',
+    ].join(', '),
     priceContainer: '.news-widget__price-value_primary',
+
+    styles: [
+      {
+        /**
+         * The price link is a flex row (prefix and value on a baseline), so
+         * anything appended inside it would sit beside the price. On a line
+         * of its own after the link instead, above the monthly installment.
+         *
+         * Stacked: the small square tiles are too narrow for one line, and
+         * a line kept from wrapping runs into the next tile. The link's 8px
+         * bottom margin is mostly taken back with a negative top margin, so
+         * the stack sits close under the price, and repeated below it.
+         *
+         * Outside the link nothing carries the price's look, so the 15px
+         * semibold of the value is set, two steps smaller.
+         */
+        selector: '.news-product__price',
+        priceContainer: '.news-product__price',
+        insertPosition: 'afterContainer',
+        layout: LAYOUT.BLOCK,
+        fontSize: '12px',
+        fontWeight: '600',
+        lineHeight: '1.3',
+        margin: '-6px 0 8px',
+      },
+    ],
   },
 
   /**
