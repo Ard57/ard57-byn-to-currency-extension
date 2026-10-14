@@ -79,6 +79,16 @@
       }
     }
   },
+  "popupAddCode": {
+    "message": "Add $CODE$",
+    "description": "Accessible label of a currency in the add-currency picker that is not chosen yet.",
+    "placeholders": {
+      "code": {
+        "content": "$1",
+        "example": "USD"
+      }
+    }
+  },
   "popupEmpty": {
     "message": "No currencies yet. Add one to see prices converted.",
     "description": "Shown in place of the list when no currency is chosen."

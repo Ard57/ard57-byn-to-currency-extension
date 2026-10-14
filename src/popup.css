@@ -20,6 +20,8 @@
   --badge: #eef1f5;
   --danger: #d93a3a;
   --danger-soft: rgba(217, 58, 58, 0.1);
+  --success: #1f9d55;
+  --success-soft: rgba(31, 157, 85, 0.12);
   --teal-soft: rgba(18, 164, 184, 0.1);
 }
 
@@ -38,6 +40,8 @@
     --badge: #2a2e37;
     --danger: #ff6b6b;
     --danger-soft: rgba(255, 107, 107, 0.14);
+    --success: #4ccb7f;
+    --success-soft: rgba(76, 203, 127, 0.15);
     --teal-soft: rgba(60, 198, 216, 0.14);
   }
 }
@@ -438,7 +442,13 @@ h1 {
   background: var(--card-hover);
 }
 
-.pick__plus {
+/**
+ * The round mark at the end of a pick: a teal plus for a currency not in use,
+ * a green check for one that is, and a red cross over that check while the
+ * pointer is on it — except straight after it was added (`is-fresh`), when
+ * the pointer is still there from the click that added it.
+ */
+.pick__mark {
   display: grid;
   flex: none;
   place-items: center;
@@ -447,9 +457,41 @@ h1 {
   border-radius: 50%;
   background: var(--teal-soft);
   color: var(--teal-strong);
-  font-size: 17px;
-  font-weight: 600;
-  line-height: 1;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.pick__mark svg {
+  display: none;
+}
+
+.pick:not(.is-chosen) .pick__add,
+.pick.is-chosen .pick__check {
+  display: block;
+}
+
+.pick.is-chosen {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+}
+
+.pick.is-chosen .pick__mark {
+  background: var(--success);
+  color: #ffffff;
+}
+
+.pick.is-chosen:not(.is-fresh):hover {
+  border-color: var(--danger);
+}
+
+.pick.is-chosen:not(.is-fresh):hover .pick__mark {
+  background: var(--danger);
+}
+
+.pick.is-chosen:not(.is-fresh):hover .pick__check {
+  display: none;
+}
+
+.pick.is-chosen:not(.is-fresh):hover .pick__remove {
+  display: block;
 }
 
 .picker__empty {

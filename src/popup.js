@@ -275,8 +275,7 @@ function fillRates() {
 function renderPicker() {
   const query = els.search.value.trim().toLowerCase();
 
-  const items = order
-    .filter(code => !chosen.includes(code))
+  const items = pickerOrder
     .filter(code => {
       if (!query) {
         return true;
@@ -301,11 +300,14 @@ function renderPicker() {
         text.append(el('span', 'row__name', name));
       }
 
-      const plus = el('span', 'pick__plus', '+');
-      plus.setAttribute('aria-hidden', 'true');
+      const mark = el('span', 'pick__mark');
+      mark.setAttribute('aria-hidden', 'true');
+      mark.innerHTML = PICK_MARKS;
 
-      button.append(badge(code), text, plus);
-      button.addEventListener('click', () => addCurrency(code));
+      button.append(badge(code), text, mark);
+      button.addEventListener('click', () => togglePick(button));
+      button.addEventListener('mouseleave', () => button.classList.remove('is-fresh'));
+      markPick(button);
       item.append(button);
 
       return item;
@@ -315,7 +317,60 @@ function renderPicker() {
   els.pickerEmpty.hidden = items.length > 0;
 }
 
+/**
+ * The three marks a pick can show, swapped by CSS: a plus to add, a check
+ * for a chosen currency, and a cross over the check when hovering a chosen
+ * one, to say a click removes it.
+ */
+const PICK_MARKS = [
+  '<svg class="pick__add" viewBox="0 0 24 24" width="14" height="14"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  '<svg class="pick__check" viewBox="0 0 24 24" width="14" height="14"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  '<svg class="pick__remove" viewBox="0 0 24 24" width="14" height="14"><path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+].join('');
+
+/** Brings a pick's look and label in line with whether its currency is chosen. */
+function markPick(button) {
+  const { code } = button.dataset;
+  const on = chosen.includes(code);
+
+  button.classList.toggle('is-chosen', on);
+  button.setAttribute('aria-pressed', String(on));
+  button.setAttribute('aria-label', on
+    ? t('popupRemove', `Remove ${code}`, [code])
+    : t('popupAddCode', `Add ${code}`, [code]));
+}
+
+/**
+ * Adds or removes a pick's currency, staying in the picker so several can be
+ * picked in a row. Only the pick itself is redrawn, so focus and the scroll
+ * position stay put.
+ *
+ * Under the pointer, a currency that has just been added would at once show
+ * the red cross that says "click to remove". The cross waits until the
+ * pointer has left the pick once (`is-fresh`).
+ */
+function togglePick(button) {
+  const { code } = button.dataset;
+
+  if (chosen.includes(code)) {
+    removeCurrency(code);
+  } else {
+    addCurrency(code);
+  }
+
+  markPick(button);
+  button.classList.add('is-fresh');
+}
+
+/**
+ * Every currency, in the order the picker opened with. Frozen while it is
+ * open: the full order puts chosen currencies first, and a pick jumping up
+ * the list the moment it is clicked would leave the pointer on another one.
+ */
+let pickerOrder = [];
+
 function openPicker() {
+  pickerOrder = [...order];
   els.search.value = '';
   renderPicker();
   els.main.hidden = true;
@@ -331,14 +386,13 @@ function closePicker() {
   fitList();
 }
 
-/** Puts a currency at the end of the chosen ones and goes back to them. */
+/** Puts a currency at the end of the chosen ones. */
 function addCurrency(code) {
   if (chosen.includes(code)) {
     return;
   }
 
   commit([...chosen, code], t('popupSaved', 'Saved'));
-  closePicker();
 }
 
 function removeCurrency(code) {
@@ -347,9 +401,12 @@ function removeCurrency(code) {
 
   commit(next, next.length === 0 ? t('popupOff', 'Conversions off') : t('popupSaved', 'Saved'));
 
-  // Keep the keyboard in the list: on the row that took this one's place.
-  const rows = els.currencies.querySelectorAll('.row');
-  (rows[Math.min(index, rows.length - 1)] ?? els.add).focus();
+  // From the list, keep the keyboard in it: on the row that took this one's
+  // place. From the picker, focus stays on the pick that was clicked.
+  if (!els.main.hidden) {
+    const rows = els.currencies.querySelectorAll('.row');
+    (rows[Math.min(index, rows.length - 1)] ?? els.add).focus();
+  }
 }
 
 /**
@@ -416,7 +473,8 @@ function enableKeyboard() {
   els.search.addEventListener('keydown', event => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      els.pickerList.querySelector('.pick')?.click();
+      // Enter adds the first match; it never removes one already chosen.
+      els.pickerList.querySelector('.pick:not(.is-chosen)')?.click();
     } else if (event.key === 'ArrowDown') {
       event.preventDefault();
       els.pickerList.querySelector('.pick')?.focus();
@@ -669,9 +727,10 @@ async function measureWindow() {
 function fitList() {
   const list = els.picker.hidden ? els.currencies : els.pickerList;
 
-  // Measured unclamped first, so the rest of the popup is what is left over.
-  list.style.maxHeight = 'none';
-
+  // The rest of the popup is measured around the list at whatever height it
+  // has now, never by lifting its cap first: for that moment the list would
+  // not scroll, and the browser would put it back at the top — on every pick.
+  //
   // Rounded up, so a fraction of a pixel cannot tip the popup over its limit
   // and bring up a scrollbar of its own.
   const rest = Math.ceil(

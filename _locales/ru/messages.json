@@ -79,6 +79,16 @@
       }
     }
   },
+  "popupAddCode": {
+    "message": "Добавить $CODE$",
+    "description": "Accessible label of a currency in the add-currency picker that is not chosen yet.",
+    "placeholders": {
+      "code": {
+        "content": "$1",
+        "example": "USD"
+      }
+    }
+  },
   "popupEmpty": {
     "message": "Валют пока нет. Добавьте, чтобы видеть пересчёт.",
     "description": "Shown in place of the list when no currency is chosen."
