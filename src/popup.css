@@ -189,6 +189,10 @@ h1 {
  * Only the chosen currencies, in the order they are printed beside a price.
  * There are rarely more than a handful, but popup.js caps the height to what
  * the popup has room for, and the rest scrolls.
+ *
+ * The scrollbar's room is kept whether or not it is showing, so the list
+ * that grows past the cap does not narrow every row, and shift its rate and
+ * cross, the moment the bar appears. A thin bar keeps that room small.
  */
 .rows,
 .picks {
@@ -200,6 +204,8 @@ h1 {
   overflow-y: auto;
   list-style: none;
   overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
 }
 
 .row,
