@@ -3,13 +3,9 @@
     "message": "Automatically converts BYN prices into USD, EUR, RUB and 30+ more currencies on Belarusian websites. No manual conversion needed.",
     "description": "Shown in the Chrome Web Store listing and on chrome://extensions. Max 132 characters."
   },
-  "popupGlobalSettings": {
-    "message": "Global settings",
-    "description": "Heading of the popup's only section, open by default."
-  },
   "popupCurrencies": {
     "message": "Currencies",
-    "description": "Label above the currency checkboxes."
+    "description": "Heading above the list of chosen currencies."
   },
   "popupSaved": {
     "message": "Saved"
@@ -20,5 +16,81 @@
   "popupSourceHint": {
     "message": "Prices are already in this currency on the sites supported so far",
     "description": "Tooltip on the source currency row in the popup."
+  },
+  "popupPreviewNone": {
+    "message": "Add a currency to see prices converted",
+    "description": "Shown in the preview when no currency is chosen."
+  },
+  "popupPreviewNoRates": {
+    "message": "Rates are not loaded yet",
+    "description": "Shown in the preview when no exchange rates could be read."
+  },
+  "popupPreviewDate": {
+    "message": "ECB rates of $DATE$",
+    "description": "Under the preview: the day the rates were published.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "10 Oct 2026"
+      }
+    }
+  },
+  "popupPreviewStale": {
+    "message": "Offline, using rates of $DATE$",
+    "description": "Under the preview when the latest rates could not be fetched.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "10 Oct 2026"
+      }
+    }
+  },
+  "popupReorderHint": {
+    "message": "Drag to reorder",
+    "description": "Small hint beside the Currencies heading."
+  },
+  "popupReorderKeys": {
+    "message": "Drag, or Alt+↑/↓ to move",
+    "description": "Tooltip on a currency row."
+  },
+  "popupAdd": {
+    "message": "Add currency",
+    "description": "The big button under the currency list."
+  },
+  "popupSearch": {
+    "message": "Search currencies",
+    "description": "Placeholder of the search box in the add-currency picker."
+  },
+  "popupBack": {
+    "message": "Back",
+    "description": "Accessible label of the picker's back button."
+  },
+  "popupNoMatch": {
+    "message": "Nothing found",
+    "description": "Shown in the picker when the search matches no currency."
+  },
+  "popupRemove": {
+    "message": "Remove $CODE$",
+    "description": "Accessible label of the cross on a currency row.",
+    "placeholders": {
+      "code": {
+        "content": "$1",
+        "example": "USD"
+      }
+    }
+  },
+  "popupEmpty": {
+    "message": "No currencies yet. Add one to see prices converted.",
+    "description": "Shown in place of the list when no currency is chosen."
+  },
+  "popupPer": {
+    "message": "per $UNIT$",
+    "description": "Under a row's rate: what amount of the currency the rate is for.",
+    "placeholders": {
+      "unit": {
+        "content": "$1",
+        "example": "100 RUB"
+      }
+    }
   }
 }

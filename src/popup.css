@@ -1,177 +1,461 @@
 /**
- * The popup follows the browser's own light and dark schemes rather than
- * picking a palette of its own, so it sits in the toolbar like a part of it.
+ * The popup takes its colours from the icon — a dark tile with an amber and a
+ * teal arrow — and follows the browser's light or dark scheme for the rest.
  */
 
 :root {
   color-scheme: light dark;
 
-  --text: #1b1b1b;
-  --muted: #5f6368;
-  --surface: #ffffff;
-  --border: #d9dade;
-  --accent: #1a73e8;
+  --amber: #f5a524;
+  --teal: #12a4b8;
+  --teal-strong: #0b8798;
+
+  --text: #15171c;
+  --muted: #6b7180;
+  --surface: #f6f7f9;
+  --card: #ffffff;
+  --card-hover: #fbfbfc;
+  --border: #e6e8ec;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --badge: #eef1f5;
+  --danger: #d93a3a;
+  --danger-soft: rgba(217, 58, 58, 0.1);
+  --teal-soft: rgba(18, 164, 184, 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #e8eaed;
-    --muted: #9aa0a6;
-    --surface: #202124;
-    --border: #3c4043;
-    --accent: #8ab4f8;
+    --teal: #3cc6d8;
+    --teal-strong: #6fd9e6;
+
+    --text: #eceef2;
+    --muted: #8e95a3;
+    --surface: #15171c;
+    --card: #1f2229;
+    --card-hover: #252931;
+    --border: #2e323b;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --badge: #2a2e37;
+    --danger: #ff6b6b;
+    --danger-soft: rgba(255, 107, 107, 0.14);
+    --teal-soft: rgba(60, 198, 216, 0.14);
   }
 }
 
-body {
-  width: 260px;
-  margin: 0;
-  padding: 12px;
-  background: var(--surface);
-  color: var(--text);
-  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-
-h1 {
-  margin: 0 0 10px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.section {
-  border-top: 1px solid var(--border);
-}
-
-summary {
-  padding: 8px 0;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-}
-
-summary:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.section__body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 2px 0 10px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font-size: 12px;
-}
-
-.field > span,
-legend {
-  padding: 0;
-  color: var(--muted);
+* {
+  box-sizing: border-box;
 }
 
 /**
- * One currency per row, in the order they are printed beside a price.
- *
- * The list is longer than a popup can be, so it scrolls. popup.js stretches
- * it to the room the popup has; this max-height is only the fallback, cut
- * mid-row on purpose, since a row half in view says there is more below far
- * better than a flush edge does.
+ * Wide enough for the longest currency name on offer — "Bosnia-Herzegovina
+ * Convertible Mark", about 200px — to sit on one line beside a row's grip,
+ * badge, rate and cross. A longer one added later is cut short (.row__name).
  */
-.options {
-  max-height: 232px;
-  margin: 4px 0 0;
-  padding: 0;
+body {
+  width: 440px;
+  margin: 0;
+  padding: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+p {
+  margin: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* Header */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.header__icon {
+  flex: none;
+  border-radius: 7px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+/**
+ * What a price looks like with the chosen currencies, worked out from the
+ * stored rates. Dark in both schemes, like the icon, so it reads as the
+ * extension's own face rather than another setting.
+ */
+.hero {
+  margin-bottom: 16px;
+  padding: 14px 16px 13px;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(18, 164, 184, 0.35), transparent 55%),
+    radial-gradient(90% 120% at 0% 100%, rgba(245, 165, 36, 0.22), transparent 60%),
+    #151922;
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(15, 18, 26, 0.18);
+}
+
+.hero__source {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.hero__prices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 7px;
+  margin: 3px 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero__item {
+  white-space: nowrap;
+}
+
+.hero__sep {
+  margin-right: 7px;
+  color: var(--amber);
+}
+
+/** More than three prices would wrap onto a third line at full size. */
+.hero__prices.is-long {
+  font-size: 16px;
+}
+
+.hero__prices.is-empty {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.hero__date {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+}
+
+/* Chosen currencies */
+
+.section__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 2px 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.section__hint {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/**
+ * Only the chosen currencies, in the order they are printed beside a price.
+ * There are rarely more than a handful, but popup.js caps the height to what
+ * the popup has room for, and the rest scrolls.
+ */
+.rows,
+.picks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 2px;
   overflow-y: auto;
   list-style: none;
   overscroll-behavior: contain;
 }
 
-.options li {
+.row,
+.pick {
   display: flex;
+  flex: none;
   align-items: center;
-  gap: 6px;
-  padding: 1px 0;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 8px 8px 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow);
 }
 
-/**
- * Every row can be dragged; the grip is just where it shows. The row being
- * dragged fades, marking the gap it will drop into.
- */
-.handle {
+.row {
+  cursor: grab;
+  transition: background-color 0.12s, border-color 0.12s;
+}
+
+.row:hover {
+  background: var(--card-hover);
+}
+
+.row.dragging {
+  border-style: dashed;
+  border-color: var(--teal);
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.rows__empty {
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.grip {
+  flex: none;
+  width: 10px;
   color: var(--muted);
   font-size: 11px;
   letter-spacing: -2px;
-  cursor: grab;
+  opacity: 0.45;
   user-select: none;
 }
 
-.options li.dragging {
-  opacity: 0.4;
+.row:hover .grip {
+  opacity: 1;
 }
 
-.options label {
+.badge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--badge);
+  font-size: 15px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.badge--long {
+  font-size: 10px;
+  letter-spacing: -0.02em;
+}
+
+/** The first currency is the one printed first, so it gets the accent. */
+.row:first-child .badge {
+  background: var(--teal-soft);
+  color: var(--teal-strong);
+}
+
+.row__text {
   display: flex;
   flex: 1;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
   min-width: 0;
-  cursor: pointer;
 }
 
-/**
- * The symbol and name after a code. Secondary to the code, and cut short
- * rather than wrapped, so every row stays one line high and the move buttons
- * stay in one column. The row's tooltip carries the whole name.
- */
-.details {
+.row__code {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.row__name {
   overflow: hidden;
   color: var(--muted);
+  font-size: 11.5px;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.move {
-  width: 20px;
-  height: 20px;
+.row__rate {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+
+.row__value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.row__per {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.remove {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.remove:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* The add button */
+
+.add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 48px;
+  margin-top: 10px;
+  border: 1.5px dashed color-mix(in srgb, var(--teal) 55%, transparent);
+  border-radius: 12px;
+  background: var(--teal-soft);
+  color: var(--teal-strong);
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background-color 0.12s, border-color 0.12s, transform 0.08s;
+}
+
+.add:hover {
+  border-color: var(--teal);
+  background: color-mix(in srgb, var(--teal) 18%, transparent);
+}
+
+.add:active {
+  transform: scale(0.99);
+}
+
+.add__plus {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* The picker */
+
+.picker__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.icon-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 4px;
-  background: none;
-  color: var(--text);
-  font: inherit;
-  line-height: 1;
+  border-radius: 10px;
+  background: var(--card);
   cursor: pointer;
 }
 
-.move:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
+.icon-button:hover {
+  border-color: var(--teal);
+  color: var(--teal-strong);
 }
 
-.move:disabled {
-  opacity: 0.35;
-  cursor: default;
+.search {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
 }
 
-.move:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+.search:focus {
+  border-color: var(--teal);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--teal-soft);
 }
 
-input[type="checkbox"] {
-  margin: 0;
-  accent-color: var(--accent);
+.picks {
+  max-height: 420px;
+}
+
+.pick {
+  width: 100%;
+  min-height: 48px;
+  padding-left: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pick:hover,
+.pick:focus-visible {
+  border-color: var(--teal);
+  background: var(--card-hover);
+}
+
+.pick__plus {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--teal-soft);
+  color: var(--teal-strong);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.picker__empty {
+  padding: 20px 0;
+  color: var(--muted);
+  text-align: center;
 }
 
 /**
@@ -180,11 +464,12 @@ input[type="checkbox"] {
  */
 .status {
   height: 16px;
-  margin: 0;
+  margin-top: 8px;
   overflow: hidden;
   line-height: 16px;
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--muted);
   font-size: 11px;
+  text-align: center;
 }

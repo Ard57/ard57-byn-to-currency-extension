@@ -3,13 +3,9 @@
     "message": "Автоматически пересчитывает цены в BYN в USD, EUR, RUB и ещё 30+ валют на белорусских сайтах. Считать вручную не нужно.",
     "description": "Shown in the Chrome Web Store listing and on chrome://extensions. Max 132 characters."
   },
-  "popupGlobalSettings": {
-    "message": "Общие настройки",
-    "description": "Heading of the popup's only section, open by default."
-  },
   "popupCurrencies": {
     "message": "Валюты",
-    "description": "Label above the currency checkboxes."
+    "description": "Heading above the list of chosen currencies."
   },
   "popupSaved": {
     "message": "Сохранено"
@@ -20,5 +16,81 @@
   "popupSourceHint": {
     "message": "На поддерживаемых сайтах цены и так в этой валюте",
     "description": "Tooltip on the source currency row in the popup."
+  },
+  "popupPreviewNone": {
+    "message": "Добавьте валюту, чтобы увидеть пересчёт",
+    "description": "Shown in the preview when no currency is chosen."
+  },
+  "popupPreviewNoRates": {
+    "message": "Курсы ещё не загружены",
+    "description": "Shown in the preview when no exchange rates could be read."
+  },
+  "popupPreviewDate": {
+    "message": "Курсы ЕЦБ на $DATE$",
+    "description": "Under the preview: the day the rates were published.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "10 Oct 2026"
+      }
+    }
+  },
+  "popupPreviewStale": {
+    "message": "Нет связи, курсы на $DATE$",
+    "description": "Under the preview when the latest rates could not be fetched.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "10 Oct 2026"
+      }
+    }
+  },
+  "popupReorderHint": {
+    "message": "Порядок: перетаскиванием",
+    "description": "Small hint beside the Currencies heading."
+  },
+  "popupReorderKeys": {
+    "message": "Перетащите или нажмите Alt+↑/↓",
+    "description": "Tooltip on a currency row."
+  },
+  "popupAdd": {
+    "message": "Добавить валюту",
+    "description": "The big button under the currency list."
+  },
+  "popupSearch": {
+    "message": "Поиск валюты",
+    "description": "Placeholder of the search box in the add-currency picker."
+  },
+  "popupBack": {
+    "message": "Назад",
+    "description": "Accessible label of the picker's back button."
+  },
+  "popupNoMatch": {
+    "message": "Ничего не найдено",
+    "description": "Shown in the picker when the search matches no currency."
+  },
+  "popupRemove": {
+    "message": "Убрать $CODE$",
+    "description": "Accessible label of the cross on a currency row.",
+    "placeholders": {
+      "code": {
+        "content": "$1",
+        "example": "USD"
+      }
+    }
+  },
+  "popupEmpty": {
+    "message": "Валют пока нет. Добавьте, чтобы видеть пересчёт.",
+    "description": "Shown in place of the list when no currency is chosen."
+  },
+  "popupPer": {
+    "message": "за $UNIT$",
+    "description": "Under a row's rate: what amount of the currency the rate is for.",
+    "placeholders": {
+      "unit": {
+        "content": "$1",
+        "example": "100 RUB"
+      }
+    }
   }
 }
