@@ -740,6 +740,47 @@ function fitList() {
   list.style.maxHeight = `${Math.max(LIST_MIN_HEIGHT, windowLimit - rest)}px`;
 }
 
+/**
+ * The tabs under the preview. Each `role="tab"` names its panel through
+ * aria-controls, so a new tab needs only its markup. Arrow keys, Home and End
+ * move between tabs, which hold a single stop in the Tab order between them.
+ */
+function enableTabs() {
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+
+  const select = tab => {
+    for (const each of tabs) {
+      const on = each === tab;
+      each.setAttribute('aria-selected', String(on));
+      each.tabIndex = on ? 0 : -1;
+      document.getElementById(each.getAttribute('aria-controls')).hidden = !on;
+    }
+    fitList();
+  };
+
+  for (const tab of tabs) {
+    tab.addEventListener('click', () => select(tab));
+
+    tab.addEventListener('keydown', event => {
+      const index = tabs.indexOf(tab);
+      const target = {
+        ArrowLeft: tabs[(index - 1 + tabs.length) % tabs.length],
+        ArrowRight: tabs[(index + 1) % tabs.length],
+        Home: tabs[0],
+        End: tabs[tabs.length - 1],
+      }[event.key];
+
+      if (target) {
+        event.preventDefault();
+        target.focus();
+        select(target);
+      }
+    });
+  }
+
+  select(tabs.find(tab => tab.getAttribute('aria-selected') === 'true') ?? tabs[0]);
+}
+
 async function start() {
   localize();
   els.name.textContent = chrome.runtime.getManifest().name;
@@ -753,6 +794,7 @@ async function start() {
   order = [...chosen, ...order.filter(code => !chosen.includes(code))];
 
   renderRows();
+  enableTabs();
   enableKeyboard();
   enableDragging();
   await measureWindow();

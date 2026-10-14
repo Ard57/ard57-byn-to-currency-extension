@@ -17,18 +17,20 @@
       <p id="preview-date" class="hero__date"></p>
     </section>
 
-    <section class="section">
-      <h2 class="section__title">
-        <span data-i18n="popupCurrencies">Currencies</span>
-        <span class="section__hint" data-i18n="popupReorderHint">Drag to reorder</span>
-      </h2>
-      <ul id="currencies" class="rows"></ul>
-    </section>
+    <div class="tabs" role="tablist">
+      <button id="tab-currencies" class="tab" type="button" role="tab"
+              aria-selected="true" aria-controls="panel-currencies" data-i18n="popupCurrencies">Currencies</button>
+    </div>
 
-    <button id="add" class="add" type="button">
-      <span class="add__plus" aria-hidden="true">+</span>
-      <span data-i18n="popupAdd">Add currency</span>
-    </button>
+    <section id="panel-currencies" class="panel" role="tabpanel" aria-labelledby="tab-currencies">
+      <p class="panel__hint" data-i18n="popupReorderHint">Drag to reorder</p>
+      <ul id="currencies" class="rows"></ul>
+
+      <button id="add" class="add" type="button">
+        <span class="add__plus" aria-hidden="true">+</span>
+        <span data-i18n="popupAdd">Add currency</span>
+      </button>
+    </section>
   </main>
 
   <section id="picker-view" class="view" hidden>

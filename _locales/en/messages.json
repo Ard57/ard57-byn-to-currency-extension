@@ -5,7 +5,7 @@
   },
   "popupCurrencies": {
     "message": "Currencies",
-    "description": "Heading above the list of chosen currencies."
+    "description": "Name of the popup tab holding the list of chosen currencies."
   },
   "popupSaved": {
     "message": "Saved"
@@ -47,7 +47,7 @@
   },
   "popupReorderHint": {
     "message": "Drag to reorder",
-    "description": "Small hint beside the Currencies heading."
+    "description": "Small hint above the list of chosen currencies."
   },
   "popupReorderKeys": {
     "message": "Drag, or Alt+↑/↓ to move",
