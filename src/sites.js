@@ -142,14 +142,40 @@ export const SITE_PRESETS = {
      *     <span>1744,64 ƃ</span>
      *     <span class="... catalog-form__description_through">1879,00 ƃ</span>
      *   </a>
+     *
+     * Cards on the catalog's main page (catalog.onliner.by/) are a variant
+     * with "alter" classes, the whole number a bare text node and the
+     * kopecks in a span of their own, so the whole link is the price:
+     *
+     *   <div class="catalog-form__description catalog-form__description_huge-alter …">
+     *     <a class="catalog-form__link catalog-form__link_huge-alter …">
+     *       <span class="…"> от </span> 1399<span class="…">,00 ƃ</span>
+     *     </a>
+     *   </div>
      */
-    priceSelector: '.catalog-form__link_huge-additional > span:not([class])',
+    priceSelector: [
+      '.catalog-form__link_huge-additional > span:not([class])',
+      '.catalog-form__link_huge-alter',
+    ].join(', '),
 
     /**
      * Appended inside the price block, not the link: the conversion inherits
      * the price's font and color without becoming part of the clickable text.
      */
-    priceContainer: '.catalog-form__description_huge-additional',
+    priceContainer: '.catalog-form__description_huge-additional, .catalog-form__description_huge-alter',
+
+    styles: [
+      {
+        /**
+         * Main page cards: narrow, with a large price. Three currencies do
+         * not fit on one line beside it, so they are stacked under it, each
+         * at well under the price's size.
+         */
+        selector: '.catalog-form__description_huge-alter',
+        layout: LAYOUT.BLOCK,
+        fontSize: '0.6em',
+      },
+    ],
 
     pages: [
       {
