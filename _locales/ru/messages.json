@@ -7,6 +7,34 @@
     "message": "Валюты",
     "description": "Name of the popup tab holding the list of chosen currencies."
   },
+  "popupConverter": {
+    "message": "Конвертер",
+    "description": "Name of the popup tab that converts an amount between two currencies."
+  },
+  "popupConvertAmount": {
+    "message": "Сумма",
+    "description": "Label above the converter's amount field."
+  },
+  "popupConvertResult": {
+    "message": "Результат",
+    "description": "Label above the converter's result."
+  },
+  "popupConvertFrom": {
+    "message": "Из валюты",
+    "description": "Accessible label of the converter's first currency list."
+  },
+  "popupConvertTo": {
+    "message": "В валюту",
+    "description": "Accessible label of the converter's second currency list."
+  },
+  "popupConvertSwap": {
+    "message": "Поменять валюты местами",
+    "description": "Accessible label of the button between the converter's two fields."
+  },
+  "popupConvertEnter": {
+    "message": "Введите сумму для пересчёта",
+    "description": "Shown in the preview on the converter tab while the amount field holds no number."
+  },
   "popupSaved": {
     "message": "Сохранено"
   },

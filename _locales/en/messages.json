@@ -7,6 +7,34 @@
     "message": "Currencies",
     "description": "Name of the popup tab holding the list of chosen currencies."
   },
+  "popupConverter": {
+    "message": "Converter",
+    "description": "Name of the popup tab that converts an amount between two currencies."
+  },
+  "popupConvertAmount": {
+    "message": "Amount",
+    "description": "Label above the converter's amount field."
+  },
+  "popupConvertResult": {
+    "message": "Converted",
+    "description": "Label above the converter's result."
+  },
+  "popupConvertFrom": {
+    "message": "Convert from",
+    "description": "Accessible label of the converter's first currency list."
+  },
+  "popupConvertTo": {
+    "message": "Convert into",
+    "description": "Accessible label of the converter's second currency list."
+  },
+  "popupConvertSwap": {
+    "message": "Swap currencies",
+    "description": "Accessible label of the button between the converter's two fields."
+  },
+  "popupConvertEnter": {
+    "message": "Enter an amount to convert",
+    "description": "Shown in the preview on the converter tab while the amount field holds no number."
+  },
   "popupSaved": {
     "message": "Saved"
   },

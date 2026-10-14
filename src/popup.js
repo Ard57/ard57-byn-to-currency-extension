@@ -35,6 +35,62 @@ const LIST_MIN_HEIGHT = 120;
 /** The price the preview converts, in SOURCE_CURRENCY. */
 const PREVIEW_AMOUNT = 100;
 
+/**
+ * Where the popup keeps its own state between openings: the open tab and
+ * what the converter was converting. A key of its own, apart from the
+ * settings, so typing an amount never makes open pages redraw.
+ */
+const STATE_KEY = 'popupState';
+
+/** The popup's state, as saved under STATE_KEY. */
+let state = {
+  tab: 'currencies',
+  amount: '100',
+  from: 'USD',
+  to: SOURCE_CURRENCY,
+};
+
+async function loadState() {
+  try {
+    const saved = (await chrome.storage.local.get(STATE_KEY))[STATE_KEY] ?? {};
+    const known = DEFAULT_SETTINGS.currencyOrder;
+
+    state = {
+      tab: saved.tab === 'converter' ? 'converter' : 'currencies',
+      amount: typeof saved.amount === 'string' ? saved.amount : state.amount,
+      from: known.includes(saved.from) ? saved.from : state.from,
+      to: known.includes(saved.to) ? saved.to : state.to,
+    };
+  } catch {
+    // Opens on the defaults.
+  }
+}
+
+function saveState() {
+  chrome.storage.local.set({ [STATE_KEY]: state }).catch(() => {});
+}
+
+/**
+ * An amount as people type it — "1 234,5", "1234.50", "1,234.50" — or null
+ * when it is not one. A comma is the decimal point unless a dot is there to
+ * be one, in which case commas only group thousands.
+ *
+ * @param {string} text
+ * @returns {number|null}
+ */
+function parseAmount(text) {
+  const bare = String(text).replace(/[\s ]/g, '');
+  const cleaned = bare.includes('.') ? bare.replace(/,/g, '') : bare.replace(',', '.');
+  const value = cleaned === '' ? NaN : Number(cleaned);
+
+  return Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+/** An amount the user entered, as the preview repeats it: "1,234.5". */
+function formatAmount(value) {
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(value);
+}
+
 const els = {
   name: document.getElementById('extension-name'),
   main: document.getElementById('main-view'),
@@ -49,6 +105,12 @@ const els = {
   previewSource: document.getElementById('preview-source'),
   previewPrices: document.getElementById('preview-prices'),
   previewDate: document.getElementById('preview-date'),
+  convertAmount: document.getElementById('convert-amount'),
+  convertFrom: document.getElementById('convert-from'),
+  convertTo: document.getElementById('convert-to'),
+  convertSwap: document.getElementById('convert-swap'),
+  convertResult: document.getElementById('convert-result'),
+  convertRate: document.getElementById('convert-rate'),
 };
 
 /**
@@ -615,51 +677,91 @@ function save(patch, message) {
 
 /**
  * Asks the service worker for rates, the way pages do. It fetches any newly
- * added currency, so once a save lands the preview can show it.
+ * added currency, so once a save lands the preview can show it — and the
+ * converter's two, which no site may convert into.
  */
 async function loadRates() {
-  const response = await chrome.runtime.sendMessage({ type: 'GET_RATES' }).catch(() => null);
+  const response = await chrome.runtime
+    .sendMessage({ type: 'GET_RATES', extra: [state.from, state.to] })
+    .catch(() => null);
 
   if (response?.success) {
     rates = response.data.rates;
     preview(response.data);
     fillRates();
+    renderConverter();
   } else if (!rates) {
     preview(null);
   }
 }
 
-/** The date and staleness of the rates last shown, for redraws without a fetch. */
-let lastRates = null;
+/**
+ * What the preview converts: 100 BYN on the currencies tab, and on the
+ * converter whatever is being converted there, so the card shows the same
+ * amount in every chosen currency at once.
+ *
+ * @returns {{ amount: number|null, from: string }}
+ */
+function previewSubject() {
+  return state.tab === 'converter'
+    ? { amount: parseAmount(state.amount), from: state.from }
+    : { amount: PREVIEW_AMOUNT, from: SOURCE_CURRENCY };
+}
 
 /**
- * Shows what a price turns into with the chosen currencies, in their order,
- * and the date of the rates behind it — formatted the way the global
+ * The rates last shown, with their date and staleness, for redraws without a
+ * fetch. Undefined until the service worker first answers, null if it could
+ * not.
+ */
+let lastRates;
+
+/**
+ * Shows what an amount turns into with the chosen currencies, in their
+ * order, and the date of the rates behind it — formatted the way the global
  * defaults format it, since no site's preset applies here.
+ *
+ * Converting from anything but BYN, BYN itself leads the list when it is not
+ * chosen: rubles are what every price on the supported sites is in.
  *
  * @param {Object|null} [data] - A GET_RATES answer; omitted, the last one
  */
 function preview(data = lastRates) {
   lastRates = data;
 
-  const currencies = chosen.filter(code => code !== SOURCE_CURRENCY);
+  // Still asking: a blank card for the moment it takes, rather than a flash
+  // of "not loaded" on every opening.
+  if (data === undefined) {
+    return;
+  }
+
+  const { amount, from } = previewSubject();
+  const home = from === SOURCE_CURRENCY || chosen.includes(SOURCE_CURRENCY) ? [] : [SOURCE_CURRENCY];
+  const currencies = [...home, ...chosen].filter(code => code !== from);
   const prices = els.previewPrices;
   const date = els.previewDate;
 
   prices.classList.remove('is-empty', 'is-long');
 
-  els.previewSource.hidden = currencies.length === 0;
+  const parts = amount !== null && currencies.length > 0 && data
+    ? convertPrices(amount, from, currencies, data.rates, DEFAULT_SETTINGS)
+    : [];
 
-  if (currencies.length === 0 || !data) {
+  els.previewSource.hidden = parts.length === 0;
+  els.previewSource.textContent = amount === null ? '' : `${formatAmount(amount)} ${from} ≈`;
+
+  if (parts.length === 0) {
     prices.classList.add('is-empty');
-    prices.textContent = currencies.length === 0
-      ? t('popupPreviewNone', 'Add a currency to see prices converted')
-      : t('popupPreviewNoRates', 'Rates are not loaded yet');
+    if (amount === null) {
+      prices.textContent = t('popupConvertEnter', 'Enter an amount to convert');
+    } else if (currencies.length === 0) {
+      prices.textContent = t('popupPreviewNone', 'Add a currency to see prices converted');
+    } else {
+      prices.textContent = t('popupPreviewNoRates', 'Rates are not loaded yet');
+    }
     date.textContent = '';
+    fitList();
     return;
   }
-
-  const parts = convertPrices(PREVIEW_AMOUNT, SOURCE_CURRENCY, currencies, data.rates, DEFAULT_SETTINGS);
 
   // Each separator travels with the price after it, so a wrapped line never
   // ends on a dangling dot.
@@ -741,9 +843,102 @@ function fitList() {
 }
 
 /**
+ * The converter's result and the rate behind it, from the rates last loaded.
+ * The result is the bare number, rounded the way prices on pages are; the
+ * currency it is in is the one picked beside it.
+ */
+function renderConverter() {
+  const { from, to } = state;
+  const amount = parseAmount(state.amount);
+  const known = lastRates?.rates;
+
+  if (!known || !(from in known) || !(to in known)) {
+    els.convertResult.textContent = '';
+    els.convertRate.textContent = lastRates === null ? t('popupPreviewNoRates', 'Rates are not loaded yet') : '';
+    return;
+  }
+
+  els.convertResult.textContent = amount === null
+    ? ''
+    : convertPrices(amount, from, [to], known, { ...DEFAULT_SETTINGS, display: 'none', includeSource: true })[0]?.text ?? '';
+
+  // Per 100 or 1000 of a small currency, as the rows do: "100 RUB = 3.53 BYN".
+  const one = known[to] / known[from];
+  let unit = 1;
+  while (one * unit < 1 && unit < 1e6) {
+    unit *= 10;
+  }
+
+  const rate = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  }).format(one * unit);
+
+  els.convertRate.textContent = `${unit} ${from} = ${rate} ${to}`;
+}
+
+/**
+ * Wires the converter: both lists offer every currency, in the grouped order
+ * of the settings rather than the user's, so a currency is always where it
+ * was last time. Every change is saved as it is made, and redraws the
+ * preview, which converts the same amount.
+ */
+function enableConverter() {
+  for (const select of [els.convertFrom, els.convertTo]) {
+    select.replaceChildren(...DEFAULT_SETTINGS.currencyOrder.map(code => {
+      const { name } = describe(code);
+      const option = el('option', null, name ? `${code} · ${name}` : code);
+      option.value = code;
+      return option;
+    }));
+  }
+
+  els.convertAmount.value = state.amount;
+  els.convertFrom.value = state.from;
+  els.convertTo.value = state.to;
+
+  const changed = () => {
+    saveState();
+    preview();
+    renderConverter();
+
+    // A currency no site converts into is not in the rates yet.
+    const known = lastRates?.rates ?? {};
+    if (!(state.from in known) || !(state.to in known)) {
+      loadRates();
+    }
+  };
+
+  els.convertAmount.addEventListener('input', () => {
+    state.amount = els.convertAmount.value;
+    changed();
+  });
+
+  els.convertFrom.addEventListener('change', () => {
+    state.from = els.convertFrom.value;
+    changed();
+  });
+
+  els.convertTo.addEventListener('change', () => {
+    state.to = els.convertTo.value;
+    changed();
+  });
+
+  els.convertSwap.addEventListener('click', () => {
+    [state.from, state.to] = [state.to, state.from];
+    els.convertFrom.value = state.from;
+    els.convertTo.value = state.to;
+    changed();
+  });
+}
+
+/**
  * The tabs under the preview. Each `role="tab"` names its panel through
  * aria-controls, so a new tab needs only its markup. Arrow keys, Home and End
  * move between tabs, which hold a single stop in the Tab order between them.
+ *
+ * The open tab is saved, so the popup opens on it next time, and the preview
+ * follows it: the converter's amount there, 100 BYN everywhere else.
  */
 function enableTabs() {
   const tabs = [...document.querySelectorAll('[role="tab"]')];
@@ -755,6 +950,14 @@ function enableTabs() {
       each.tabIndex = on ? 0 : -1;
       document.getElementById(each.getAttribute('aria-controls')).hidden = !on;
     }
+
+    const name = tab.id.replace(/^tab-/, '');
+    if (name !== state.tab) {
+      state.tab = name;
+      saveState();
+    }
+
+    preview();
     fitList();
   };
 
@@ -778,15 +981,14 @@ function enableTabs() {
     });
   }
 
-  select(tabs.find(tab => tab.getAttribute('aria-selected') === 'true') ?? tabs[0]);
+  select(document.getElementById(`tab-${state.tab}`) ?? tabs[0]);
 }
 
 async function start() {
   localize();
   els.name.textContent = chrome.runtime.getManifest().name;
-  els.previewSource.textContent = `${PREVIEW_AMOUNT} ${SOURCE_CURRENCY} ≈`;
 
-  const stored = await loadSettings();
+  const [stored] = await Promise.all([loadSettings(), loadState()]);
   const settings = { ...DEFAULT_SETTINGS, ...(stored.defaults ?? {}) };
 
   order = usableOrder(settings.currencyOrder);
@@ -794,6 +996,7 @@ async function start() {
   order = [...chosen, ...order.filter(code => !chosen.includes(code))];
 
   renderRows();
+  enableConverter();
   enableTabs();
   enableKeyboard();
   enableDragging();
