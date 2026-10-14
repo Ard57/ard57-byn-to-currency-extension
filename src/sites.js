@@ -85,7 +85,7 @@ export const SITE_PRESETS = {
 
   /**
    * Product catalog. Dense listing grids; decimals follow the global default
-   * (cents for USD and EUR, whole rubles).
+   * (cents, except for the currencies MAX_DECIMALS in format.js keeps whole).
    */
   'catalog.onliner.by': {
     layout: LAYOUT.INLINE,

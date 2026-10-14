@@ -44,7 +44,7 @@ export const DEFAULT_SETTINGS = {
 
   layout: LAYOUT.INLINE,
   display: 'symbol',
-  decimals: { default: 2, RUB: 0 },
+  decimals: 2,
   locale: 'en-US',
 
   /**
@@ -120,7 +120,7 @@ export const DEFAULT_SETTINGS = {
  *         // everywhere on the site.
  *         currencies: ["USD", "EUR"],
  *         layout: "inline",
- *         decimals: { default: 2, RUB: 0 },
+ *         decimals: 2,
  *
  *         // Page level — evaluated in order, FIRST MATCH WINS. A rule may
  *         // override any field; layout and decimals are the ones that vary
