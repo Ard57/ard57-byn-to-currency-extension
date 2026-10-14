@@ -167,6 +167,23 @@ export const SITE_PRESETS = {
     styles: [
       {
         /**
+         * Recommended products at the bottom of a product page, e.g.
+         * /mobile/samsung/sms731b8256bka8:
+         *
+         *   <div class="product-recommended__price">
+         *     <a class="product-recommended__link …">от 37,49 ƃ </a>
+         *   </div>
+         *
+         * Appended to the price div, after the link. The product page rule
+         * inserts after its price and borrows a class; neither suits these.
+         */
+        selector: '.product-recommended__price',
+        insertPosition: 'append',
+        className: null,
+        fontSize: '0.85em',
+      },
+      {
+        /**
          * Main page cards: narrow, with a large price. Three currencies do
          * not fit on one line beside it, so they are stacked under it, each
          * at well under the price's size.
@@ -180,11 +197,12 @@ export const SITE_PRESETS = {
     pages: [
       {
         /**
-         * Product page, e.g. /mobile/google/pixel11pro16512o. Only the lowest
-         * price across stores is converted: not the monthly installment, not
-         * the per-store offers, not the "N предложений (от …)" button, and not
-         * recommended products. All of those also say "ƃ", which is why the
-         * selector names the one link rather than scanning for prices.
+         * Product page, e.g. /mobile/google/pixel11pro16512o. The lowest
+         * price across stores is converted, and the recommended products'
+         * prices at the bottom (see the styles rule above): not the monthly
+         * installment, not the per-store offers, not the "N предложений
+         * (от …)" button. All of those also say "ƃ", which is why the
+         * selector names the links rather than scanning for prices.
          *
          *   <div class="h_flx_grw h_mnw_zer">
          *     <a class="... js-description-price-link h_txt_pri-t">
@@ -216,7 +234,7 @@ export const SITE_PRESETS = {
          * selector simply finds nothing if the link is absent.
          */
         pattern: '/*/*/*',
-        priceSelector: '.js-description-price-link',
+        priceSelector: '.js-description-price-link, .product-recommended__price > a',
         insertPosition: 'after',
         className: 'h_txt_fte',
         fontSize: null,
