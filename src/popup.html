@@ -5,18 +5,74 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <h1 id="extension-name"></h1>
+  <main id="main-view" class="view">
+    <header class="header">
+      <img class="header__icon" src="../icons/icon48.png" alt="" width="28" height="28">
+      <h1 id="extension-name"></h1>
+    </header>
 
-  <details class="section" open>
-    <summary data-i18n="popupGlobalSettings">Global settings</summary>
+    <section class="hero" aria-live="polite">
+      <p id="preview-source" class="hero__source"></p>
+      <p id="preview-prices" class="hero__prices"></p>
+      <p id="preview-date" class="hero__date"></p>
+    </section>
 
-    <div class="section__body">
-      <fieldset class="field">
-        <legend data-i18n="popupCurrencies">Currencies</legend>
-        <ul id="currencies" class="options"></ul>
-      </fieldset>
+    <div class="tabs" role="tablist">
+      <button id="tab-currencies" class="tab" type="button" role="tab"
+              aria-selected="true" aria-controls="panel-currencies" data-i18n="popupCurrencies">Currencies</button>
+      <button id="tab-converter" class="tab" type="button" role="tab"
+              aria-selected="false" aria-controls="panel-converter" data-i18n="popupConverter">Converter</button>
     </div>
-  </details>
+
+    <section id="panel-currencies" class="panel" role="tabpanel" aria-labelledby="tab-currencies">
+      <p class="panel__hint" data-i18n="popupReorderHint">Drag to reorder</p>
+      <ul id="currencies" class="rows"></ul>
+
+      <button id="add" class="add" type="button">
+        <span class="add__plus" aria-hidden="true">+</span>
+        <span data-i18n="popupAdd">Add currency</span>
+      </button>
+    </section>
+
+    <section id="panel-converter" class="panel converter" role="tabpanel" aria-labelledby="tab-converter" hidden>
+      <div class="field">
+        <label class="field__label" for="convert-amount" data-i18n="popupConvertAmount">Amount</label>
+        <div class="field__row">
+          <input id="convert-amount" class="field__input" type="text" inputmode="decimal"
+                 autocomplete="off" spellcheck="false">
+          <select id="convert-from" class="field__select"
+                  aria-label="Convert from" data-i18n-label="popupConvertFrom"></select>
+        </div>
+      </div>
+
+      <button id="convert-swap" class="swap" type="button" aria-label="Swap currencies" data-i18n-label="popupConvertSwap">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M8 4v16M8 20l-4-4M8 20l4-4M16 20V4M16 4l-4 4M16 4l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <div class="field">
+        <span class="field__label" id="convert-result-label" data-i18n="popupConvertResult">Converted</span>
+        <div class="field__row">
+          <output id="convert-result" class="field__input field__output" aria-labelledby="convert-result-label"></output>
+          <select id="convert-to" class="field__select"
+                  aria-label="Convert into" data-i18n-label="popupConvertTo"></select>
+        </div>
+      </div>
+
+      <p id="convert-rate" class="converter__rate"></p>
+    </section>
+  </main>
+
+  <section id="picker-view" class="view" hidden>
+    <header class="picker__head">
+      <button id="back" class="icon-button" type="button" aria-label="Back" data-i18n-label="popupBack">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <input id="search" class="search" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Search currencies" data-i18n-placeholder="popupSearch">
+    </header>
+    <ul id="picker-list" class="picks"></ul>
+    <p id="picker-empty" class="picker__empty" data-i18n="popupNoMatch" hidden>Nothing found</p>
+  </section>
 
   <p id="status" class="status" role="status" aria-live="polite"></p>
 

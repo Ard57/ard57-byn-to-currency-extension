@@ -78,14 +78,56 @@ export const SITE_PRESETS = {
      * Appended inside the price-value div, which carries the price's 20px
      * bold, so the conversion inherits it with no borrowed classes. The
      * column is 180px, so the ruble amount wraps to a second line.
+     *
+     * Product cards in news articles, a different widget, e.g.
+     * people.onliner.by/2026/10/07/idei-na-den-materi. The primary and
+     * secondary variants are both the product's own price:
+     *
+     *   <a class="news-product__price news-product__price_primary">
+     *     <span class="news-product__price-prefix">от</span>
+     *     <span class="news-product__price-value">49,00 ƃ</span>
+     *   </a>
+     *   <a class="news-product__monthly">…от 1,55 ƃ/мес…</a>
+     *
+     * The value span alone is parsed. The monthly installment is a sibling
+     * and never matched. See the styles rule for where the conversion goes.
      */
-    priceSelector: '.news-widget__price-value_primary > .news-widget__link',
+    priceSelector: [
+      '.news-widget__price-value_primary > .news-widget__link',
+      '.news-product__price > .news-product__price-value',
+    ].join(', '),
     priceContainer: '.news-widget__price-value_primary',
+
+    styles: [
+      {
+        /**
+         * The price link is a flex row (prefix and value on a baseline), so
+         * anything appended inside it would sit beside the price. On a line
+         * of its own after the link instead, above the monthly installment.
+         *
+         * Stacked: the small square tiles are too narrow for one line, and
+         * a line kept from wrapping runs into the next tile. The link's 8px
+         * bottom margin is mostly taken back with a negative top margin, so
+         * the stack sits close under the price, and repeated below it.
+         *
+         * Outside the link nothing carries the price's look, so the 15px
+         * semibold of the value is set, two steps smaller.
+         */
+        selector: '.news-product__price',
+        priceContainer: '.news-product__price',
+        insertPosition: 'afterContainer',
+        layout: LAYOUT.BLOCK,
+        fontSize: '12px',
+        fontWeight: '600',
+        lineHeight: '1.3',
+        margin: '-6px 0 8px',
+      },
+    ],
   },
 
   /**
    * Product catalog. Dense listing grids; decimals follow the global default
-   * (cents for USD and EUR, whole rubles).
+   * (cents, except for the currencies MAX_DECIMALS in format.js keeps whole).
    */
   'catalog.onliner.by': {
     layout: LAYOUT.INLINE,
@@ -100,23 +142,67 @@ export const SITE_PRESETS = {
      *     <span>1744,64 ƃ</span>
      *     <span class="... catalog-form__description_through">1879,00 ƃ</span>
      *   </a>
+     *
+     * Cards on the catalog's main page (catalog.onliner.by/) are a variant
+     * with "alter" classes, the whole number a bare text node and the
+     * kopecks in a span of their own, so the whole link is the price:
+     *
+     *   <div class="catalog-form__description catalog-form__description_huge-alter …">
+     *     <a class="catalog-form__link catalog-form__link_huge-alter …">
+     *       <span class="…"> от </span> 1399<span class="…">,00 ƃ</span>
+     *     </a>
+     *   </div>
      */
-    priceSelector: '.catalog-form__link_huge-additional > span:not([class])',
+    priceSelector: [
+      '.catalog-form__link_huge-additional > span:not([class])',
+      '.catalog-form__link_huge-alter',
+    ].join(', '),
 
     /**
      * Appended inside the price block, not the link: the conversion inherits
      * the price's font and color without becoming part of the clickable text.
      */
-    priceContainer: '.catalog-form__description_huge-additional',
+    priceContainer: '.catalog-form__description_huge-additional, .catalog-form__description_huge-alter',
+
+    styles: [
+      {
+        /**
+         * Recommended products at the bottom of a product page, e.g.
+         * /mobile/samsung/sms731b8256bka8:
+         *
+         *   <div class="product-recommended__price">
+         *     <a class="product-recommended__link …">от 37,49 ƃ </a>
+         *   </div>
+         *
+         * Appended to the price div, after the link. The product page rule
+         * inserts after its price and borrows a class; neither suits these.
+         */
+        selector: '.product-recommended__price',
+        insertPosition: 'append',
+        className: null,
+        fontSize: '0.85em',
+      },
+      {
+        /**
+         * Main page cards: narrow, with a large price. Three currencies do
+         * not fit on one line beside it, so they are stacked under it, each
+         * at well under the price's size.
+         */
+        selector: '.catalog-form__description_huge-alter',
+        layout: LAYOUT.BLOCK,
+        fontSize: '0.6em',
+      },
+    ],
 
     pages: [
       {
         /**
-         * Product page, e.g. /mobile/google/pixel11pro16512o. Only the lowest
-         * price across stores is converted: not the monthly installment, not
-         * the per-store offers, not the "N предложений (от …)" button, and not
-         * recommended products. All of those also say "ƃ", which is why the
-         * selector names the one link rather than scanning for prices.
+         * Product page, e.g. /mobile/google/pixel11pro16512o. The lowest
+         * price across stores is converted, and the recommended products'
+         * prices at the bottom (see the styles rule above): not the monthly
+         * installment, not the per-store offers, not the "N предложений
+         * (от …)" button. All of those also say "ƃ", which is why the
+         * selector names the links rather than scanning for prices.
          *
          *   <div class="h_flx_grw h_mnw_zer">
          *     <a class="... js-description-price-link h_txt_pri-t">
@@ -148,7 +234,7 @@ export const SITE_PRESETS = {
          * selector simply finds nothing if the link is absent.
          */
         pattern: '/*/*/*',
-        priceSelector: '.js-description-price-link',
+        priceSelector: '.js-description-price-link, .product-recommended__price > a',
         insertPosition: 'after',
         className: 'h_txt_fte',
         fontSize: null,
