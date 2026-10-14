@@ -1,177 +1,630 @@
 /**
- * The popup follows the browser's own light and dark schemes rather than
- * picking a palette of its own, so it sits in the toolbar like a part of it.
+ * The popup takes its colours from the icon — a dark tile with an amber and a
+ * teal arrow — and follows the browser's light or dark scheme for the rest.
  */
 
 :root {
   color-scheme: light dark;
 
-  --text: #1b1b1b;
-  --muted: #5f6368;
-  --surface: #ffffff;
-  --border: #d9dade;
-  --accent: #1a73e8;
+  --amber: #f5a524;
+  --teal: #12a4b8;
+  --teal-strong: #0b8798;
+
+  --text: #15171c;
+  --muted: #6b7180;
+  --surface: #f6f7f9;
+  --card: #ffffff;
+  --card-hover: #fbfbfc;
+  --border: #e6e8ec;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --badge: #eef1f5;
+  --danger: #d93a3a;
+  --danger-soft: rgba(217, 58, 58, 0.1);
+  --success: #1f9d55;
+  --success-soft: rgba(31, 157, 85, 0.12);
+  --teal-soft: rgba(18, 164, 184, 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #e8eaed;
-    --muted: #9aa0a6;
-    --surface: #202124;
-    --border: #3c4043;
-    --accent: #8ab4f8;
+    --teal: #3cc6d8;
+    --teal-strong: #6fd9e6;
+
+    --text: #eceef2;
+    --muted: #8e95a3;
+    --surface: #15171c;
+    --card: #1f2229;
+    --card-hover: #252931;
+    --border: #2e323b;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --badge: #2a2e37;
+    --danger: #ff6b6b;
+    --danger-soft: rgba(255, 107, 107, 0.14);
+    --success: #4ccb7f;
+    --success-soft: rgba(76, 203, 127, 0.15);
+    --teal-soft: rgba(60, 198, 216, 0.14);
   }
 }
 
+* {
+  box-sizing: border-box;
+}
+
+/**
+ * Wide enough for the longest currency name on offer — "Bosnia-Herzegovina
+ * Convertible Mark", about 200px — to sit on one line beside a row's grip,
+ * badge, rate and cross. A longer one added later is cut short (.row__name).
+ */
 body {
-  width: 260px;
+  width: 440px;
   margin: 0;
-  padding: 12px;
+  padding: 14px;
   background: var(--surface);
   color: var(--text);
-  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-h1 {
-  margin: 0 0 10px;
-  font-size: 14px;
-  font-weight: 600;
+p {
+  margin: 0;
 }
 
-.section {
-  border-top: 1px solid var(--border);
+[hidden] {
+  display: none !important;
 }
 
-summary {
-  padding: 8px 0;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  cursor: pointer;
+button {
+  font: inherit;
+  color: inherit;
 }
 
-summary:focus-visible {
-  outline: 2px solid var(--accent);
+:focus-visible {
+  outline: 2px solid var(--teal);
   outline-offset: 2px;
 }
 
-.section__body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 2px 0 10px;
-}
+/* Header */
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font-size: 12px;
-}
-
-.field > span,
-legend {
-  padding: 0;
-  color: var(--muted);
-}
-
-/**
- * One currency per row, in the order they are printed beside a price.
- *
- * The list is longer than a popup can be, so it scrolls. popup.js stretches
- * it to the room the popup has; this max-height is only the fallback, cut
- * mid-row on purpose, since a row half in view says there is more below far
- * better than a flush edge does.
- */
-.options {
-  max-height: 232px;
-  margin: 4px 0 0;
-  padding: 0;
-  overflow-y: auto;
-  list-style: none;
-  overscroll-behavior: contain;
-}
-
-.options li {
+.header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 1px 0;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.header__icon {
+  flex: none;
+  border-radius: 7px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
 }
 
 /**
- * Every row can be dragged; the grip is just where it shows. The row being
- * dragged fades, marking the gap it will drop into.
+ * What a price looks like with the chosen currencies, worked out from the
+ * stored rates. Dark in both schemes, like the icon, so it reads as the
+ * extension's own face rather than another setting.
  */
-.handle {
+.hero {
+  margin-bottom: 16px;
+  padding: 14px 16px 13px;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(18, 164, 184, 0.35), transparent 55%),
+    radial-gradient(90% 120% at 0% 100%, rgba(245, 165, 36, 0.22), transparent 60%),
+    #151922;
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(15, 18, 26, 0.18);
+}
+
+.hero__source {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.hero__prices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 7px;
+  margin: 3px 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero__item {
+  white-space: nowrap;
+}
+
+.hero__sep {
+  margin-right: 7px;
+  color: var(--amber);
+}
+
+/** More than three prices would wrap onto a third line at full size. */
+.hero__prices.is-long {
+  font-size: 16px;
+}
+
+.hero__prices.is-empty {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.hero__date {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+}
+
+/* Chosen currencies */
+
+/**
+ * Tabs under the preview, each opening a panel. The selected one is
+ * underlined in teal; the others stay muted until hovered.
+ */
+.tabs {
+  display: flex;
+  gap: 18px;
+  margin: 0 2px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  margin-bottom: -1px;
+  padding: 0 0 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-selected="true"] {
+  border-bottom-color: var(--teal);
+  color: var(--text);
+}
+
+/* The converter */
+
+.converter {
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+}
+
+.field__label {
+  display: block;
+  margin: 0 2px 6px;
   color: var(--muted);
   font-size: 11px;
-  letter-spacing: -2px;
-  cursor: grab;
-  user-select: none;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.options li.dragging {
-  opacity: 0.4;
-}
-
-.options label {
+.field__row {
   display: flex;
+  gap: 8px;
+}
+
+.field__input,
+.field__select {
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  box-shadow: var(--shadow);
+}
+
+.field__input {
   flex: 1;
-  align-items: center;
-  gap: 6px;
   min-width: 0;
+  padding: 0 14px;
+  font-size: 18px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+/** The result reads like the amount, but is not a box to type in. */
+.field__output {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: var(--surface);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  box-shadow: none;
+}
+
+.field__select {
+  flex: none;
+  width: 180px;
+  padding: 0 10px;
+  font-size: 13px;
   cursor: pointer;
 }
 
+.field__input:focus,
+.field__select:focus {
+  border-color: var(--teal);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--teal-soft);
+}
+
+.swap {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 32px;
+  height: 32px;
+  margin: 8px 0 2px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--teal-strong);
+  cursor: pointer;
+  transition: border-color 0.12s, transform 0.2s;
+}
+
+.swap:hover {
+  border-color: var(--teal);
+  transform: rotate(180deg);
+}
+
+.converter__rate {
+  min-height: 16px;
+  margin: 10px 2px 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel__hint {
+  margin: 0 2px 6px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: right;
+}
+
 /**
- * The symbol and name after a code. Secondary to the code, and cut short
- * rather than wrapped, so every row stays one line high and the move buttons
- * stay in one column. The row's tooltip carries the whole name.
+ * Only the chosen currencies, in the order they are printed beside a price.
+ * There are rarely more than a handful, but popup.js caps the height to what
+ * the popup has room for, and the rest scrolls.
+ *
+ * The scrollbar's room is kept whether or not it is showing, so the list
+ * that grows past the cap does not narrow every row, and shift its rate and
+ * cross, the moment the bar appears. A thin bar keeps that room small.
  */
-.details {
+.rows,
+.picks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 2px;
+  overflow-y: auto;
+  list-style: none;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.row,
+.pick {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 8px 8px 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.row {
+  cursor: grab;
+  transition: background-color 0.12s, border-color 0.12s;
+}
+
+.row:hover {
+  background: var(--card-hover);
+}
+
+.row.dragging {
+  border-style: dashed;
+  border-color: var(--teal);
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.rows__empty {
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.grip {
+  flex: none;
+  width: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: -2px;
+  opacity: 0.45;
+  user-select: none;
+}
+
+.row:hover .grip {
+  opacity: 1;
+}
+
+.badge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--badge);
+  font-size: 15px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.badge--long {
+  font-size: 10px;
+  letter-spacing: -0.02em;
+}
+
+/** The first currency is the one printed first, so it gets the accent. */
+.row:first-child .badge {
+  background: var(--teal-soft);
+  color: var(--teal-strong);
+}
+
+.row__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.row__code {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.row__name {
   overflow: hidden;
   color: var(--muted);
+  font-size: 11.5px;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.move {
-  width: 20px;
-  height: 20px;
+.row__rate {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+
+.row__value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.row__per {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.remove {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.remove:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* The add button */
+
+.add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 48px;
+  margin-top: 10px;
+  border: 1.5px dashed color-mix(in srgb, var(--teal) 55%, transparent);
+  border-radius: 12px;
+  background: var(--teal-soft);
+  color: var(--teal-strong);
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background-color 0.12s, border-color 0.12s, transform 0.08s;
+}
+
+.add:hover {
+  border-color: var(--teal);
+  background: color-mix(in srgb, var(--teal) 18%, transparent);
+}
+
+.add:active {
+  transform: scale(0.99);
+}
+
+.add__plus {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* The picker */
+
+.picker__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.icon-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 4px;
-  background: none;
-  color: var(--text);
-  font: inherit;
-  line-height: 1;
+  border-radius: 10px;
+  background: var(--card);
   cursor: pointer;
 }
 
-.move:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
+.icon-button:hover {
+  border-color: var(--teal);
+  color: var(--teal-strong);
 }
 
-.move:disabled {
-  opacity: 0.35;
-  cursor: default;
+.search {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
 }
 
-.move:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+.search:focus {
+  border-color: var(--teal);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--teal-soft);
 }
 
-input[type="checkbox"] {
-  margin: 0;
-  accent-color: var(--accent);
+.picks {
+  max-height: 420px;
+}
+
+.pick {
+  width: 100%;
+  min-height: 48px;
+  padding-left: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pick:hover,
+.pick:focus-visible {
+  border-color: var(--teal);
+  background: var(--card-hover);
+}
+
+/**
+ * The round mark at the end of a pick: a teal plus for a currency not in use,
+ * a green check for one that is, and a red cross over that check while the
+ * pointer is on it — except straight after it was added (`is-fresh`), when
+ * the pointer is still there from the click that added it.
+ */
+.pick__mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--teal-soft);
+  color: var(--teal-strong);
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.pick__mark svg {
+  display: none;
+}
+
+.pick:not(.is-chosen) .pick__add,
+.pick.is-chosen .pick__check {
+  display: block;
+}
+
+.pick.is-chosen {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+}
+
+.pick.is-chosen .pick__mark {
+  background: var(--success);
+  color: #ffffff;
+}
+
+.pick.is-chosen:not(.is-fresh):hover {
+  border-color: var(--danger);
+}
+
+.pick.is-chosen:not(.is-fresh):hover .pick__mark {
+  background: var(--danger);
+}
+
+.pick.is-chosen:not(.is-fresh):hover .pick__check {
+  display: none;
+}
+
+.pick.is-chosen:not(.is-fresh):hover .pick__remove {
+  display: block;
+}
+
+.picker__empty {
+  padding: 20px 0;
+  color: var(--muted);
+  text-align: center;
 }
 
 /**
@@ -180,11 +633,12 @@ input[type="checkbox"] {
  */
 .status {
   height: 16px;
-  margin: 0;
+  margin-top: 8px;
   overflow: hidden;
   line-height: 16px;
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--muted);
   font-size: 11px;
+  text-align: center;
 }

@@ -24,6 +24,26 @@ const CURRENCY_FORMAT = {
   BYN: { symbol: 'Br', position: 'suffix' },
 };
 
+/**
+ * The most fraction digits a currency is ever shown with, whatever the
+ * settings ask for. Listed are the currencies whose unit is worth under about
+ * five US cents: their minor unit is noise ("1,302.47 ₽") and nobody prices
+ * in it. Others take the settings' decimals unchanged.
+ *
+ * A cap rather than a default, so a preset can ask for cents everywhere on a
+ * site of small prices and still get whole rubles.
+ */
+const MAX_DECIMALS = {
+  // Neighbours and Europe
+  RUB: 0, UAH: 0, CZK: 0, HUF: 0, ISK: 0,
+  // Balkans and Turkey
+  RSD: 0, MKD: 0, ALL: 0, TRY: 0,
+  // Caucasus and Central Asia
+  AMD: 0, KZT: 0, UZS: 0, KGS: 0,
+  // Asia
+  INR: 0, JPY: 0, THB: 0, IDR: 0,
+};
+
 const DEFAULT_SEPARATOR = {
   [LAYOUT.INLINE]: ' | ',
   [LAYOUT.BLOCK]: '\n',
@@ -37,7 +57,8 @@ export const DEFAULT_OPTIONS = {
   display: 'symbol',
   /**
    * Either a number applied to every currency, or a per-currency map with an
-   * optional `default`:  { default: 2, RUB: 0 }
+   * optional `default`:  { default: 2, EUR: 0 }. Either way MAX_DECIMALS
+   * caps it per currency.
    *
    * Pages override this wholesale — an apartment listing sets `decimals: 0`
    * and no currency shows fractions, regardless of the site-level map.
@@ -54,8 +75,8 @@ export const DEFAULT_OPTIONS = {
  * Resolves how many fraction digits a currency gets.
  *
  * Accepts a plain number (applies to everything) or a per-currency map with an
- * optional `default`. An out-of-range or non-numeric value falls back to 2
- * rather than throwing inside Intl.
+ * optional `default`, then capped by MAX_DECIMALS. An out-of-range or
+ * non-numeric value falls back to 2 rather than throwing inside Intl.
  *
  * @param {number|Object} decimals
  * @param {string} currency - Currency code
@@ -66,11 +87,9 @@ function resolveDecimals(decimals, currency) {
     ? decimals[currency] ?? decimals.default
     : decimals;
 
-  if (!Number.isFinite(value)) {
-    return 2;
-  }
+  const digits = Number.isFinite(value) ? Math.min(Math.max(Math.trunc(value), 0), 20) : 2;
 
-  return Math.min(Math.max(Math.trunc(value), 0), 20);
+  return Math.min(digits, MAX_DECIMALS[currency] ?? 20);
 }
 
 /**

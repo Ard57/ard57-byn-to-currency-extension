@@ -18,10 +18,13 @@ import {
  * rates.js stays a leaf module rather than importing settings.js, which would
  * close the cycle settings → format → rates.
  *
+ * @param {string[]} [extra] - More codes to include, for the popup's
+ *   converter, which may be asked about currencies no site converts into
  * @returns {Promise<Object>} Rates object from getExchangeRates()
  */
-function getConfiguredRates() {
-  return getAllCurrencies().then(getExchangeRates);
+function getConfiguredRates(extra = []) {
+  const more = Array.isArray(extra) ? extra.filter(code => typeof code === 'string') : [];
+  return getAllCurrencies().then(currencies => getExchangeRates([...currencies, ...more]));
 }
 
 /** Name of the alarm that wakes the worker for the daily refresh. */
@@ -74,15 +77,15 @@ chrome.alarms.onAlarm.addListener(alarm => {
  * Handle messages from content scripts or popup.
  *
  * Supported message types:
- *   { type: "GET_RATES" }
- *     → Returns the full rates object
+ *   { type: "GET_RATES", extra?: string[] }
+ *     → Returns the full rates object, covering `extra` too
  *
  *   { type: "CONVERT", amount: number, from: string, to: string }
  *     → Returns { result: number, from, to, amount, date }
  */
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'GET_RATES') {
-    getConfiguredRates()
+    getConfiguredRates(message.extra)
       .then(data => sendResponse({ success: true, data }))
       .catch(error => sendResponse({ success: false, error: error.message }));
 
