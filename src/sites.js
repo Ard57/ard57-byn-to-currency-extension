@@ -295,8 +295,8 @@ export const SITE_PRESETS = {
   /**
    * Cars. Large round numbers, so no cents in any currency.
    *
-   * Only onliner's own BYN price of each ad converts. Not similar-ad prices,
-   * leasing ("от 1013 ƃ месяц", "Первоначальный взнос 22 399 ƃ"), or the menu's
+   * Only onliner's own BYN price of each ad converts. Not leasing
+   * ("от 1013 ƃ месяц", "Первоначальный взнос 22 399 ƃ"), or the menu's
    * "Авто до 4000 ƃ" labels. A price element holding USD text is left alone
    * too: the parser only reads BYN markers, so it finds nothing to convert.
    *
@@ -319,6 +319,18 @@ export const SITE_PRESETS = {
    * 36px bold, which does not fit on one line. A `styles` rule swaps in the
    * similar-ads price classes (15px semibold), which do.
    *
+   * Similar ads on the ad page (ab.onliner.by/bmw/5-seriya/5057427), a
+   * carousel of cards, the price last in each:
+   *
+   *   <a class="vehicle-form__carousel-item">
+   *     …title, year and mileage, city…
+   *     <div class="vehicle-form__description … _font-weight_semibold vehicle-form__description_ellipsis"> 45 000 ƃ </div>
+   *   </a>
+   *
+   * The price div clips to one line, so the conversion goes after it, with
+   * the same classes as the ad's own price: they are these very ones, minus
+   * the clipping.
+   *
    * Both page kinds share one selector with an element-scoped rule rather
    * than a URL page rule: a three-segment URL pattern would also match
    * generation listings like /audi/a6/4gc7-restayling and strip their card
@@ -332,15 +344,32 @@ export const SITE_PRESETS = {
     layout: LAYOUT.BLOCK,
     decimals: 0,
 
-    priceSelector: '.vehicle-form__offers-part_price > div, .jest-price-byn',
+    priceSelector: [
+      '.vehicle-form__offers-part_price > div',
+      '.jest-price-byn',
+      '.vehicle-form__carousel-item > .vehicle-form__description_font-weight_semibold',
+    ].join(', '),
     insertPosition: 'after',
     className: 'vehicle-form__description vehicle-form__description_middle vehicle-form__description_primary vehicle-form__description_font-weight_bold vehicle-form__description_condensed-other',
     fontSize: null,
 
+    /**
+     * Both prices are followed by the site's own spacing — 8px under the ad's
+     * price, the 15px every description gets under a card's — which would
+     * otherwise stand between the price and its conversion. A negative top
+     * margin takes all but 2px of it back (the margins collapse), and the
+     * borrowed description class keeps its 15px below the conversion.
+     */
     styles: [
       {
         selector: '.jest-price-byn',
         className: 'vehicle-form__description vehicle-form__description_primary vehicle-form__description_base-alter vehicle-form__description_font-weight_semibold',
+        margin: '-6px 0 15px',
+      },
+      {
+        selector: '.vehicle-form__carousel-item',
+        className: 'vehicle-form__description vehicle-form__description_primary vehicle-form__description_base-alter vehicle-form__description_font-weight_semibold',
+        margin: '-13px 0 15px',
       },
     ],
   },
