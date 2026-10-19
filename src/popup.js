@@ -1102,37 +1102,91 @@ function siteParent(host) {
 }
 
 /**
+ * The region a site serves, from its top-level domain: "BY" for every ".by"
+ * site. Sites are grouped by it, so one for another country gets a group of
+ * its own with no more than its preset.
+ *
+ * @param {string} host
+ * @returns {string} An ISO region code, upper case
+ */
+function siteRegion(host) {
+  return host.slice(host.lastIndexOf('.') + 1).toUpperCase();
+}
+
+/**
+ * A region's name in the popup's language — "Belarus", "Беларусь" — or its
+ * code when the browser has no name for it.
+ *
+ * @param {string} code
+ * @returns {string}
+ */
+function regionName(code) {
+  try {
+    return new Intl.DisplayNames([chrome.i18n.getUILanguage()], { type: 'region' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+/**
+ * The sites, grouped by region under a heading each, in the order sites.js
+ * lists them.
+ */
+function renderSites() {
+  const regions = new Map();
+  for (const host of SITE_HOSTS) {
+    const code = siteRegion(host);
+    regions.set(code, [...(regions.get(code) ?? []), host]);
+  }
+
+  els.sites.replaceChildren(...[...regions].map(([code, hosts]) => {
+    const group = el('li', 'region');
+    const title = el('h3', 'region__title');
+    const list = el('ul', 'region__sites');
+
+    title.id = `region-${code}`;
+    title.append(el('span', 'region__code', code), el('span', 'region__name', regionName(code)));
+    list.setAttribute('aria-labelledby', title.id);
+    list.append(...hosts.map(siteRow));
+    group.append(title, list);
+
+    return group;
+  }));
+}
+
+/**
  * One switch per site, subdomains indented under their domain. A domain's
  * switch covers its subdomains too, so while it is off theirs are greyed out
  * and cannot be used — but keep their own setting for when it is back on.
+ *
+ * @param {string} host
+ * @returns {HTMLLIElement}
  */
-function renderSites() {
-  els.sites.replaceChildren(...SITE_HOSTS.map(host => {
-    const parent = siteParent(host);
-    const row = el('li', parent ? 'site site--child' : 'site');
-    const label = el('label', 'site__label');
-    const text = el('span', 'site__text');
-    const toggle = el('input', 'switch');
+function siteRow(host) {
+  const parent = siteParent(host);
+  const row = el('li', parent ? 'site site--child' : 'site');
+  const label = el('label', 'site__label');
+  const text = el('span', 'site__text');
+  const toggle = el('input', 'switch');
 
-    text.append(el('span', 'site__host', host));
-    const name = t(`site_${host.replace(/[.-]/g, '_')}`, '');
-    if (name) {
-      text.append(el('span', 'site__name', name));
-    }
+  text.append(el('span', 'site__host', host));
+  const name = t(`site_${host.replace(/[.-]/g, '_')}`, '');
+  if (name) {
+    text.append(el('span', 'site__name', name));
+  }
 
-    toggle.type = 'checkbox';
-    toggle.setAttribute('role', 'switch');
-    toggle.dataset.host = host;
-    toggle.checked = !disabledSites.includes(host);
-    toggle.disabled = Boolean(parent) && disabledSites.includes(parent);
-    toggle.addEventListener('change', () => toggleSite(host, toggle.checked));
+  toggle.type = 'checkbox';
+  toggle.setAttribute('role', 'switch');
+  toggle.dataset.host = host;
+  toggle.checked = !disabledSites.includes(host);
+  toggle.disabled = Boolean(parent) && disabledSites.includes(parent);
+  toggle.addEventListener('change', () => toggleSite(host, toggle.checked));
 
-    row.classList.toggle('is-inactive', toggle.disabled);
-    label.append(text, toggle);
-    row.append(label);
+  row.classList.toggle('is-inactive', toggle.disabled);
+  label.append(text, toggle);
+  row.append(label);
 
-    return row;
-  }));
+  return row;
 }
 
 /**

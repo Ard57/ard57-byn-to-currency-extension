@@ -815,3 +815,39 @@ h1 {
 .switch:disabled {
   cursor: default;
 }
+
+/**
+ * A region's sites under a heading: its code in a small pill, then its name.
+ */
+.region {
+  flex: none;
+}
+
+.region__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 2px 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.region__code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--teal-soft);
+  color: var(--teal-strong);
+  letter-spacing: 0.04em;
+}
+
+.region__sites {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
