@@ -621,6 +621,84 @@ h1 {
   display: block;
 }
 
+/**
+ * Choosing a converter currency: one pick, not a set, so there is nothing to
+ * add or remove. Only the current one is marked, with the same green check.
+ */
+.picks--choose .pick .pick__add {
+  display: none;
+}
+
+.picks--choose .pick__mark {
+  background: none;
+}
+
+.pick.is-current {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+}
+
+.pick.is-current .pick__mark {
+  background: var(--success);
+  color: #ffffff;
+}
+
+.pick.is-current .pick__check {
+  display: block;
+}
+
+/**
+ * The converter's currency buttons, standing in for a drop-down: a small
+ * badge, the code over the name, and a chevron saying it opens a list.
+ */
+.currency-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 6px;
+  text-align: left;
+  transition: border-color 0.12s;
+}
+
+.currency-button:hover {
+  border-color: var(--teal);
+}
+
+.currency-button .badge {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+}
+
+.currency-button .badge--long {
+  font-size: 9px;
+}
+
+.currency-button__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.currency-button__code {
+  font-weight: 650;
+}
+
+.currency-button__name {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.currency-button__chevron {
+  display: grid;
+  flex: none;
+  color: var(--muted);
+}
+
 .picker__empty {
   padding: 20px 0;
   color: var(--muted);

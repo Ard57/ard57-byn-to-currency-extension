@@ -368,8 +368,12 @@ function renderPicker() {
       mark.innerHTML = PICK_MARKS;
 
       button.append(badge(code), text, mark);
-      button.addEventListener('click', () => togglePick(button));
-      button.addEventListener('mouseleave', () => button.classList.remove('is-fresh'));
+      if (choosing) {
+        button.addEventListener('click', () => choose(code));
+      } else {
+        button.addEventListener('click', () => togglePick(button));
+        button.addEventListener('mouseleave', () => button.classList.remove('is-fresh'));
+      }
       markPick(button);
       item.append(button);
 
@@ -391,9 +395,20 @@ const PICK_MARKS = [
   '<svg class="pick__remove" viewBox="0 0 24 24" width="14" height="14"><path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
 ].join('');
 
-/** Brings a pick's look and label in line with whether its currency is chosen. */
+/**
+ * Brings a pick's look and label in line with whether its currency is chosen
+ * — or, choosing for the converter, whether it is the one picked there now.
+ */
 function markPick(button) {
   const { code } = button.dataset;
+
+  if (choosing) {
+    const current = code === state[choosing];
+    button.classList.toggle('is-current', current);
+    button.setAttribute('aria-current', String(current));
+    return;
+  }
+
   const on = chosen.includes(code);
 
   button.classList.toggle('is-chosen', on);
@@ -432,20 +447,58 @@ function togglePick(button) {
  */
 let pickerOrder = [];
 
+/**
+ * Which converter field the picker is choosing for, 'from' or 'to', or null
+ * when it is adding currencies to the list. Choosing, a click picks one
+ * currency and goes back; the one picked now is checked.
+ */
+let choosing = null;
+
 function openPicker() {
-  pickerOrder = [...order];
+  choosing = null;
+  showPicker([...order]);
+}
+
+/**
+ * Opens the picker to choose a converter currency, listing every currency in
+ * the grouped order of the settings — the same place each time, unlike the
+ * list's own order, which moves with what is chosen.
+ *
+ * @param {'from'|'to'} field
+ */
+function openChooser(field) {
+  choosing = field;
+  showPicker([...DEFAULT_SETTINGS.currencyOrder]);
+}
+
+function showPicker(codes) {
+  pickerOrder = codes;
   els.search.value = '';
+  els.pickerList.classList.toggle('picks--choose', Boolean(choosing));
   renderPicker();
   els.main.hidden = true;
   els.picker.hidden = false;
   els.search.focus();
+
+  // Choosing, the current currency is in view straight away.
+  els.pickerList.querySelector('.is-current')?.scrollIntoView({ block: 'nearest' });
   fitList();
 }
 
+/** Sets the converter field being chosen for, and goes back to it. */
+function choose(code) {
+  state[choosing] = code;
+  converterChanged();
+  closePicker();
+}
+
 function closePicker() {
+  const back = choosing === 'from' ? els.convertFrom : choosing === 'to' ? els.convertTo : els.add;
+  choosing = null;
+
   els.picker.hidden = true;
   els.main.hidden = false;
-  els.add.focus();
+  back.focus();
 
   // The card was measured while hidden, at no height at all; picks made in
   // the picker may also have changed what it holds.
@@ -540,8 +593,9 @@ function enableKeyboard() {
   els.search.addEventListener('keydown', event => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      // Enter adds the first match; it never removes one already chosen.
-      els.pickerList.querySelector('.pick:not(.is-chosen)')?.click();
+      // Enter takes the first match. Adding, it never removes one already
+      // chosen; choosing for the converter, any match will do.
+      els.pickerList.querySelector(choosing ? '.pick' : '.pick:not(.is-chosen)')?.click();
     } else if (event.key === 'ArrowDown') {
       event.preventDefault();
       els.pickerList.querySelector('.pick')?.focus();
@@ -906,57 +960,67 @@ function renderConverter() {
 }
 
 /**
- * Wires the converter: both lists offer every currency, in the grouped order
- * of the settings rather than the user's, so a currency is always where it
- * was last time. Every change is saved as it is made, and redraws the
- * preview, which converts the same amount.
+ * Saves a converter change and redraws what follows from it: the two
+ * currency buttons, the result, and the preview, which converts the same
+ * amount.
+ */
+function converterChanged() {
+  saveState();
+  labelCurrencyButtons();
+  preview();
+  renderConverter();
+
+  // A currency no site converts into is not in the rates yet.
+  const known = lastRates?.rates ?? {};
+  if (!(state.from in known) || !(state.to in known)) {
+    loadRates();
+  }
+}
+
+/**
+ * The converter's currency buttons: the badge, the code and the name of the
+ * currency picked, the name cut short to fit. Each button's accessible name
+ * keeps its role ("Convert from") and adds what is picked.
+ */
+function labelCurrencyButtons() {
+  for (const [button, code] of [[els.convertFrom, state.from], [els.convertTo, state.to]]) {
+    const { name } = describe(code);
+    const text = el('span', 'currency-button__text');
+    text.append(el('span', 'currency-button__code', code));
+    if (name) {
+      text.append(el('span', 'currency-button__name', name));
+    }
+
+    const chevron = el('span', 'currency-button__chevron');
+    chevron.setAttribute('aria-hidden', 'true');
+    chevron.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    button.dataset.role ??= button.getAttribute('aria-label') ?? '';
+    button.setAttribute('aria-label', `${button.dataset.role}: ${code}${name ? `, ${name}` : ''}`);
+    button.replaceChildren(badge(code), text, chevron);
+  }
+}
+
+/**
+ * Wires the converter. Its currencies are picked on the picker's screen, with
+ * the same search as adding a currency, rather than in a plain drop-down,
+ * which has none. Every change is saved as it is made.
  */
 function enableConverter() {
-  for (const select of [els.convertFrom, els.convertTo]) {
-    select.replaceChildren(...DEFAULT_SETTINGS.currencyOrder.map(code => {
-      const { name } = describe(code);
-      const option = el('option', null, name ? `${code} · ${name}` : code);
-      option.value = code;
-      return option;
-    }));
-  }
-
   els.convertAmount.value = state.amount;
-  els.convertFrom.value = state.from;
-  els.convertTo.value = state.to;
-
-  const changed = () => {
-    saveState();
-    preview();
-    renderConverter();
-
-    // A currency no site converts into is not in the rates yet.
-    const known = lastRates?.rates ?? {};
-    if (!(state.from in known) || !(state.to in known)) {
-      loadRates();
-    }
-  };
+  labelCurrencyButtons();
 
   els.convertAmount.addEventListener('input', () => {
     state.amount = els.convertAmount.value;
-    changed();
+    converterChanged();
   });
 
-  els.convertFrom.addEventListener('change', () => {
-    state.from = els.convertFrom.value;
-    changed();
-  });
-
-  els.convertTo.addEventListener('change', () => {
-    state.to = els.convertTo.value;
-    changed();
-  });
+  els.convertFrom.addEventListener('click', () => openChooser('from'));
+  els.convertTo.addEventListener('click', () => openChooser('to'));
 
   els.convertSwap.addEventListener('click', () => {
     [state.from, state.to] = [state.to, state.from];
-    els.convertFrom.value = state.from;
-    els.convertTo.value = state.to;
-    changed();
+    converterChanged();
   });
 }
 
