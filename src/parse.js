@@ -5,9 +5,11 @@
  *
  *   1 234,56 р.      199 руб.        Br 1 234
  *   1234.56 BYN      12,50 руб       5 р
- *   1744,64 ƃ
+ *   1744,64 ƃ        5 899,00 Ҕ
  *
- * The last one is onliner's: it writes BYN as "ƃ" (U+0183).
+ * The last two stand in for the new Belarusian ruble sign, which Unicode does
+ * not have yet: onliner writes "ƃ" (U+0183), 21vek "Ҕ" (U+0494, Cyrillic Ghe
+ * with middle hook). Its lowercase "ҕ" (U+0495) is accepted too.
  *
  * Grouping is a space — very often a non-breaking or narrow one — and the
  * decimal separator is usually a comma, though sites that lean on JS number
@@ -21,7 +23,7 @@
  * and the two are visually identical. The letter guards keep a marker from
  * matching inside a word: "5 рядов" must not read as 5 rubles.
  */
-const MARKER = /(?<!\p{L})(?:BYN|Br|ƃ|бел\.?\s*руб\.?|руб\.?|[рp]\.?)(?!\p{L})/;
+const MARKER = /(?<!\p{L})(?:BYN|Br|[ƃҔҕ]|бел\.?\s*руб\.?|руб\.?|[рp]\.?)(?!\p{L})/;
 
 /**
  * A run of digits that may contain grouping spaces and separators.

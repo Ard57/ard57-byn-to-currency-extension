@@ -105,6 +105,10 @@
       }
     }
   },
+  "site_21vek_by": {
+    "message": "Online hypermarket",
+    "description": "21vek.by"
+  },
   "popupSaved": {
     "message": "Saved"
   },

@@ -1171,6 +1171,65 @@ export const SITE_PRESETS = {
 
     priceSelector: '.price-byn, li.byn, .card__price_byn',
   },
+
+  /**
+   * Online hypermarket. A Next.js site whose own class names are hashed
+   * (ProductCard_price__MhmhF), but every price is drawn by one shared
+   * component whose classes are not:
+   *
+   *   <div class="Price-module__container ProductCard_price__…">
+   *     <span class="Price-module__price Price-module__majorPrice-small">
+   *       <span>1 234</span><span class="Price-module__minorPrice-small">,00 Ҕ</span>
+   *     </span>
+   *     <span class="Price-module__oldPrice">1 399,00 Ҕ</span>   (on sale only)
+   *   </div>
+   *
+   * "Ҕ" is 21vek's stand-in for the new ruble sign; see parse.js.
+   *
+   * The current price span alone is parsed; the struck-through old price is
+   * a sibling and never matched. Prices run from a few rubles up, so cents
+   * stay on.
+   *
+   * Main page (www.21vek.by/), so far:
+   *
+   * - Product tiles — recommendations, and the same card elsewhere on the
+   *   site. The container is a wrapping flex row, so the conversion goes in
+   *   it with a full-width basis: on a line of its own under the price.
+   * - Goods of the week, a narrow card — WeeklyProductMiniCard, or
+   *   ProductCardCompact where 21vek's "unified-product-card-compact" flag
+   *   is on; both are laid out alike. The price shares a row with the basket
+   *   button, and a conversion in the price's
+   *   container would squeeze in between and spill under the button. It goes
+   *   after that whole row instead, across the card, where it wraps within
+   *   the card's width.
+   *
+   *     <div class="WeeklyProductMiniCard_priceBasketWrapper__…">   (flex row)
+   *       <div class="Price-module__container WeeklyProductMiniCard_price__…">…</div>
+   *       <div class="…basketBlock…">🛒</div>
+   *     </div>
+   *
+   * Set at 13px rather than scaled off the price's container, which on these
+   * cards made it smaller than the card's own small print.
+   *
+   * Matched by the shared classes alone, so every price the component
+   * draws anywhere on the site converts the same way.
+   */
+  '21vek.by': {
+    priceSelector: '.Price-module__price',
+    priceContainer: '.Price-module__container',
+    flexBasis: '100%',
+    fontSize: '13px',
+
+    styles: [
+      {
+        selector: '[class*="WeeklyProductMiniCard_price__"], [class*="ProductCardCompact_price__"]',
+        priceContainer: '[class*="WeeklyProductMiniCard_priceBasketWrapper__"], [class*="ProductCardCompact_priceBasketWrapper__"]',
+        insertPosition: 'afterContainer',
+        flexBasis: null,
+        margin: '6px 0 0',
+      },
+    ],
+  },
 };
 
 /**

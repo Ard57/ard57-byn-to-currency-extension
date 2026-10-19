@@ -105,6 +105,10 @@
       }
     }
   },
+  "site_21vek_by": {
+    "message": "Онлайн-гипермаркет",
+    "description": "21vek.by"
+  },
   "popupSaved": {
     "message": "Сохранено"
   },
