@@ -1,5 +1,6 @@
 import { convertPrices } from './format.js';
 import { DEFAULT_SETTINGS, SOURCE_CURRENCY, loadSettings, setDefaults } from './settings.js';
+import { SITE_PRESETS, hostnameChain } from './sites.js';
 
 /**
  * The toolbar popup: which currencies prices are converted into, and in what
@@ -56,7 +57,7 @@ async function loadState() {
     const known = DEFAULT_SETTINGS.currencyOrder;
 
     state = {
-      tab: saved.tab === 'converter' ? 'converter' : 'currencies',
+      tab: ['converter', 'sites'].includes(saved.tab) ? saved.tab : 'currencies',
       amount: typeof saved.amount === 'string' ? saved.amount : state.amount,
       from: known.includes(saved.from) ? saved.from : state.from,
       to: known.includes(saved.to) ? saved.to : state.to,
@@ -102,6 +103,7 @@ const els = {
   search: document.getElementById('search'),
   back: document.getElementById('back'),
   status: document.getElementById('status'),
+  sites: document.getElementById('sites'),
   previewSource: document.getElementById('preview-source'),
   previewPrices: document.getElementById('preview-prices'),
   previewDate: document.getElementById('preview-date'),
@@ -909,7 +911,13 @@ async function measureWindow() {
 }
 
 function fitList() {
-  const list = els.picker.hidden ? els.currencies : els.pickerList;
+  // The picker's list, or the one in the open tab; a tab may have none.
+  const list = els.picker.hidden
+    ? document.querySelector('[role="tabpanel"]:not([hidden]) [data-fit]')
+    : els.pickerList;
+  if (!list) {
+    return;
+  }
 
   // The rest of the popup is measured around the list at whatever height it
   // has now, never by lifting its cap first: for that moment the list would
@@ -1076,6 +1084,76 @@ function enableTabs() {
   select(document.getElementById(`tab-${state.tab}`) ?? tabs[0]);
 }
 
+/** Every site with a preset of its own, in the order sites.js lists them. */
+const SITE_HOSTS = Object.keys(SITE_PRESETS);
+
+/** The sites switched off, as stored in `defaults.disabledSites`. */
+let disabledSites = [];
+
+/**
+ * The nearest site above a host that has a preset of its own — "onliner.by"
+ * for "ab.onliner.by" — or null for a site at the top.
+ *
+ * @param {string} host
+ * @returns {string|null}
+ */
+function siteParent(host) {
+  return hostnameChain(host).slice(0, -1).reverse().find(each => SITE_HOSTS.includes(each)) ?? null;
+}
+
+/**
+ * One switch per site, subdomains indented under their domain. A domain's
+ * switch covers its subdomains too, so while it is off theirs are greyed out
+ * and cannot be used — but keep their own setting for when it is back on.
+ */
+function renderSites() {
+  els.sites.replaceChildren(...SITE_HOSTS.map(host => {
+    const parent = siteParent(host);
+    const row = el('li', parent ? 'site site--child' : 'site');
+    const label = el('label', 'site__label');
+    const text = el('span', 'site__text');
+    const toggle = el('input', 'switch');
+
+    text.append(el('span', 'site__host', host));
+    const name = t(`site_${host.replace(/[.-]/g, '_')}`, '');
+    if (name) {
+      text.append(el('span', 'site__name', name));
+    }
+
+    toggle.type = 'checkbox';
+    toggle.setAttribute('role', 'switch');
+    toggle.dataset.host = host;
+    toggle.checked = !disabledSites.includes(host);
+    toggle.disabled = Boolean(parent) && disabledSites.includes(parent);
+    toggle.addEventListener('change', () => toggleSite(host, toggle.checked));
+
+    row.classList.toggle('is-inactive', toggle.disabled);
+    label.append(text, toggle);
+    row.append(label);
+
+    return row;
+  }));
+}
+
+/**
+ * Switches a site on or off, and redraws, since a domain's switch decides
+ * whether its subdomains' can be used. Pages watch the settings, so open
+ * ones follow at once.
+ *
+ * @param {string} host
+ * @param {boolean} on
+ */
+function toggleSite(host, on) {
+  disabledSites = on
+    ? disabledSites.filter(each => each !== host)
+    : [...disabledSites.filter(each => each !== host), host];
+
+  renderSites();
+  els.sites.querySelector(`input[data-host="${host}"]`)?.focus();
+
+  save({ disabledSites: [...disabledSites] }, t('popupSaved', 'Saved'));
+}
+
 async function start() {
   localize();
   els.name.textContent = chrome.runtime.getManifest().name;
@@ -1086,8 +1164,12 @@ async function start() {
   order = usableOrder(settings.currencyOrder);
   chosen = (settings.currencies ?? []).filter(code => order.includes(code));
   order = [...chosen, ...order.filter(code => !chosen.includes(code))];
+  disabledSites = Array.isArray(settings.disabledSites)
+    ? settings.disabledSites.filter(host => SITE_HOSTS.includes(host))
+    : [];
 
   renderRows();
+  renderSites();
   enableConverter();
   enableTabs();
   enableKeyboard();

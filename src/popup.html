@@ -22,11 +22,13 @@
               aria-selected="true" aria-controls="panel-currencies" data-i18n="popupCurrencies">Currencies</button>
       <button id="tab-converter" class="tab" type="button" role="tab"
               aria-selected="false" aria-controls="panel-converter" data-i18n="popupConverter">Converter</button>
+      <button id="tab-sites" class="tab" type="button" role="tab"
+              aria-selected="false" aria-controls="panel-sites" data-i18n="popupSites">Sites</button>
     </div>
 
     <section id="panel-currencies" class="panel" role="tabpanel" aria-labelledby="tab-currencies">
       <p class="panel__hint" data-i18n="popupReorderHint">Drag to reorder</p>
-      <ul id="currencies" class="rows"></ul>
+      <ul id="currencies" class="rows" data-fit></ul>
 
       <button id="add" class="add" type="button">
         <span class="add__plus" aria-hidden="true">+</span>
@@ -59,6 +61,11 @@
       </div>
 
       <p id="convert-rate" class="converter__rate"></p>
+    </section>
+
+    <section id="panel-sites" class="panel" role="tabpanel" aria-labelledby="tab-sites" hidden>
+      <p class="panel__hint" data-i18n="popupSitesHint">Where prices are converted</p>
+      <ul id="sites" class="rows sites" data-fit></ul>
     </section>
   </main>
 
