@@ -279,7 +279,8 @@ export function resolveSettings(url, settings = {}, presets = SITE_PRESETS) {
  * Switched-off sites are kept as hostnames in `defaults.disabledSites`, and
  * one covers its subdomains: "onliner.by" turns off every onliner site, while
  * "ab.onliner.by" turns off only that one. So a hostname is off when any
- * host along its chain is listed.
+ * host along its chain is listed — down to a top-level domain: "by" is the
+ * popup's switch for the whole of Belarus.
  *
  * @param {string} url - Full page URL
  * @param {Object} settings - Stored settings object

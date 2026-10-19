@@ -870,7 +870,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 2px 2px 8px;
+  margin: 2px 13px 8px 2px;
   color: var(--muted);
   font-size: 11px;
   font-weight: 650;
@@ -895,6 +895,11 @@ h1 {
 
 .region__toggle:hover {
   color: var(--text);
+}
+
+/** The region's switch, in line with the switches of its sites. */
+.region__title > .switch {
+  margin-left: auto;
 }
 
 .region__code {

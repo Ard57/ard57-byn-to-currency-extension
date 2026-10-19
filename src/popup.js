@@ -1157,7 +1157,7 @@ function renderSites() {
 
     const toggle = foldButton(`region:${code}`, list, 'region__toggle', false);
     toggle.append(el('span', 'region__code', code), el('span', 'region__name', regionName(code)));
-    title.append(toggle);
+    title.append(toggle, siteSwitch(code.toLowerCase(), regionName(code)));
     group.append(title, list);
 
     return group;
@@ -1242,11 +1242,10 @@ function foldButton(key, target, className, foldedByDefault) {
  * @returns {HTMLDivElement}
  */
 function siteRow(host) {
-  const parent = siteParent(host);
   const row = el('div', 'site');
   const label = el('label', 'site__label');
   const text = el('span', 'site__text');
-  const toggle = el('input', 'switch');
+  const toggle = siteSwitch(host);
 
   text.append(el('span', 'site__host', host));
   const name = t(`site_${host.replace(/[.-]/g, '_')}`, '');
@@ -1254,18 +1253,37 @@ function siteRow(host) {
     text.append(el('span', 'site__name', name));
   }
 
-  toggle.type = 'checkbox';
-  toggle.setAttribute('role', 'switch');
-  toggle.dataset.host = host;
-  toggle.checked = !disabledSites.includes(host);
-  toggle.disabled = Boolean(parent) && disabledSites.includes(parent);
-  toggle.addEventListener('change', () => toggleSite(host, toggle.checked));
-
   row.classList.toggle('is-inactive', toggle.disabled);
   label.append(text, toggle);
   row.append(label);
 
   return row;
+}
+
+/**
+ * The on/off switch for a site, or for a whole region under its top-level
+ * domain ("by"): pages check a hostname's whole chain, so turning off "by"
+ * turns off every Belarusian site. While anything above is off, the switch
+ * cannot be used, but keeps its own setting for when that is back on.
+ *
+ * @param {string} host - A site's hostname, or a region's top-level domain
+ * @param {string} [label] - Accessible name, where nothing visible gives one
+ * @returns {HTMLInputElement}
+ */
+function siteSwitch(host, label) {
+  const toggle = el('input', 'switch');
+
+  toggle.type = 'checkbox';
+  toggle.setAttribute('role', 'switch');
+  if (label) {
+    toggle.setAttribute('aria-label', label);
+  }
+  toggle.dataset.host = host;
+  toggle.checked = !disabledSites.includes(host);
+  toggle.disabled = hostnameChain(host).slice(0, -1).some(each => disabledSites.includes(each));
+  toggle.addEventListener('change', () => toggleSite(host, toggle.checked));
+
+  return toggle;
 }
 
 /**
@@ -1297,8 +1315,10 @@ async function start() {
   order = usableOrder(settings.currencyOrder);
   chosen = (settings.currencies ?? []).filter(code => order.includes(code));
   order = [...chosen, ...order.filter(code => !chosen.includes(code))];
+  // Sites, and regions by their top-level domain.
+  const switchable = [...SITE_HOSTS, ...SITE_HOSTS.map(host => siteRegion(host).toLowerCase())];
   disabledSites = Array.isArray(settings.disabledSites)
-    ? settings.disabledSites.filter(host => SITE_HOSTS.includes(host))
+    ? settings.disabledSites.filter(host => switchable.includes(host))
     : [];
 
   renderRows();
