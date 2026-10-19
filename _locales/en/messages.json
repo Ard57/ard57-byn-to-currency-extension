@@ -95,6 +95,16 @@
     "message": "Cars",
     "description": "abw.by"
   },
+  "popupSubdomains": {
+    "message": "$HOST$ subdomains",
+    "description": "Accessible label of the chevron that folds a site's subdomains on the Sites tab.",
+    "placeholders": {
+      "host": {
+        "content": "$1",
+        "example": "onliner.by"
+      }
+    }
+  },
   "popupSaved": {
     "message": "Saved"
   },

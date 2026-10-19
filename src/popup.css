@@ -728,7 +728,10 @@ h1 {
  * domain's switch is off, its subdomains fade: their switches cannot be used.
  */
 .site {
+  display: flex;
   flex: none;
+  align-items: center;
+  padding-left: 6px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--card);
@@ -736,8 +739,46 @@ h1 {
   transition: opacity 0.12s;
 }
 
-.site--child {
-  margin-left: 18px;
+/** A domain's subdomains, indented under it. */
+.site__children {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+/** The chevron that folds a domain's subdomains, or room for one. */
+.site__fold,
+.site__fold-space {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+.site__fold {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.site__fold:hover {
+  background: var(--badge);
+  color: var(--text);
+}
+
+.fold__chevron {
+  transition: transform 0.15s;
+}
+
+[aria-expanded="false"] > .fold__chevron {
+  transform: rotate(-90deg);
 }
 
 .site.is-inactive {
@@ -746,10 +787,12 @@ h1 {
 
 .site__label {
   display: flex;
+  flex: 1;
   align-items: center;
   gap: 10px;
+  min-width: 0;
   min-height: 46px;
-  padding: 6px 12px;
+  padding: 6px 12px 6px 6px;
   cursor: pointer;
 }
 
@@ -833,6 +876,25 @@ h1 {
   font-weight: 650;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+/** The whole heading folds its region: chevron, code and name. */
+.region__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.region__toggle:hover {
+  color: var(--text);
 }
 
 .region__code {

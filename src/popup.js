@@ -49,6 +49,11 @@ let state = {
   amount: '100',
   from: 'USD',
   to: SOURCE_CURRENCY,
+  /**
+   * Groups on the Sites tab folded (true) or unfolded (false) by hand, keyed
+   * "region:BY", "site:onliner.by". One not here is as its default.
+   */
+  folds: {},
 };
 
 async function loadState() {
@@ -61,6 +66,7 @@ async function loadState() {
       amount: typeof saved.amount === 'string' ? saved.amount : state.amount,
       from: known.includes(saved.from) ? saved.from : state.from,
       to: known.includes(saved.to) ? saved.to : state.to,
+      folds: Object.fromEntries(Object.entries(saved.folds ?? {}).filter(([, folded]) => typeof folded === 'boolean')),
     };
   } catch {
     // Opens on the defaults.
@@ -1130,7 +1136,9 @@ function regionName(code) {
 
 /**
  * The sites, grouped by region under a heading each, in the order sites.js
- * lists them.
+ * lists them. A region folds away under its heading, and a domain's
+ * subdomains under the domain. Regions start unfolded and domains folded, so
+ * the tab opens on one line per site; folding by hand is remembered.
  */
 function renderSites() {
   const regions = new Map();
@@ -1144,10 +1152,12 @@ function renderSites() {
     const title = el('h3', 'region__title');
     const list = el('ul', 'region__sites');
 
-    title.id = `region-${code}`;
-    title.append(el('span', 'region__code', code), el('span', 'region__name', regionName(code)));
-    list.setAttribute('aria-labelledby', title.id);
-    list.append(...hosts.map(siteRow));
+    list.id = `region-${code}`;
+    list.append(...hosts.filter(host => !hosts.includes(siteParent(host))).map(host => siteNode(host, hosts)));
+
+    const toggle = foldButton(`region:${code}`, list, 'region__toggle', false);
+    toggle.append(el('span', 'region__code', code), el('span', 'region__name', regionName(code)));
+    title.append(toggle);
     group.append(title, list);
 
     return group;
@@ -1155,16 +1165,85 @@ function renderSites() {
 }
 
 /**
- * One switch per site, subdomains indented under their domain. A domain's
- * switch covers its subdomains too, so while it is off theirs are greyed out
- * and cannot be used — but keep their own setting for when it is back on.
+ * A site's card, with its subdomains' cards in a list under it that folds
+ * away behind a chevron on the card.
  *
  * @param {string} host
+ * @param {string[]} hosts - Every site in its region
  * @returns {HTMLLIElement}
+ */
+function siteNode(host, hosts) {
+  const node = el('li', 'site-node');
+  const card = siteRow(host);
+  const children = hosts.filter(each => siteParent(each) === host);
+
+  node.append(card);
+
+  if (children.length === 0) {
+    // Keeps every card's text in line, chevron or not.
+    card.prepend(el('span', 'site__fold-space'));
+    return node;
+  }
+
+  const list = el('ul', 'site__children');
+  list.id = `site-${host.replace(/./g, '-')}`;
+  list.append(...children.map(child => siteNode(child, hosts)));
+
+  const toggle = foldButton(`site:${host}`, list, 'site__fold', true);
+  toggle.setAttribute('aria-label', t('popupSubdomains', `${host} subdomains`, [host]));
+  card.prepend(toggle);
+  node.append(list);
+
+  return node;
+}
+
+/** The chevron a fold button opens with, turned sideways while folded. */
+const FOLD_CHEVRON = '<svg class="fold__chevron" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/**
+ * A button that folds `target` away and back, remembering which under
+ * `key` in the popup's state.
+ *
+ * @param {string} key
+ * @param {HTMLElement} target - Needs an id, for aria-controls
+ * @param {string} className
+ * @param {boolean} foldedByDefault - Until folded or unfolded by hand
+ * @returns {HTMLButtonElement}
+ */
+function foldButton(key, target, className, foldedByDefault) {
+  const button = el('button', className);
+  button.type = 'button';
+  button.innerHTML = FOLD_CHEVRON;
+  button.setAttribute('aria-controls', target.id);
+
+  const show = () => {
+    const folded = state.folds[key] ?? foldedByDefault;
+    button.setAttribute('aria-expanded', String(!folded));
+    target.hidden = folded;
+  };
+
+  button.addEventListener('click', () => {
+    state.folds = { ...state.folds, [key]: !(state.folds[key] ?? foldedByDefault) };
+    saveState();
+    show();
+    fitList();
+  });
+
+  show();
+  return button;
+}
+
+/**
+ * One site's card: its host, what it is, and its switch. A domain's switch
+ * covers its subdomains too, so while it is off theirs are greyed out and
+ * cannot be used — but keep their own setting for when it is back on.
+ *
+ * @param {string} host
+ * @returns {HTMLDivElement}
  */
 function siteRow(host) {
   const parent = siteParent(host);
-  const row = el('li', parent ? 'site site--child' : 'site');
+  const row = el('div', 'site');
   const label = el('label', 'site__label');
   const text = el('span', 'site__text');
   const toggle = el('input', 'switch');
