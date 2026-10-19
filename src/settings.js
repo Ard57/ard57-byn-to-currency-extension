@@ -282,6 +282,11 @@ export function resolveSettings(url, settings = {}, presets = SITE_PRESETS) {
  * host along its chain is listed — down to a top-level domain: "by" is the
  * popup's switch for the whole of Belarus.
  *
+ * A domain's own pages can also be off apart from its subdomains:
+ * "onliner.by:own" turns off the pages the onliner.by preset is the nearest
+ * one for — onliner.by itself, people., tech. — but not catalog. or ab.,
+ * which have presets of their own.
+ *
  * @param {string} url - Full page URL
  * @param {Object} settings - Stored settings object
  * @returns {boolean}
@@ -299,7 +304,13 @@ export function isSiteEnabled(url, settings = {}) {
     return true;
   }
 
-  return !hostnameChain(host).some(each => disabled.includes(each));
+  const chain = hostnameChain(host);
+  if (chain.some(each => disabled.includes(each))) {
+    return false;
+  }
+
+  const preset = [...chain].reverse().find(each => each in SITE_PRESETS);
+  return !(preset && disabled.includes(`${preset}:own`));
 }
 
 /**

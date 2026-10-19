@@ -1157,7 +1157,7 @@ function renderSites() {
 
     const toggle = foldButton(`region:${code}`, list, 'region__toggle', false);
     toggle.append(el('span', 'region__code', code), el('span', 'region__name', regionName(code)));
-    title.append(toggle, siteSwitch(code.toLowerCase(), regionName(code)));
+    title.append(toggle, siteSwitch(code.toLowerCase(), [], regionName(code)));
     group.append(title, list);
 
     return group;
@@ -1165,8 +1165,10 @@ function renderSites() {
 }
 
 /**
- * A site's card, with its subdomains' cards in a list under it that folds
- * away behind a chevron on the card.
+ * A site with no subdomains of its own is a card. A domain with some is a
+ * group: a heading card with the switch for the whole domain, and under it,
+ * folding away, a card for the domain's own pages beside one per subdomain —
+ * so its own pages can be switched off without the rest.
  *
  * @param {string} host
  * @param {string[]} hosts - Every site in its region
@@ -1174,27 +1176,44 @@ function renderSites() {
  */
 function siteNode(host, hosts) {
   const node = el('li', 'site-node');
-  const card = siteRow(host);
+  const above = hostnameChain(host).slice(0, -1);
   const children = hosts.filter(each => siteParent(each) === host);
 
-  node.append(card);
-
   if (children.length === 0) {
-    // Keeps every card's text in line, chevron or not.
-    card.prepend(el('span', 'site__fold-space'));
+    node.append(siteCard(host, host, siteName(host), above));
     return node;
   }
 
   const list = el('ul', 'site__children');
-  list.id = `site-${host.replace(/./g, '-')}`;
-  list.append(...children.map(child => siteNode(child, hosts)));
+  list.id = `site-${host.replace(/\./g, '-')}`;
+
+  const own = el('li', 'site-node');
+  own.append(siteCard(`${host}${OWN_PAGES}`, host, siteName(host), [...above, host]));
+  list.append(own, ...children.map(child => siteNode(child, hosts)));
+
+  // What the group holds, for when it is folded.
+  const summary = [host, ...children].map(siteName).filter(Boolean).join(', ');
+  const heading = siteCard(host, host, summary, above);
+  heading.classList.add('site--domain');
 
   const toggle = foldButton(`site:${host}`, list, 'site__fold', true);
   toggle.setAttribute('aria-label', t('popupSubdomains', `${host} subdomains`, [host]));
-  card.prepend(toggle);
-  node.append(list);
+  heading.querySelector('.site__fold-space').replaceWith(toggle);
 
+  node.append(heading, list);
   return node;
+}
+
+/**
+ * Appended to a domain to name its own pages, apart from its subdomains:
+ * "onliner.by:own" is onliner.by itself and every subdomain without a preset
+ * of its own (people., tech., …). See isSiteEnabled() in settings.js.
+ */
+const OWN_PAGES = ':own';
+
+/** What a site is — "Cars" — from the locale, or empty. */
+function siteName(host) {
+  return t(`site_${host.replace(/[.-]/g, '_')}`, '');
 }
 
 /** The chevron a fold button opens with, turned sideways while folded. */
@@ -1234,43 +1253,48 @@ function foldButton(key, target, className, foldedByDefault) {
 }
 
 /**
- * One site's card: its host, what it is, and its switch. A domain's switch
- * covers its subdomains too, so while it is off theirs are greyed out and
- * cannot be used — but keep their own setting for when it is back on.
+ * One card: a host, what it covers, and its switch. Faded while anything
+ * above it is off, as its switch then cannot be used.
  *
- * @param {string} host
+ * @param {string} key - What the switch turns off, see siteSwitch()
+ * @param {string} host - Shown in bold
+ * @param {string} description - Shown under it
+ * @param {string[]} above - Keys whose being off locks this one
  * @returns {HTMLDivElement}
  */
-function siteRow(host) {
+function siteCard(key, host, description, above) {
   const row = el('div', 'site');
   const label = el('label', 'site__label');
   const text = el('span', 'site__text');
-  const toggle = siteSwitch(host);
+  const toggle = siteSwitch(key, above);
 
   text.append(el('span', 'site__host', host));
-  const name = t(`site_${host.replace(/[.-]/g, '_')}`, '');
-  if (name) {
-    text.append(el('span', 'site__name', name));
+  if (description) {
+    text.append(el('span', 'site__name', description));
   }
 
   row.classList.toggle('is-inactive', toggle.disabled);
   label.append(text, toggle);
-  row.append(label);
+  // Room for a fold chevron, which a domain's heading puts here: every
+  // card's text lines up, chevron or not.
+  row.append(el('span', 'site__fold-space'), label);
 
   return row;
 }
 
 /**
- * The on/off switch for a site, or for a whole region under its top-level
- * domain ("by"): pages check a hostname's whole chain, so turning off "by"
- * turns off every Belarusian site. While anything above is off, the switch
- * cannot be used, but keeps its own setting for when that is back on.
+ * An on/off switch, for what pages check in `defaults.disabledSites`: a
+ * site's hostname, which covers its subdomains; a domain's own pages
+ * ("onliner.by:own"); or a whole region by its top-level domain ("by").
+ * While anything above is off, the switch cannot be used, but keeps its own
+ * setting for when that is back on.
  *
- * @param {string} host - A site's hostname, or a region's top-level domain
+ * @param {string} key
+ * @param {string[]} above - Keys whose being off locks this one
  * @param {string} [label] - Accessible name, where nothing visible gives one
  * @returns {HTMLInputElement}
  */
-function siteSwitch(host, label) {
+function siteSwitch(key, above, label) {
   const toggle = el('input', 'switch');
 
   toggle.type = 'checkbox';
@@ -1278,10 +1302,10 @@ function siteSwitch(host, label) {
   if (label) {
     toggle.setAttribute('aria-label', label);
   }
-  toggle.dataset.host = host;
-  toggle.checked = !disabledSites.includes(host);
-  toggle.disabled = hostnameChain(host).slice(0, -1).some(each => disabledSites.includes(each));
-  toggle.addEventListener('change', () => toggleSite(host, toggle.checked));
+  toggle.dataset.host = key;
+  toggle.checked = !disabledSites.includes(key);
+  toggle.disabled = above.some(each => disabledSites.includes(each));
+  toggle.addEventListener('change', () => toggleSite(key, toggle.checked));
 
   return toggle;
 }
@@ -1315,8 +1339,12 @@ async function start() {
   order = usableOrder(settings.currencyOrder);
   chosen = (settings.currencies ?? []).filter(code => order.includes(code));
   order = [...chosen, ...order.filter(code => !chosen.includes(code))];
-  // Sites, and regions by their top-level domain.
-  const switchable = [...SITE_HOSTS, ...SITE_HOSTS.map(host => siteRegion(host).toLowerCase())];
+  // Sites, domains' own pages, and regions by their top-level domain.
+  const switchable = [
+    ...SITE_HOSTS,
+    ...SITE_HOSTS.filter(host => SITE_HOSTS.some(each => siteParent(each) === host)).map(host => `${host}${OWN_PAGES}`),
+    ...SITE_HOSTS.map(host => siteRegion(host).toLowerCase()),
+  ];
   disabledSites = Array.isArray(settings.disabledSites)
     ? settings.disabledSites.filter(host => switchable.includes(host))
     : [];
