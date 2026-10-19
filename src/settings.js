@@ -274,6 +274,46 @@ export function resolveSettings(url, settings = {}, presets = SITE_PRESETS) {
 }
 
 /**
+ * Whether prices are converted on a site at all — the popup's Sites tab.
+ *
+ * Switched-off sites are kept as hostnames in `defaults.disabledSites`, and
+ * one covers its subdomains: "onliner.by" turns off every onliner site, while
+ * "ab.onliner.by" turns off only that one. So a hostname is off when any
+ * host along its chain is listed — down to a top-level domain: "by" is the
+ * popup's switch for the whole of Belarus.
+ *
+ * A domain's own pages can also be off apart from its subdomains:
+ * "onliner.by:own" turns off the pages the onliner.by preset is the nearest
+ * one for — onliner.by itself, people., tech. — but not catalog. or ab.,
+ * which have presets of their own.
+ *
+ * @param {string} url - Full page URL
+ * @param {Object} settings - Stored settings object
+ * @returns {boolean}
+ */
+export function isSiteEnabled(url, settings = {}) {
+  const disabled = settings.defaults?.disabledSites;
+  if (!Array.isArray(disabled) || disabled.length === 0) {
+    return true;
+  }
+
+  let host;
+  try {
+    host = normalizeHost(new URL(url).hostname);
+  } catch {
+    return true;
+  }
+
+  const chain = hostnameChain(host);
+  if (chain.some(each => disabled.includes(each))) {
+    return false;
+  }
+
+  const preset = [...chain].reverse().find(each => each in SITE_PRESETS);
+  return !(preset && disabled.includes(`${preset}:own`));
+}
+
+/**
  * Collects every currency mentioned anywhere in the settings — global
  * defaults, every built-in preset and stored site, every page rule.
  *

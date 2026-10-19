@@ -35,6 +35,76 @@
     "message": "Enter an amount to convert",
     "description": "Shown in the preview on the converter tab while the amount field holds no number."
   },
+  "popupSites": {
+    "message": "Sites",
+    "description": "Name of the popup tab with a switch per supported site."
+  },
+  "popupSitesHint": {
+    "message": "Where prices are converted",
+    "description": "Small hint above the list of sites."
+  },
+  "site_onliner_by": {
+    "message": "News and other pages",
+    "description": "onliner.by itself and its subdomains without a line of their own."
+  },
+  "site_catalog_onliner_by": {
+    "message": "Catalog",
+    "description": "catalog.onliner.by"
+  },
+  "site_r_onliner_by": {
+    "message": "Real estate",
+    "description": "r.onliner.by"
+  },
+  "site_ab_onliner_by": {
+    "message": "Cars",
+    "description": "ab.onliner.by"
+  },
+  "site_mb_onliner_by": {
+    "message": "Motorcycles",
+    "description": "mb.onliner.by"
+  },
+  "site_kufar_by": {
+    "message": "Classifieds and cars",
+    "description": "kufar.by and auto.kufar.by"
+  },
+  "site_re_kufar_by": {
+    "message": "Real estate",
+    "description": "re.kufar.by"
+  },
+  "site_travel_kufar_by": {
+    "message": "Short-term rentals",
+    "description": "travel.kufar.by"
+  },
+  "site_realt_by": {
+    "message": "Real estate",
+    "description": "realt.by"
+  },
+  "site_flatby_by": {
+    "message": "Apartments",
+    "description": "flatby.by"
+  },
+  "site_av_by": {
+    "message": "Cars",
+    "description": "av.by"
+  },
+  "site_salon_av_by": {
+    "message": "Cars from dealers",
+    "description": "salon.av.by"
+  },
+  "site_abw_by": {
+    "message": "Cars",
+    "description": "abw.by"
+  },
+  "popupSubdomains": {
+    "message": "$HOST$ subdomains",
+    "description": "Accessible label of the chevron that folds a site's subdomains on the Sites tab.",
+    "placeholders": {
+      "host": {
+        "content": "$1",
+        "example": "onliner.by"
+      }
+    }
+  },
   "popupSaved": {
     "message": "Saved"
   },

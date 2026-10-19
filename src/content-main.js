@@ -1,4 +1,4 @@
-import { loadSettings, resolveSettings } from './settings.js';
+import { isSiteEnabled, loadSettings, resolveSettings } from './settings.js';
 import { annotatePrices, removeConversions } from './inject.js';
 
 /**
@@ -35,7 +35,11 @@ async function start() {
 
   let stored = await loadSettings();
 
-  const scan = () => annotatePrices(document, resolveSettings(location.href, stored), rates);
+  // A site switched off in the popup is left as the site drew it. Checked on
+  // every scan, like the settings, since it can be switched back on while
+  // the page is open.
+  const scan = () => isSiteEnabled(location.href, stored)
+    && annotatePrices(document, resolveSettings(location.href, stored), rates);
   scan();
 
   // Catalogs render and re-render prices after load: filtering, sorting,

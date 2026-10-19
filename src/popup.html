@@ -22,11 +22,13 @@
               aria-selected="true" aria-controls="panel-currencies" data-i18n="popupCurrencies">Currencies</button>
       <button id="tab-converter" class="tab" type="button" role="tab"
               aria-selected="false" aria-controls="panel-converter" data-i18n="popupConverter">Converter</button>
+      <button id="tab-sites" class="tab" type="button" role="tab"
+              aria-selected="false" aria-controls="panel-sites" data-i18n="popupSites">Sites</button>
     </div>
 
     <section id="panel-currencies" class="panel" role="tabpanel" aria-labelledby="tab-currencies">
       <p class="panel__hint" data-i18n="popupReorderHint">Drag to reorder</p>
-      <ul id="currencies" class="rows"></ul>
+      <ul id="currencies" class="rows" data-fit></ul>
 
       <button id="add" class="add" type="button">
         <span class="add__plus" aria-hidden="true">+</span>
@@ -40,8 +42,8 @@
         <div class="field__row">
           <input id="convert-amount" class="field__input" type="text" inputmode="decimal"
                  autocomplete="off" spellcheck="false">
-          <select id="convert-from" class="field__select"
-                  aria-label="Convert from" data-i18n-label="popupConvertFrom"></select>
+          <button id="convert-from" class="field__select currency-button" type="button"
+                  aria-label="Convert from" data-i18n-label="popupConvertFrom"></button>
         </div>
       </div>
 
@@ -53,12 +55,17 @@
         <span class="field__label" id="convert-result-label" data-i18n="popupConvertResult">Converted</span>
         <div class="field__row">
           <output id="convert-result" class="field__input field__output" aria-labelledby="convert-result-label"></output>
-          <select id="convert-to" class="field__select"
-                  aria-label="Convert into" data-i18n-label="popupConvertTo"></select>
+          <button id="convert-to" class="field__select currency-button" type="button"
+                  aria-label="Convert into" data-i18n-label="popupConvertTo"></button>
         </div>
       </div>
 
       <p id="convert-rate" class="converter__rate"></p>
+    </section>
+
+    <section id="panel-sites" class="panel" role="tabpanel" aria-labelledby="tab-sites" hidden>
+      <p class="panel__hint" data-i18n="popupSitesHint">Where prices are converted</p>
+      <ul id="sites" class="rows sites" data-fit></ul>
     </section>
   </main>
 

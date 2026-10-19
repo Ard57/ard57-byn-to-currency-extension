@@ -621,6 +621,84 @@ h1 {
   display: block;
 }
 
+/**
+ * Choosing a converter currency: one pick, not a set, so there is nothing to
+ * add or remove. Only the current one is marked, with the same green check.
+ */
+.picks--choose .pick .pick__add {
+  display: none;
+}
+
+.picks--choose .pick__mark {
+  background: none;
+}
+
+.pick.is-current {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+}
+
+.pick.is-current .pick__mark {
+  background: var(--success);
+  color: #ffffff;
+}
+
+.pick.is-current .pick__check {
+  display: block;
+}
+
+/**
+ * The converter's currency buttons, standing in for a drop-down: a small
+ * badge, the code over the name, and a chevron saying it opens a list.
+ */
+.currency-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 6px;
+  text-align: left;
+  transition: border-color 0.12s;
+}
+
+.currency-button:hover {
+  border-color: var(--teal);
+}
+
+.currency-button .badge {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+}
+
+.currency-button .badge--long {
+  font-size: 9px;
+}
+
+.currency-button__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.currency-button__code {
+  font-weight: 650;
+}
+
+.currency-button__name {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.currency-button__chevron {
+  display: grid;
+  flex: none;
+  color: var(--muted);
+}
+
 .picker__empty {
   padding: 20px 0;
   color: var(--muted);
@@ -641,4 +719,202 @@ h1 {
   color: var(--muted);
   font-size: 11px;
   text-align: center;
+}
+
+/* Sites */
+
+/**
+ * One card per site, a subdomain indented under its domain. While a
+ * domain's switch is off, its subdomains fade: their switches cannot be used.
+ */
+.site {
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding-left: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  transition: opacity 0.12s;
+}
+
+/** A domain's subdomains, indented under it. */
+.site__children {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+/** The chevron that folds a domain's subdomains, or room for one. */
+.site__fold,
+.site__fold-space {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+.site__fold {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.site__fold:hover {
+  background: var(--badge);
+  color: var(--text);
+}
+
+.fold__chevron {
+  transition: transform 0.15s;
+}
+
+[aria-expanded="false"] > .fold__chevron {
+  transform: rotate(-90deg);
+}
+
+.site.is-inactive {
+  opacity: 0.5;
+}
+
+.site__label {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 6px 12px 6px 6px;
+  cursor: pointer;
+}
+
+.site.is-inactive .site__label {
+  cursor: default;
+}
+
+.site__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.site__host {
+  font-size: 13.5px;
+  font-weight: 650;
+}
+
+.site__name {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/** An on/off switch drawn over a checkbox, which keeps its keyboard and state. */
+.switch {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border-radius: 10px;
+  background: var(--border);
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 0.15s;
+}
+
+.switch::before {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  content: "";
+  transition: transform 0.15s;
+}
+
+.switch:checked {
+  background: var(--teal);
+}
+
+.switch:checked::before {
+  transform: translateX(14px);
+}
+
+.switch:disabled {
+  cursor: default;
+}
+
+/**
+ * A region's sites under a heading: its code in a small pill, then its name.
+ */
+.region {
+  flex: none;
+}
+
+.region__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 13px 8px 2px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/** The whole heading folds its region: chevron, code and name. */
+.region__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.region__toggle:hover {
+  color: var(--text);
+}
+
+/** The region's switch, in line with the switches of its sites. */
+.region__title > .switch {
+  margin-left: auto;
+}
+
+.region__code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--teal-soft);
+  color: var(--teal-strong);
+  letter-spacing: 0.04em;
+}
+
+.region__sites {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
