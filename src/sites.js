@@ -1275,6 +1275,29 @@ export const SITE_PRESETS = {
    * by the same ProductPrice component as the product's own, which is why
    * that one is matched only inside the product's price block, and the
    * service blocks and pop-ups are excluded from the shared component too.
+   *
+   * Basket (www.21vek.by/order/), prices drawn by a PriceBlock component:
+   *
+   * - Each item: the old price, the current one, and the discount line.
+   *   Only the current price is matched — the one PriceBlock without the
+   *   grossPrice class — and the conversion goes last, under the discount:
+   *
+   *     <div class="BasketItem_price__…">
+   *       <div class="PriceBlock_priceBlock__… BasketItem_grossPrice__…"><span>2 699,</span><span>00 Ҕ</span></div>
+   *       <div class="PriceBlock_priceBlock__…"><span>2 599,</span><span>00 Ҕ</span></div>
+   *       <p class="BasketItem_promotion__…">Скидка <span>100,00 Ҕ</span></p>
+   *     </div>
+   *
+   * - The order total, label left and amount right; its amount alone, not
+   *   the goods subtotal or the discount under it. The row is a flex row
+   *   underlined with a border, so the conversion goes inside it, above the
+   *   line: `pageStyles` lets the row wrap, and a full-width basis gives the
+   *   conversion a line of its own, right-aligned under the amount:
+   *
+   *     <div class="OrderPrice_totalPrice__… OrderPrice_row__…">
+   *       <span>Итого</span>
+   *       <div data-testid="total-price" class="PriceBlock_priceBlock__… …">…2 599,00 Ҕ</div>
+   *     </div>
    */
   '21vek.by': {
     priceSelector: [
@@ -1282,6 +1305,8 @@ export const SITE_PRESETS = {
       '[class*="ListingSEOProductsTable_price__"]',
       '[class*="Prices_priceContainer__"] > [class*="ProductPrice_productPrice__"]',
       '[class*="CollectionProduct_prices__"] > :first-child',
+      '[class*="BasketItem_price__"] > [class*="PriceBlock_priceBlock__"]:not([class*="BasketItem_grossPrice__"])',
+      '[data-testid="total-price"]',
     ].join(', '),
     priceContainer: '.Price-module__container',
     flexBasis: '100%',
@@ -1302,6 +1327,9 @@ export const SITE_PRESETS = {
         white-space: normal !important;
       }
       [class*="CollectionProduct_container__"] {
+        flex-wrap: wrap !important;
+      }
+      [class*="OrderPrice_totalPrice__"]:has(> [data-byn-to-currency]) {
         flex-wrap: wrap !important;
       }
     `,
@@ -1330,6 +1358,17 @@ export const SITE_PRESETS = {
       {
         selector: '[class*="CollectionProduct_prices__"]',
         priceContainer: '[class*="CollectionProduct_container__"]',
+      },
+      {
+        selector: '[class*="BasketItem_price__"]',
+        priceContainer: '[class*="BasketItem_price__"]',
+        flexBasis: null,
+      },
+      {
+        selector: '[data-testid="total-price"]',
+        priceContainer: '[class*="OrderPrice_totalPrice__"]',
+        textAlign: 'right',
+        fontWeight: '400',
       },
     ],
   },
