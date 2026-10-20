@@ -1380,9 +1380,83 @@ export const SITE_PRESETS = {
    * 16px under the price (priceBlock--…), and −8px over the badges below,
    * which reach up into that space. Margins collapse: −12px above leaves 4px
    * under the price, and 16px below leaves the badges their usual 8px.
+   *
+   * "Other offers" on the product page, each seller's price in bold:
+   *
+   *   <div class="itemContent--…">
+   *     <div class="priceWrap--…"><b class="mo-typography …">21,15 ƃ</b></div>
+   *     …rating, delivery day, seller…
+   *   </div>
+   *
+   * The price's div lays out sideways, so the conversion goes after it, on
+   * a line of its own above the rating. ("priceWrap--" is case-sensitive,
+   * so the product's own priceBlockPriceWrap-- never matches.)
+   *
+   * Other sellers' page (www.wildberries.by/catalog/762229639/other-sellers),
+   * one line per seller, the current price beside the old one:
+   *
+   *   <div class="productLinePrice--…">
+   *     <div class="productLinePriceWrapDesktop--…">
+   *       <div class="productLinePriceContainer--…">
+   *         <span class="… productLinePriceNow--…"><span>19,63 ƃ</span></span>
+   *       </div>
+   *       <span class="… productLinePriceOld--…">21,22 ƃ</span>
+   *     </div>
+   *   </div>
+   *
+   * The conversion goes after the pair, under them, one currency a line.
+   *
+   * "Предложения продавцов" on a product page: one row per seller, laid out
+   * in columns — description, price, delivery button, seller:
+   *
+   *   <div class="container--…">
+   *     <div class="description--…">…</div>
+   *     <div class="price--…">                              (current over old)
+   *       <span class="… priceNow--…">21,15 ƃ</span>
+   *       <span class="… priceOld--…">72,26 ƃ</span>
+   *     </div>
+   *     <button …>Послезавтра</button>
+   *     …seller…
+   *
+   * After the price div, as on the cards, the conversion would take a
+   * column slot of its own, far from the price. So it goes last in the price
+   * div, one currency a line, and `pageStyles` turns that div into two
+   * columns — current over old price, and the conversion beside them:
+   *
+   *   21,15 ƃ   $7.06
+   *   72,26 ƃ   €6.29
+   *             585 ₽
+   *
+   * Only a price div holding a conversion is changed. ("priceNow--" is
+   * case-sensitive, so the other sellers' productLinePriceNow-- never
+   * matches it.)
    */
   'wildberries.by': {
-    priceSelector: '[class*="mainPriceWrapper--"] > ins, [class*="priceBlockFinalPrice--"], .price__lower-price',
+    pageStyles: `
+      div[class^="price--"]:has(> [class*="priceNow--"]):has(> [data-byn-to-currency]) {
+        display: grid !important;
+        grid-template-columns: auto auto;
+        column-gap: 12px;
+        align-items: start;
+      }
+      div[class^="price--"]:has(> [class*="priceNow--"]) > [class*="priceNow--"],
+      div[class^="price--"]:has(> [class*="priceNow--"]) > [class*="priceOld--"] {
+        grid-column: 1;
+      }
+      div[class^="price--"]:has(> [class*="priceNow--"]) > [data-byn-to-currency] {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+      }
+    `,
+
+    priceSelector: [
+      '[class*="mainPriceWrapper--"] > ins',
+      '[class*="priceBlockFinalPrice--"]',
+      '[class*="priceWrap--"] > b',
+      '[class*="productLinePriceNow--"]',
+      '[class*="priceNow--"]',
+      '.price__lower-price',
+    ].join(', '),
     priceContainer: 'div[class^="price--"], div[class*=" price--"], .product-card__price',
     insertPosition: 'afterContainer',
     fontSize: '13px',
@@ -1394,6 +1468,20 @@ export const SITE_PRESETS = {
         insertPosition: 'append',
         fontSize: '16px',
         margin: '-12px 0 16px',
+      },
+      {
+        selector: '[class*="priceWrap--"]',
+        priceContainer: '[class*="priceWrap--"]',
+      },
+      {
+        selector: '[class*="productLinePriceNow--"]',
+        priceContainer: '[class*="productLinePriceWrapDesktop--"]',
+        layout: LAYOUT.BLOCK,
+      },
+      {
+        selector: '[class*="priceNow--"]',
+        insertPosition: 'append',
+        layout: LAYOUT.BLOCK,
       },
     ],
   },
