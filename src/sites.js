@@ -1430,6 +1430,24 @@ export const SITE_PRESETS = {
    * Only a price div holding a conversion is changed. ("priceNow--" is
    * case-sensitive, so the other sellers' productLinePriceNow-- never
    * matches it.)
+   *
+   * Basket (www.wildberries.by/lk/basket), in the site's older markup:
+   *
+   * - Each item's price, in a column with the old price under it:
+   *
+   *     <div class="list-item__price">
+   *       <div class="list-item__price-new">19,63 ƃ</div>
+   *       <div class="list-item__price-old">21,22 ƃ</div>
+   *     </div>
+   *
+   *   The conversion goes last in that column, under the old price.
+   *
+   * - The order total, label left and amount right:
+   *
+   *     <p class="b-top__total line …"><span>Итого</span><span>1 314,87 ƃ</span></p>
+   *
+   *   Only the total converts, not the goods subtotal or the discount above
+   *   it. The conversion goes under the line, right-aligned under the amount.
    */
   'wildberries.by': {
     pageStyles: `
@@ -1455,6 +1473,8 @@ export const SITE_PRESETS = {
       '[class*="priceWrap--"] > b',
       '[class*="productLinePriceNow--"]',
       '[class*="priceNow--"]',
+      '.list-item__price-new',
+      '.b-top__total > span:last-child',
       '.price__lower-price',
     ].join(', '),
     priceContainer: 'div[class^="price--"], div[class*=" price--"], .product-card__price',
@@ -1482,6 +1502,16 @@ export const SITE_PRESETS = {
         selector: '[class*="priceNow--"]',
         insertPosition: 'append',
         layout: LAYOUT.BLOCK,
+      },
+      {
+        selector: '.list-item__price',
+        priceContainer: '.list-item__price',
+        insertPosition: 'append',
+      },
+      {
+        selector: '.b-top__total',
+        priceContainer: '.b-top__total',
+        textAlign: 'right',
       },
     ],
   },

@@ -28,7 +28,7 @@ const MARKER_ATTRIBUTE = 'data-byn-to-currency';
  */
 const STYLE_FIELDS = [
   'fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity',
-  'flexBasis', 'order', 'margin', 'whiteSpace', 'float', 'width',
+  'flexBasis', 'order', 'margin', 'whiteSpace', 'float', 'width', 'textAlign',
 ];
 
 /**
