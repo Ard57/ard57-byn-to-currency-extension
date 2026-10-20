@@ -59,6 +59,10 @@
     "message": "Автобарахолка",
     "description": "ab.onliner.by"
   },
+  "site_cart_onliner_by": {
+    "message": "Корзина",
+    "description": "cart.onliner.by"
+  },
   "site_mb_onliner_by": {
     "message": "Мотобарахолка",
     "description": "mb.onliner.by"

@@ -253,6 +253,52 @@ export const SITE_PRESETS = {
   },
 
   /**
+   * Cart (cart.onliner.by): each item's price, each store's total, and the
+   * whole cart's in the heading. Not the delivery terms or anything else.
+   *
+   *   <div class="cart-form__offers-part cart-form__offers-part_price …">
+   *     <div class="cart-form__description … _font-weight_semibold cart-form__description_ellipsis …">1649,00 ƃ</div>
+   *     <div class="…">В наличии на складе</div>
+   *   </div>
+   *
+   *   <div class="cart-form__offers-part cart-form__offers-part_sum …">
+   *     <div class="cart-form__description … _ellipsis …"><span>1649,00 ƃ</span> <span>за 1 товар</span></div>
+   *   </div>
+   *
+   *   <div class="cart-form__part cart-form__part_wide">
+   *     …"Корзина"…
+   *     <div class="cart-form__description … cart-form__description_condensed-other">2 товара на сумму: 1939,21 ƃ</div>
+   *
+   * An item's price is drawn twice, for narrow screens and wide, one of them
+   * hidden; both convert, so the one on screen has its line. The price and
+   * the store total each sit in a line cut short with an ellipsis, so the
+   * conversion goes after that line, under it. The cart total's line does
+   * not clip, and takes it on a line of its own inside.
+   */
+  'cart.onliner.by': {
+    priceSelector: [
+      '.cart-form__offers-part_price > .cart-form__description_font-weight_semibold',
+      '.cart-form__offers-part_sum > .cart-form__description > span:first-child',
+      '.cart-form__part_wide > .cart-form__description_condensed-other',
+    ].join(', '),
+    insertPosition: 'after',
+    priceContainer: null,
+
+    styles: [
+      {
+        selector: '.cart-form__offers-part_sum',
+        priceContainer: '.cart-form__offers-part_sum > .cart-form__description',
+        insertPosition: 'afterContainer',
+      },
+      {
+        selector: '.cart-form__part_wide',
+        insertPosition: 'append',
+        priceContainer: '.cart-form__description_condensed-other',
+      },
+    ],
+  },
+
+  /**
    * Real estate. Prices run to six or seven figures, so no cents anywhere.
    * The page always shows BYN (the ?currency= parameter changes nothing).
    *

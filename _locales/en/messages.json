@@ -59,6 +59,10 @@
     "message": "Cars",
     "description": "ab.onliner.by"
   },
+  "site_cart_onliner_by": {
+    "message": "Cart",
+    "description": "cart.onliner.by"
+  },
   "site_mb_onliner_by": {
     "message": "Motorcycles",
     "description": "mb.onliner.by"
