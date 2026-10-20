@@ -1213,12 +1213,45 @@ export const SITE_PRESETS = {
    *
    * Matched by the shared classes alone, so every price the component
    * draws anywhere on the site converts the same way.
+   *
+   * Category pages (www.21vek.by/mobile/) end with a small SEO table of
+   * products and prices, drawn without the component:
+   *
+   *   <tr data-testid="seo-product-10203906">
+   *     <th>…product link…</th>
+   *     <th><span class="ListingSEOProductsTable_price__… Text-module__caption">77,00 Ҕ</span></th>
+   *   </tr>
+   *
+   * The conversion goes in the price's cell, under the price, at the
+   * table's caption size rather than the 13px of the cards.
+   *
+   * As 21vek draws it, the price column is only as wide as the price: the
+   * name column takes the rest, its names taken out of the flow and cut
+   * short to one line. A conversion there wraps in a sliver. `pageStyles`
+   * gives the price column 35% of the table and lets both columns wrap: the
+   * names go back into the flow, and the row grows to fit.
    */
   '21vek.by': {
-    priceSelector: '.Price-module__price',
+    priceSelector: '.Price-module__price, [class*="ListingSEOProductsTable_price__"]',
     priceContainer: '.Price-module__container',
     flexBasis: '100%',
     fontSize: '13px',
+
+    pageStyles: `
+      [class*="ListingSEOProductsTable_container__"] th:first-child {
+        width: 65% !important;
+        padding-right: 16px !important;
+      }
+      [class*="ListingSEOProductsTable_container__"] th:last-child {
+        width: 35% !important;
+      }
+      [class*="ListingSEOProductsTable_linkWrapper__"] {
+        position: static !important;
+      }
+      [class*="ListingSEOProductsTable_linkContent__"] {
+        white-space: normal !important;
+      }
+    `,
 
     styles: [
       {
@@ -1227,6 +1260,12 @@ export const SITE_PRESETS = {
         insertPosition: 'afterContainer',
         flexBasis: null,
         margin: '6px 0 0',
+      },
+      {
+        selector: '[class*="ListingSEOProductsTable_price__"]',
+        priceContainer: 'th',
+        flexBasis: null,
+        fontSize: '0.85em',
       },
     ],
   },

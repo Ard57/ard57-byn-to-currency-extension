@@ -215,7 +215,35 @@ function render(rows, settings) {
 }
 
 /**
- * Removes every conversion this extension has inserted under `root`.
+ * Puts `settings.pageStyles` on the page, in a style element marked like the
+ * conversions so that removeConversions() takes it away with them. Replaced
+ * when the styles change, removed when there are none, otherwise left alone —
+ * it runs on every scan.
+ *
+ * @param {Object} settings - Resolved settings for the current URL
+ */
+export function applyPageStyles(settings) {
+  const existing = document.querySelector(`style[${MARKER_ATTRIBUTE}]`);
+  const css = settings?.pageStyles;
+
+  if (existing && existing.textContent === css) {
+    return;
+  }
+  existing?.remove();
+
+  if (!css) {
+    return;
+  }
+
+  const style = document.createElement('style');
+  style.setAttribute(MARKER_ATTRIBUTE, '');
+  style.textContent = css;
+  (document.head ?? document.documentElement).append(style);
+}
+
+/**
+ * Removes every conversion this extension has inserted under `root`, and
+ * the page styles that went with them.
  *
  * For when the settings change rather than the page: the prices themselves
  * are untouched, so annotatePrices() would skip each one as already done and

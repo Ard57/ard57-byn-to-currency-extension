@@ -1,5 +1,5 @@
 import { isSiteEnabled, loadSettings, resolveSettings } from './settings.js';
-import { annotatePrices, removeConversions } from './inject.js';
+import { annotatePrices, applyPageStyles, removeConversions } from './inject.js';
 
 /**
  * Content script entry point, loaded by content.js.
@@ -38,8 +38,15 @@ async function start() {
   // A site switched off in the popup is left as the site drew it. Checked on
   // every scan, like the settings, since it can be switched back on while
   // the page is open.
-  const scan = () => isSiteEnabled(location.href, stored)
-    && annotatePrices(document, resolveSettings(location.href, stored), rates);
+  const scan = () => {
+    if (!isSiteEnabled(location.href, stored)) {
+      return 0;
+    }
+
+    const settings = resolveSettings(location.href, stored);
+    applyPageStyles(settings);
+    return annotatePrices(document, settings, rates);
+  };
   scan();
 
   // Catalogs render and re-render prices after load: filtering, sorting,

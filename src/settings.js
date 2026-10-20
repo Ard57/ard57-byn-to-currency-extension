@@ -107,6 +107,14 @@ export const DEFAULT_SETTINGS = {
   fontSize: '0.85em',
   opacity: 0.85,
   styles: [],
+
+  /**
+   * CSS added to the page while it converts, for the rare layout a
+   * conversion cannot fit into without a change to the site's own elements —
+   * a table column to widen, text to let wrap. Removed with the conversions
+   * when the site is switched off. Null adds nothing.
+   */
+  pageStyles: null,
 };
 
 /**
