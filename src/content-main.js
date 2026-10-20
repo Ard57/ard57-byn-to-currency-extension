@@ -51,13 +51,18 @@ async function start() {
 
   // Catalogs render and re-render prices after load: filtering, sorting,
   // pagination. Rescanning is cheap because unchanged prices are skipped.
+  //
+  // The document itself is watched, not its root element: a page can swap
+  // the root for a new one — wildberries.by first serves an anti-bot check
+  // that gives way to the store — and an observer on the old root would
+  // never hear of anything under the new.
   let pending = null;
   new MutationObserver(() => {
     pending ??= setTimeout(() => {
       pending = null;
       scan();
     }, SCAN_DELAY_MS);
-  }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+  }).observe(document, { childList: true, subtree: true, characterData: true });
 
   // Settings changes come in bursts — every pick in the popup's picker is
   // one — so only the latest one's rates are applied.

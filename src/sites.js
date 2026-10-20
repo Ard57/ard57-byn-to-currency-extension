@@ -1333,6 +1333,70 @@ export const SITE_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Marketplace. Prices write BYN as "ƃ", as onliner does. Class names are
+   * hashed per build (price--TuQtK), so they are matched by their stable
+   * part. The main page's product cards, plain and accented alike:
+   *
+   *   <article class="main-page__product product-card …">
+   *     <div class="catalogCard--… [accentCatalogCard--…]">
+   *       <div class="middleWrap--…">
+   *         <div class="price--…">
+   *           <span class="firstRowPrice--…">
+   *             <span class="mainPriceWrapper--…"><ins class="mo-typography …">21,15 ƃ</ins></span>
+   *             <del class="mo-typography …">72,26 ƃ</del>    (on sale only)
+   *           </span>
+   *         </div>
+   *         …name…
+   *
+   * The current price is the <ins>; the struck-through <del> is never
+   * matched. The cards are narrow, so the conversion goes after the whole
+   * price line, across the card, where it wraps within the card's width — as
+   * on 21vek's small cards.
+   *
+   * The card every Wildberries site used before the redesign
+   * (ins.price__lower-price in p.product-card__price) is matched too, for
+   * pages that still draw it.
+   *
+   * Product page (www.wildberries.by/catalog/823725522/detail.aspx): the
+   * price beside the struck-through old one, which is a span of its own:
+   *
+   *   <div class="productSummary--…">
+   *     …promo timer…
+   *     <div class="productPrice--… productPriceAside--…">
+   *       …
+   *         <div class="priceBlockPriceWrapper--…">          (lays out in a row)
+   *           <div class="priceBlockPriceWrap--…">
+   *             <span class="priceBlockPrice--…"><ins class="… priceBlockFinalPrice--…">21,15 ƃ</ins></span>
+   *             <span class="… priceBlockOldPrice--…">72,26 ƃ</span>
+   *           </div>
+   *     </div>
+   *     …"Хорошая цена" badges, buttons…
+   *
+   * The row holding the price lays out sideways (and clips), so the
+   * conversion goes at the end of the whole price block instead, under the
+   * row — larger than on the cards. Measured there, two margins meet it:
+   * 16px under the price (priceBlock--…), and −8px over the badges below,
+   * which reach up into that space. Margins collapse: −12px above leaves 4px
+   * under the price, and 16px below leaves the badges their usual 8px.
+   */
+  'wildberries.by': {
+    priceSelector: '[class*="mainPriceWrapper--"] > ins, [class*="priceBlockFinalPrice--"], .price__lower-price',
+    priceContainer: 'div[class^="price--"], div[class*=" price--"], .product-card__price',
+    insertPosition: 'afterContainer',
+    fontSize: '13px',
+
+    styles: [
+      {
+        selector: '[class*="priceBlockFinalPrice--"]',
+        priceContainer: '[class*="productPrice--"]',
+        insertPosition: 'append',
+        fontSize: '16px',
+        margin: '-12px 0 16px',
+      },
+    ],
+  },
 };
 
 /**

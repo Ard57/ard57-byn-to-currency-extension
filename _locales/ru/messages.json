@@ -109,6 +109,10 @@
     "message": "Онлайн-гипермаркет",
     "description": "21vek.by"
   },
+  "site_wildberries_by": {
+    "message": "Маркетплейс",
+    "description": "wildberries.by"
+  },
   "popupSaved": {
     "message": "Сохранено"
   },
