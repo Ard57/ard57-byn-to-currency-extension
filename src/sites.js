@@ -1,6 +1,16 @@
 import { LAYOUT } from './format.js';
 
 /**
+ * Anything inside 21vek's add-on services — the block on a product page, its
+ * pop-ups, and the offer of services after adding to the basket — for
+ * leaving their prices alone. A descendant selector, for use in :not().
+ */
+const VEK_SERVICES = [
+  'ServicesBlock_', 'ServiceItem_', 'ServiceModalItem_', 'ServicesModal_',
+  'NewServices_', 'AddPromotionServicesModal_',
+].map(prefix => `[class*="${prefix}"] *`).join(', ');
+
+/**
  * Built-in site presets, shipped with the extension.
  *
  * These are defaults, not user data: they sit between DEFAULT_SETTINGS and
@@ -1230,9 +1240,49 @@ export const SITE_PRESETS = {
    * short to one line. A conversion there wraps in a sliver. `pageStyles`
    * gives the price column 35% of the table and lets both columns wrap: the
    * names go back into the flow, and the row grows to fit.
+   *
+   * Product page (www.21vek.by/mobile/iphone17256gb_apple_10019135.html):
+   *
+   * - The product's own price, also drawn without the component, in a block
+   *   with the old price under it; the conversion goes last in that block:
+   *
+   *     <div class="Prices_wrapper__…">
+   *       <div class="Prices_priceContainer__…">
+   *         <span data-testid="productPrice-3399" class="ProductPrice_productPrice__… …">3 399,<span>00 Ҕ</span></span>
+   *         …discount label, info button…
+   *       </div>
+   *       <div class="Prices_oldPrice__…">4 099,00 Ҕ</div>
+   *     </div>
+   *
+   * - "Другие товары коллекции", a carousel of small tiles: a picture beside
+   *   the name, and under the name the price beside the basket button. The
+   *   price is a bare bold text span, first in its block:
+   *
+   *     <div class="CollectionProduct_container__…">          (flex row)
+   *       …80px picture…
+   *       <div class="CollectionProduct_content__…">
+   *         …name…
+   *         <div class="CollectionProduct_info__…">
+   *           <div class="CollectionProduct_prices__…"><span>2 899,00 Ҕ</span>…old price…</div>
+   *           …basket button…
+   *
+   *   The conversion goes last in the tile, across its whole width, under
+   *   picture, price and button alike. The tile's row does not wrap, so
+   *   `pageStyles` lets it: a full-width basis then starts a line of its own.
+   *
+   * Add-ons offered with a product — warranty, setup, insurance — are not
+   * converted: they are not what the page is selling. Their prices are drawn
+   * by the same ProductPrice component as the product's own, which is why
+   * that one is matched only inside the product's price block, and the
+   * service blocks and pop-ups are excluded from the shared component too.
    */
   '21vek.by': {
-    priceSelector: '.Price-module__price, [class*="ListingSEOProductsTable_price__"]',
+    priceSelector: [
+      `.Price-module__price:not(${VEK_SERVICES})`,
+      '[class*="ListingSEOProductsTable_price__"]',
+      '[class*="Prices_priceContainer__"] > [class*="ProductPrice_productPrice__"]',
+      '[class*="CollectionProduct_prices__"] > :first-child',
+    ].join(', '),
     priceContainer: '.Price-module__container',
     flexBasis: '100%',
     fontSize: '13px',
@@ -1251,6 +1301,9 @@ export const SITE_PRESETS = {
       [class*="ListingSEOProductsTable_linkContent__"] {
         white-space: normal !important;
       }
+      [class*="CollectionProduct_container__"] {
+        flex-wrap: wrap !important;
+      }
     `,
 
     styles: [
@@ -1266,6 +1319,17 @@ export const SITE_PRESETS = {
         priceContainer: 'th',
         flexBasis: null,
         fontSize: '0.85em',
+      },
+      {
+        selector: '[class*="ProductPrice_productPrice__"]',
+        priceContainer: '[class*="Prices_wrapper__"]',
+        flexBasis: null,
+        fontSize: '16px',
+        margin: '4px 0 0',
+      },
+      {
+        selector: '[class*="CollectionProduct_prices__"]',
+        priceContainer: '[class*="CollectionProduct_container__"]',
       },
     ],
   },
