@@ -1,5 +1,5 @@
 import { BY_PRESETS } from './sites/by.js';
-
+import { PL_PRESETS } from './sites/pl.js';
 
 /**
  * Built-in site presets, shipped with the extension.
@@ -57,6 +57,7 @@ import { BY_PRESETS } from './sites/by.js';
  */
 export const SITE_PRESETS = {
   ...BY_PRESETS,
+  ...PL_PRESETS,
 };
 
 /**
