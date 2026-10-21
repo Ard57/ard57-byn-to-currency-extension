@@ -104,11 +104,37 @@ export const PL_PRESETS = {
    * The per-m² figure rides along on each line, one currency a line, as on
    * re.kufar.by: "$166,111 · $5,537/m²". The stack goes under the whole row,
    * above the title, leaving the price and the heart where they are.
+   *
+   * Offer page (www.otodom.pl/pl/oferta/…): the price and its per-m² figure,
+   * each in a wrapper of its own, in a section under the title:
+   *
+   *   <div class="css-zh1qtc …">                          (price section)
+   *     <div …><strong data-cy="adPageHeaderPrice" …>780 000 zł</strong></div>
+   *     <div …><div aria-label="Cena za metr kwadratowy" …>15 918,37 zł/m²</div></div>
+   *   </div>
+   *   …loan advert…
+   *
+   * The same stack as on search cards, larger, under the whole section.
+   *
+   * Recommendations on the offer page carry no data-cy, but name their parts
+   * in the attributes of Otodom's error reporting (data-sentry-*):
+   *
+   *   <div data-sentry-component="RecommendedAdItemDetails" …>
+   *     <div data-sentry-element="PriceWrapper" …><h2 …>950 000 zł</h2></div>
+   *     <p …>…address…</p>
+   *     <div …>…3 pokoje · 46 m² · 20 652,17 zł/m²…</div>
+   *   </div>
+   *
+   * The conversion goes under the price, above the address. The per-m²
+   * figure is just one unlabelled spec among others here, so it is left
+   * out rather than picked by position.
    */
   'otodom.pl': {
     priceSelector: [
       '[data-cy="offer-card"] > span > p:first-child',
       '[data-cy="listing-item-price"] > span:first-child',
+      '[data-cy="adPageHeaderPrice"]',
+      '[data-sentry-element="PriceWrapper"] > h2',
     ].join(', '),
     priceContainer: ':scope',
     insertPosition: 'append',
@@ -126,6 +152,23 @@ export const PL_PRESETS = {
           selector: '[data-cy="listing-item-price"] > span:nth-child(2)',
           suffix: '/m²',
         },
+      },
+      {
+        selector: '[data-cy="adPageHeaderPrice"]',
+        priceContainer: 'div:has(> div > [data-cy="adPageHeaderPrice"])',
+        insertPosition: 'afterContainer',
+        layout: LAYOUT.BLOCK,
+        fontSize: '16px',
+        companion: {
+          scope: 'div:has(> div > [data-cy="adPageHeaderPrice"])',
+          selector: '[aria-label="Cena za metr kwadratowy"]',
+          suffix: '/m²',
+        },
+      },
+      {
+        selector: '[data-sentry-element="PriceWrapper"]',
+        priceContainer: '[data-sentry-element="PriceWrapper"]',
+        insertPosition: 'afterContainer',
       },
     ],
   },
