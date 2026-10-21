@@ -1,6 +1,6 @@
 import { convertPrices } from './format.js';
 import { DEFAULT_SETTINGS, SOURCE_CURRENCY, loadSettings, setDefaults } from './settings.js';
-import { SITE_PRESETS, hostnameChain } from './sites.js';
+import { REGIONS, SITE_PRESETS, hostnameChain } from './sites.js';
 
 /**
  * The toolbar popup: which currencies prices are converted into, and in what
@@ -1135,13 +1135,14 @@ function regionName(code) {
 }
 
 /**
- * The sites, grouped by region under a heading each, in the order sites.js
- * lists them. A region folds away under its heading, and a domain's
+ * The sites, grouped by region under a heading each — every region in
+ * REGIONS, in its order, even one with no sites yet — and within a region in
+ * the order sites.js lists them. A region folds away under its heading, and a domain's
  * subdomains under the domain. Regions start unfolded and domains folded, so
  * the tab opens on one line per site; folding by hand is remembered.
  */
 function renderSites() {
-  const regions = new Map();
+  const regions = new Map(Object.keys(REGIONS).map(code => [code.toUpperCase(), []]));
   for (const host of SITE_HOSTS) {
     const code = siteRegion(host);
     regions.set(code, [...(regions.get(code) ?? []), host]);
@@ -1154,6 +1155,9 @@ function renderSites() {
 
     list.id = `region-${code}`;
     list.append(...hosts.filter(host => !hosts.includes(siteParent(host))).map(host => siteNode(host, hosts)));
+    if (hosts.length === 0) {
+      list.append(el('li', 'rows__empty', t('popupRegionEmpty', 'No sites here yet')));
+    }
 
     const toggle = foldButton(`region:${code}`, list, 'region__toggle', false);
     toggle.append(el('span', 'region__code', code), el('span', 'region__name', regionName(code)));

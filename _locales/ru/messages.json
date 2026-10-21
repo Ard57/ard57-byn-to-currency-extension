@@ -59,6 +59,10 @@
     "message": "Автобарахолка",
     "description": "ab.onliner.by"
   },
+  "site_cart_onliner_by": {
+    "message": "Корзина",
+    "description": "cart.onliner.by"
+  },
   "site_mb_onliner_by": {
     "message": "Мотобарахолка",
     "description": "mb.onliner.by"
@@ -105,6 +109,30 @@
       }
     }
   },
+  "site_21vek_by": {
+    "message": "Онлайн-гипермаркет",
+    "description": "21vek.by"
+  },
+  "site_ozon_by": {
+    "message": "Маркетплейс",
+    "description": "ozon.by"
+  },
+  "site_olx_pl": {
+    "message": "Объявления",
+    "description": "olx.pl"
+  },
+  "site_otodom_pl": {
+    "message": "Недвижимость",
+    "description": "otodom.pl"
+  },
+  "site_wildberries_by": {
+    "message": "Маркетплейс",
+    "description": "wildberries.by"
+  },
+  "popupRegionEmpty": {
+    "message": "Сайтов пока нет",
+    "description": "Shown on the Sites tab under a region that has no sites yet."
+  },
   "popupSaved": {
     "message": "Сохранено"
   },
@@ -112,7 +140,7 @@
     "message": "Пересчёт выключен"
   },
   "popupSourceHint": {
-    "message": "На поддерживаемых сайтах цены и так в этой валюте",
+    "message": "На белорусских сайтах не показывается: цены там и так в BYN",
     "description": "Tooltip on the source currency row in the popup."
   },
   "popupPreviewNone": {
