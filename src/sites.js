@@ -1457,11 +1457,35 @@ export const SITE_PRESETS = {
    *     <div class="… tsBody400Small">28,00 BYN за 1 шт</div>
    *
    * The conversion goes under the price row, above the per-unit line.
+   *
+   * Cart (ozon.by/cart): each item's price sits in the grid's price column,
+   * built like a tile's price block one level deeper:
+   *
+   *   <div data-widget="cartSplit" …>
+   *     …
+   *     <div class="checkout_u7">                         (price column)
+   *       <div class="checkout_q9">                       (flex row)
+   *         <div class="… c35_6_2-a …"><div …>
+   *           <span class="… tsHeadline400Small …">32.6 BYN</span>
+   *           <span class="… tsBodyControl300XSmall …">…79.75 BYN…</span>   (old)
+   *
+   * The conversion goes under that flex row. The summary on the right lists
+   * goods, discount and the total; only the total is converted. Its row is
+   * the one whose first child is a span (the label) rather than a div:
+   *
+   *   <section data-widget="total" …>
+   *     <div class="checkout_ag2">                       (flex, space-between)
+   *       <span …><span …>Общая стоимость</span></span>
+   *       <div …><span …>68.8 BYN</span></div>
+   *
+   * The conversion goes under that row, right-aligned with the total.
    */
   'ozon.by': {
     priceSelector: [
       '.tile-root span[class*="tsHeadline"]',
       '[data-widget="webPrice"] span[class*="tsHeadline"]',
+      '[data-widget="cartSplit"] span[class*="tsHeadline"]',
+      '[data-widget="total"] div:has(> span:first-child) > div > span',
     ].join(', '),
     priceContainer: '.tile-root > div > div',
     insertPosition: 'afterContainer',
@@ -1472,6 +1496,17 @@ export const SITE_PRESETS = {
         selector: '[data-widget="webPrice"]',
         priceContainer: '[data-widget="webPrice"] > div > div',
         fontSize: '16px',
+      },
+      {
+        selector: '[data-widget="cartSplit"]',
+        priceContainer: 'div:has(> div > div > span[class*="tsHeadline"])',
+      },
+      {
+        selector: '[data-widget="total"]',
+        priceContainer: 'div:has(> span:first-child):has(> div > span)',
+        fontSize: '14px',
+        textAlign: 'right',
+        margin: '4px 0 0',
       },
     ],
   },
