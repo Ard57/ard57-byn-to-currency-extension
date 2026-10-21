@@ -1440,12 +1440,40 @@ export const SITE_PRESETS = {
    * The current price is the one headline-type text in a tile; the old price
    * and the discount are body text. The conversion goes after the price
    * block, on a line of its own above the name.
+   *
+   * Product page: the price widget, current price beside the old one, then a
+   * per-unit line that is left alone:
+   *
+   *   <div data-widget="webPrice" …>
+   *     <div …>
+   *       <div …>                                         (price row)
+   *         <div …><div …>
+   *           <span class="… tsHeadline600Large">27,23 BYN</span>
+   *           <span class="… tsBody400Small">172,80 BYN</span>      (old)
+   *         </div></div>
+   *         …info icon…
+   *       </div>
+   *     </div>
+   *     <div class="… tsBody400Small">28,00 BYN за 1 шт</div>
+   *
+   * The conversion goes under the price row, above the per-unit line.
    */
   'ozon.by': {
-    priceSelector: '.tile-root span[class*="tsHeadline"]',
+    priceSelector: [
+      '.tile-root span[class*="tsHeadline"]',
+      '[data-widget="webPrice"] span[class*="tsHeadline"]',
+    ].join(', '),
     priceContainer: '.tile-root > div > div',
     insertPosition: 'afterContainer',
     fontSize: '13px',
+
+    styles: [
+      {
+        selector: '[data-widget="webPrice"]',
+        priceContainer: '[data-widget="webPrice"] > div > div',
+        fontSize: '16px',
+      },
+    ],
   },
 
   /**
