@@ -16,11 +16,10 @@ export const PL_PRESETS = {
    * left alone. A negotiable price carries "do negocjacji" inside the price
    * element, under the amount.
    *
-   * The conversion goes in front of the price. The wide tiles of a search
-   * (www.olx.pl/motoryzacja/) pin the price to the right end of a row, and a
-   * conversion after it would push it inwards; in front, the price stays put
-   * and the conversion takes the room to its left. In the main page's
-   * narrow cards, a column, it goes above the price.
+   * The conversion goes under the price — except on search and category
+   * pages (www.olx.pl/motoryzacja/), whose wide tiles pin the price to the
+   * right end of a row: a conversion after it would push it inwards, so
+   * there it goes in front, and the price stays put.
    *
    * Ad page (www.olx.pl/d/oferta/…): the price is a heading in a container
    * of its own, "Do negocjacji" beside it where it applies:
@@ -31,27 +30,35 @@ export const PL_PRESETS = {
    *   </div>
    *
    * The conversion goes under the heading, larger than on the cards.
-   *
-   * Wherever it goes, the conversion takes a line of its own: `pageStyles`
-   * lets the row holding it wrap and stretches it across that row, so in a
-   * wide tile it sits above the price rather than squeezed beside it.
    */
   'olx.pl': {
     priceSelector: [
       '[data-testid="ad-price"]',
       '[data-testid="ad-price-container"] h3',
     ].join(', '),
-    insertPosition: 'before',
+    insertPosition: 'after',
     fontSize: '13px',
 
+    // On the ad page the heading shares a row with what follows it, so the
+    // row is let wrap and the conversion stretched across it, onto a line of
+    // its own. The cards need none of this.
     pageStyles: `
-      :has(> div[data-byn-to-currency]) {
+      [data-testid="ad-price-container"]:has(> div[data-byn-to-currency]),
+      [data-testid="ad-price-container"] :has(> div[data-byn-to-currency]) {
         flex-wrap: wrap !important;
       }
-      div[data-byn-to-currency] {
+      [data-testid="ad-price-container"] div[data-byn-to-currency] {
         width: 100%;
       }
     `,
+
+    // Only search and category pages lay ads out as wide tiles; the main
+    // page and ad pages (and their "similar ads") use narrow cards.
+    pages: [
+      { pattern: '/' },
+      { pattern: '/d/*' },
+      { pattern: '/*', insertPosition: 'before' },
+    ],
 
     styles: [
       {
