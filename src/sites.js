@@ -60,6 +60,19 @@ export const SITE_PRESETS = {
 };
 
 /**
+ * Every region the extension knows, keyed by top-level domain, in the order
+ * the popup lists them — a region shows there even before it has a site.
+ *
+ * A region's fields apply to every site under its domain, beneath the site's
+ * own preset: resolveSettings() merges them in right after the defaults. So
+ * far that is only the currency prices are written in there.
+ */
+export const REGIONS = {
+  by: { sourceCurrency: 'BYN' },
+  pl: { sourceCurrency: 'PLN' },
+};
+
+/**
  * Every hostname a preset exists for, broadest first.
  *
  * "r.onliner.by" yields ["by", "onliner.by", "r.onliner.by"] — the chain a

@@ -121,6 +121,10 @@
     "message": "Маркетплейс",
     "description": "wildberries.by"
   },
+  "popupRegionEmpty": {
+    "message": "Сайтов пока нет",
+    "description": "Shown on the Sites tab under a region that has no sites yet."
+  },
   "popupSaved": {
     "message": "Сохранено"
   },
@@ -128,7 +132,7 @@
     "message": "Пересчёт выключен"
   },
   "popupSourceHint": {
-    "message": "На поддерживаемых сайтах цены и так в этой валюте",
+    "message": "На белорусских сайтах не показывается: цены там и так в BYN",
     "description": "Tooltip on the source currency row in the popup."
   },
   "popupPreviewNone": {

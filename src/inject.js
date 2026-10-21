@@ -336,7 +336,9 @@ export function annotatePrices(root, settings, rates) {
     }
     inserted.delete(priceElement);
 
-    const parseOptions = { requireMarker: !effective.markerOptional };
+    // Read in the region's currency, which every conversion starts from.
+    const currency = effective.sourceCurrency ?? SOURCE_CURRENCY;
+    const parseOptions = { requireMarker: !effective.markerOptional, currency };
 
     // Zero converts to zero in every currency, so there is nothing to show.
     // Booking forms print a "0 BYN" total until dates are picked, and sites
@@ -351,7 +353,7 @@ export function annotatePrices(root, settings, rates) {
       ...effective,
       companion: { ...effective.companion, amount: companionPrice?.amount },
     };
-    const rows = priceRows(price.amount, SOURCE_CURRENCY, effective.currencies, rates, forPrice);
+    const rows = priceRows(price.amount, currency, effective.currencies, rates, forPrice);
     if (!rows.length) {
       continue;
     }

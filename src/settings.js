@@ -1,11 +1,13 @@
 import { LAYOUT } from './format.js';
-import { SITE_PRESETS, hostnameChain } from './sites.js';
+import { REGIONS, SITE_PRESETS, hostnameChain } from './sites.js';
 
 const SETTINGS_KEY = 'siteSettings';
 
 /**
- * The currency page prices are written in. Every conversion starts from it, so
- * its rate is always fetched regardless of what the user converts into.
+ * The currency page prices are written in where no region says otherwise,
+ * and the one the popup quotes rates in. A region sets its own as
+ * `sourceCurrency` (see REGIONS in sites.js); every region's is always
+ * fetched, whatever the user converts into.
  */
 export const SOURCE_CURRENCY = 'BYN';
 
@@ -13,8 +15,14 @@ export const SOURCE_CURRENCY = 'BYN';
  * Global fallback, used for any site the user has not configured.
  */
 export const DEFAULT_SETTINGS = {
-  /** Shown beside a price, in this order. */
-  currencies: ['USD', 'EUR', 'RUB'],
+  /**
+   * Shown beside a price, in this order. A price's own currency is left out
+   * of its conversion, so BYN shows on Polish sites but not on Belarusian.
+   */
+  currencies: ['USD', 'EUR', 'RUB', 'BYN'],
+
+  /** The currency page prices are written in; set per region. */
+  sourceCurrency: SOURCE_CURRENCY,
 
   /**
    * Every currency the popup offers, in the order it lists them — including
@@ -235,8 +243,9 @@ function ruleOverrides(rule) {
  * Layers, later wins:
  *   1. DEFAULT_SETTINGS
  *   2. The user's stored global defaults
- *   3. Built-in SITE_PRESETS along the hostname chain, broadest first
- *   4. The user's stored sites along the hostname chain, broadest first
+ *   3. The region of the top-level domain (REGIONS) — its source currency
+ *   4. Built-in SITE_PRESETS along the hostname chain, broadest first
+ *   5. The user's stored sites along the hostname chain, broadest first
  *
  * Each host applies its own fields, then its first matching page rule. All
  * presets come before any stored site, so something the user stored — even on
@@ -260,7 +269,7 @@ export function resolveSettings(url, settings = {}, presets = SITE_PRESETS) {
   }
 
   const chain = hostnameChain(normalizeHost(parsed.hostname));
-  let resolved = defaults;
+  let resolved = { ...defaults, ...REGIONS[chain[0]] };
 
   for (const sites of [presets, settings.sites]) {
     for (const host of chain) {
@@ -330,14 +339,14 @@ export function isSiteEnabled(url, settings = {}) {
  * this, a site configured for PLN would silently render nothing for it,
  * because the fetcher would never have asked for PLN.
  *
- * SOURCE_CURRENCY is always included: prices are read in it, so every
- * conversion needs its rate whatever the targets are.
+ * Every region's source currency is always included: prices are read in it,
+ * so every conversion there needs its rate whatever the targets are.
  *
  * @param {Object} settings - Stored settings object
  * @returns {string[]} Uppercased, deduplicated currency codes
  */
 export function collectCurrencies(settings = {}) {
-  const found = new Set([SOURCE_CURRENCY]);
+  const found = new Set([SOURCE_CURRENCY, ...Object.values(REGIONS).map(region => region.sourceCurrency)]);
 
   const add = list => {
     if (!Array.isArray(list)) {

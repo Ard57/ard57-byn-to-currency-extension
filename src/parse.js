@@ -1,5 +1,6 @@
 /**
- * Finding BYN prices in page text.
+ * Finding prices in page text — BYN on Belarusian sites, the region's own
+ * currency elsewhere (see MARKERS).
  *
  * Belarusian sites write prices in a handful of shapes:
  *
@@ -26,6 +27,17 @@
 const MARKER = /(?<!\p{L})(?:BYN|Br|[ƃҔҕ]|бел\.?\s*руб\.?|руб\.?|[рp]\.?)(?!\p{L})/;
 
 /**
+ * Markers for every other currency prices are read in, by code. Polish shops
+ * write "1 234,56 zł", now and then "zl" without the stroke or "PLN".
+ *
+ * A currency not listed is recognised by its code alone.
+ */
+const MARKERS = {
+  BYN: MARKER,
+  PLN: /(?<!\p{L})(?:PLN|zł|zl)(?!\p{L})/,
+};
+
+/**
  * A run of digits that may contain grouping spaces and separators.
  *
  * `\s` already covers U+00A0 (non-breaking), U+202F (narrow no-break) and
@@ -49,13 +61,29 @@ const GAP = /\s*/;
  * Composed from the regex literals above rather than written as one string:
  * every backslash then lives inside a literal, where it means what it looks
  * like, instead of being escaped twice through a string.
+ *
+ * Built once per currency, on first use.
  */
-const PRICE_PATTERN = new RegExp(
-  '(?:(?<prefix>' + MARKER.source + ')' + GAP.source + ')?' +
-  '(?<number>' + NUMBER.source + ')' +
-  '(?:' + GAP.source + '(?<suffix>' + MARKER.source + '))?',
-  'giu'
-);
+const PRICE_PATTERNS = new Map();
+
+/**
+ * @param {string} currency - Code of the currency prices are read in
+ * @returns {RegExp}
+ */
+function pricePattern(currency) {
+  if (!PRICE_PATTERNS.has(currency)) {
+    const marker = MARKERS[currency]
+      ?? new RegExp('(?<!\\p{L})' + currency.replace(/[^A-Z]/g, '') + '(?!\\p{L})');
+
+    PRICE_PATTERNS.set(currency, new RegExp(
+      '(?:(?<prefix>' + marker.source + ')' + GAP.source + ')?' +
+      '(?<number>' + NUMBER.source + ')' +
+      '(?:' + GAP.source + '(?<suffix>' + marker.source + '))?',
+      'giu'
+    ));
+  }
+  return PRICE_PATTERNS.get(currency);
+}
 
 /**
  * Parses a numeric string into a number, resolving the separator ambiguity
@@ -118,7 +146,7 @@ export function parseAmount(raw) {
 }
 
 /**
- * Finds every BYN price in a string.
+ * Finds every price in a string, in BYN unless `currency` names another.
  *
  * A bare number is never a price — without a currency marker on one side or
  * the other, annotating it would rewrite dates, quantities and model numbers.
@@ -135,18 +163,19 @@ export function parseAmount(raw) {
  * @param {string} text - Text to scan, typically one text node
  * @param {Object} [options]
  * @param {boolean} [options.requireMarker=true] - Demand a currency marker
+ * @param {string} [options.currency='BYN'] - Currency whose markers to look for
  * @returns {Array<{ index: number, length: number, amount: number, raw: string }>}
  */
-export function findPrices(text, { requireMarker = true } = {}) {
+export function findPrices(text, { requireMarker = true, currency = 'BYN' } = {}) {
   if (typeof text !== 'string' || !text) {
     return [];
   }
 
   const found = [];
 
-  // matchAll builds its own regex from this one, so the shared PRICE_PATTERN's
+  // matchAll builds its own regex from this one, so the shared pattern's
   // lastIndex is never mutated and concurrent scans cannot interfere.
-  for (const match of text.matchAll(PRICE_PATTERN)) {
+  for (const match of text.matchAll(pricePattern(currency))) {
     const { prefix, suffix, number } = match.groups;
 
     if (!prefix && !suffix && requireMarker) {

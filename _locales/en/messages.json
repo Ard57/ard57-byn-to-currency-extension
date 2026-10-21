@@ -121,6 +121,10 @@
     "message": "Marketplace",
     "description": "wildberries.by"
   },
+  "popupRegionEmpty": {
+    "message": "No sites here yet",
+    "description": "Shown on the Sites tab under a region that has no sites yet."
+  },
   "popupSaved": {
     "message": "Saved"
   },
@@ -128,7 +132,7 @@
     "message": "Conversions off"
   },
   "popupSourceHint": {
-    "message": "Prices are already in this currency on the sites supported so far",
+    "message": "Not shown on Belarusian sites, whose prices are already in BYN",
     "description": "Tooltip on the source currency row in the popup."
   },
   "popupPreviewNone": {
