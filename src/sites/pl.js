@@ -21,10 +21,44 @@ export const PL_PRESETS = {
    * conversion after it would push it inwards; in front, the price stays put
    * and the conversion takes the room to its left. In the main page's
    * narrow cards, a column, it goes above the price.
+   *
+   * Ad page (www.olx.pl/d/oferta/…): the price is a heading in a container
+   * of its own, "Do negocjacji" beside it where it applies:
+   *
+   *   <div data-testid="ad-price-container">
+   *     <h3 …>69 900 zł</h3>
+   *     <p …>Do negocjacji</p>
+   *   </div>
+   *
+   * The conversion goes under the heading, larger than on the cards.
+   *
+   * Wherever it goes, the conversion takes a line of its own: `pageStyles`
+   * lets the row holding it wrap and stretches it across that row, so in a
+   * wide tile it sits above the price rather than squeezed beside it.
    */
   'olx.pl': {
-    priceSelector: '[data-testid="ad-price"]',
+    priceSelector: [
+      '[data-testid="ad-price"]',
+      '[data-testid="ad-price-container"] h3',
+    ].join(', '),
     insertPosition: 'before',
     fontSize: '13px',
+
+    pageStyles: `
+      :has(> div[data-byn-to-currency]) {
+        flex-wrap: wrap !important;
+      }
+      div[data-byn-to-currency] {
+        width: 100%;
+      }
+    `,
+
+    styles: [
+      {
+        selector: '[data-testid="ad-price-container"]',
+        insertPosition: 'after',
+        fontSize: '16px',
+      },
+    ],
   },
 };
