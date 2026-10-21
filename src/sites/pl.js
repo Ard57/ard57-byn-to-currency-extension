@@ -1,3 +1,5 @@
+import { LAYOUT } from '../format.js';
+
 /**
  * Polish sites. Prices are in PLN, written "1 234 zł".
  */
@@ -86,12 +88,45 @@ export const PL_PRESETS = {
    * inside it, under the amount, so the paragraph's bottom margin still
    * separates the pair from the location — after it, the conversion would
    * sit across that gap, nearer the location than its price.
+   *
+   * Search results (www.otodom.pl/pl/wyniki/…): the price comes with its
+   * per-m² figure, in a row it shares with the favourites heart:
+   *
+   *   <div class="css-1wgv22l …">                         (price row)
+   *     <div data-cy="listing-item-price" …>
+   *       <span …>598 000 zł</span>
+   *       <span …>19 933,33 zł/m²</span>
+   *     </div>
+   *     …favourites button…
+   *   </div>
+   *   <a data-cy="listing-item-link" …>…title…</a>
+   *
+   * The per-m² figure rides along on each line, one currency a line, as on
+   * re.kufar.by: "$166,111 · $5,537/m²". The stack goes under the whole row,
+   * above the title, leaving the price and the heart where they are.
    */
   'otodom.pl': {
-    priceSelector: '[data-cy="offer-card"] > span > p:first-child',
+    priceSelector: [
+      '[data-cy="offer-card"] > span > p:first-child',
+      '[data-cy="listing-item-price"] > span:first-child',
+    ].join(', '),
     priceContainer: ':scope',
     insertPosition: 'append',
     fontSize: '13px',
     fontWeight: '400',
+
+    styles: [
+      {
+        selector: '[data-cy="listing-item-price"]',
+        priceContainer: 'div:has(> [data-cy="listing-item-price"])',
+        insertPosition: 'afterContainer',
+        layout: LAYOUT.BLOCK,
+        companion: {
+          scope: '[data-cy="listing-item-price"]',
+          selector: '[data-cy="listing-item-price"] > span:nth-child(2)',
+          suffix: '/m²',
+        },
+      },
+    ],
   },
 };
