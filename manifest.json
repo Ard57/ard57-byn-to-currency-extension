@@ -25,7 +25,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*", "https://*.av.by/*", "https://*.abw.by/*", "https://*.21vek.by/*", "https://*.wildberries.by/*"],
+      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*", "https://*.av.by/*", "https://*.abw.by/*", "https://*.21vek.by/*", "https://*.wildberries.by/*", "https://*.ozon.by/*"],
       "js": ["src/content.js"],
       "run_at": "document_idle"
     }
@@ -33,7 +33,7 @@
   "web_accessible_resources": [
     {
       "resources": ["src/*.js"],
-      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*", "https://*.av.by/*", "https://*.abw.by/*", "https://*.21vek.by/*", "https://*.wildberries.by/*"]
+      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*", "https://*.av.by/*", "https://*.abw.by/*", "https://*.21vek.by/*", "https://*.wildberries.by/*", "https://*.ozon.by/*"]
     }
   ],
   "icons": {

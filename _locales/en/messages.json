@@ -113,6 +113,10 @@
     "message": "Online hypermarket",
     "description": "21vek.by"
   },
+  "site_ozon_by": {
+    "message": "Marketplace",
+    "description": "ozon.by"
+  },
   "site_wildberries_by": {
     "message": "Marketplace",
     "description": "wildberries.by"

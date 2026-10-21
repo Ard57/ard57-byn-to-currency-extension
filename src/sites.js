@@ -1420,6 +1420,35 @@ export const SITE_PRESETS = {
   },
 
   /**
+   * Marketplace. Prices are written "6,80 BYN". Class names are generated
+   * per build (c35_6_3-a, g7r_22), so tiles are matched by the parts that
+   * stay: the tile-root class, the tile's shape, and the typography classes.
+   * Every tile on the main page (www.ozon.by/) is the same:
+   *
+   *   <div class="tile-root …">
+   *     <a …>…picture…</a>
+   *     <div class="…">                                    (the tile's text)
+   *       <div class="… c35_6_3-a …">                      (price block)
+   *         <div class="…">
+   *           <span class="… tsHeadline500Medium …">6,80 BYN</span>
+   *           <span class="… tsBodyControl400Small …">…10,38 BYN…</span>   (old, struck)
+   *           <span class="…">−34%</span>
+   *         </div>
+   *       </div>
+   *       …name, rating…
+   *
+   * The current price is the one headline-type text in a tile; the old price
+   * and the discount are body text. The conversion goes after the price
+   * block, on a line of its own above the name.
+   */
+  'ozon.by': {
+    priceSelector: '.tile-root span[class*="tsHeadline"]',
+    priceContainer: '.tile-root > div > div',
+    insertPosition: 'afterContainer',
+    fontSize: '13px',
+  },
+
+  /**
    * Marketplace. Prices write BYN as "ƃ", as onliner does. Class names are
    * hashed per build (price--TuQtK), so they are matched by their stable
    * part. The main page's product cards, plain and accented alike:

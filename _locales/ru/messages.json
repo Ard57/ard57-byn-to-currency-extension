@@ -113,6 +113,10 @@
     "message": "Онлайн-гипермаркет",
     "description": "21vek.by"
   },
+  "site_ozon_by": {
+    "message": "Маркетплейс",
+    "description": "ozon.by"
+  },
   "site_wildberries_by": {
     "message": "Маркетплейс",
     "description": "wildberries.by"
