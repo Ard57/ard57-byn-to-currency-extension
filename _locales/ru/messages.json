@@ -121,6 +121,10 @@
     "message": "Объявления",
     "description": "olx.pl"
   },
+  "site_otodom_pl": {
+    "message": "Недвижимость",
+    "description": "otodom.pl"
+  },
   "site_wildberries_by": {
     "message": "Маркетплейс",
     "description": "wildberries.by"

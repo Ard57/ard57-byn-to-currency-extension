@@ -68,4 +68,30 @@ export const PL_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Real estate, from the same group as OLX. Cards are marked with data-cy;
+   * the rest is utility classes. The main page's recommendations:
+   *
+   *   <a data-cy="offer-card" …>
+   *     <img …>
+   *     <span class="flex grow flex-col p-200">
+   *       <p class="type-body-base mt-0 mb-150 font-bold">648 000 zł</p>
+   *       <p class="type-body-small …">Opole, opolskie</p>
+   *       <span class="mt-auto block">…developer, bold too…</span>
+   *     </span>
+   *   </a>
+   *
+   * The price is the text block's first paragraph. The conversion goes
+   * inside it, under the amount, so the paragraph's bottom margin still
+   * separates the pair from the location — after it, the conversion would
+   * sit across that gap, nearer the location than its price.
+   */
+  'otodom.pl': {
+    priceSelector: '[data-cy="offer-card"] > span > p:first-child',
+    priceContainer: ':scope',
+    insertPosition: 'append',
+    fontSize: '13px',
+    fontWeight: '400',
+  },
 };
