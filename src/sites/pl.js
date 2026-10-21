@@ -13,12 +13,18 @@ export const PL_PRESETS = {
    *   </div>
    *
    * The second figure is the price with OLX's buyer protection added, and is
-   * left alone. The conversion goes straight after the price, on a line of
-   * its own above it.
+   * left alone. A negotiable price carries "do negocjacji" inside the price
+   * element, under the amount.
+   *
+   * The conversion goes in front of the price. The wide tiles of a search
+   * (www.olx.pl/motoryzacja/) pin the price to the right end of a row, and a
+   * conversion after it would push it inwards; in front, the price stays put
+   * and the conversion takes the room to its left. In the main page's
+   * narrow cards, a column, it goes above the price.
    */
   'olx.pl': {
     priceSelector: '[data-testid="ad-price"]',
-    insertPosition: 'after',
+    insertPosition: 'before',
     fontSize: '13px',
   },
 };

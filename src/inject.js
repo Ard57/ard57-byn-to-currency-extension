@@ -64,20 +64,26 @@ function safeClosest(element, selector) {
  * the price, or every scan would see changed text and re-insert — forever,
  * since each insertion triggers the next scan.
  *
+ * Pieces of text are joined as they stand — 21vek splits "509,00 Ҕ" into
+ * "509" and ",00 Ҕ" — except where two words would run together: olx.pl
+ * puts "do negocjacji" in its own element right after "33 000 zł", and as
+ * "złdo" the sign would no longer read as one. A space goes between two
+ * pieces only when the first ends in a letter and the next starts with one.
+ *
  * @param {Element} element
  * @returns {string}
  */
 function priceText(element) {
-  if (!element.querySelector(`[${MARKER_ATTRIBUTE}]`)) {
-    return element.textContent;
-  }
-
   let text = '';
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    if (!node.parentElement.closest(`[${MARKER_ATTRIBUTE}]`)) {
-      text += node.data;
+    if (node.parentElement.closest(`[${MARKER_ATTRIBUTE}]`)) {
+      continue;
     }
+    if (/\p{L}$/u.test(text) && /^\p{L}/u.test(node.data)) {
+      text += ' ';
+    }
+    text += node.data;
   }
   return text;
 }
@@ -362,6 +368,8 @@ export function annotatePrices(root, settings, rates) {
 
     if (effective.insertPosition === 'after') {
       priceElement.after(node);
+    } else if (effective.insertPosition === 'before') {
+      priceElement.before(node);
     } else {
       const container = containerFor(priceElement, effective.priceContainer);
       if (!container) {

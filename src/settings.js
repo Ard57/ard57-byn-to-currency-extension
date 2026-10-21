@@ -71,6 +71,9 @@ export const DEFAULT_SETTINGS = {
    * 'append' — last child of priceContainer.
    * 'after'  — directly after the price element; priceContainer is ignored.
    * For a price followed by siblings that must stay below the conversion.
+   * 'before' — directly before the price element; priceContainer is ignored.
+   * For a price pinned to the end of a row, which a conversion after it would
+   * push out of place.
    * 'afterContainer' — directly after priceContainer. For a container that
    * cannot hold the conversion itself (a flex row, a clipped box) but whose
    * following siblings should stay below it.
