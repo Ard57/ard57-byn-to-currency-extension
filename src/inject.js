@@ -28,7 +28,7 @@ const MARKER_ATTRIBUTE = 'data-byn-to-currency';
  */
 const STYLE_FIELDS = [
   'fontSize', 'fontWeight', 'fontFamily', 'lineHeight', 'color', 'opacity',
-  'flexBasis', 'order', 'margin', 'whiteSpace', 'float', 'width',
+  'flexBasis', 'order', 'margin', 'whiteSpace', 'float', 'width', 'textAlign',
 ];
 
 /**
@@ -64,20 +64,26 @@ function safeClosest(element, selector) {
  * the price, or every scan would see changed text and re-insert — forever,
  * since each insertion triggers the next scan.
  *
+ * Pieces of text are joined as they stand — 21vek splits "509,00 Ҕ" into
+ * "509" and ",00 Ҕ" — except where two words would run together: olx.pl
+ * puts "do negocjacji" in its own element right after "33 000 zł", and as
+ * "złdo" the sign would no longer read as one. A space goes between two
+ * pieces only when the first ends in a letter and the next starts with one.
+ *
  * @param {Element} element
  * @returns {string}
  */
 function priceText(element) {
-  if (!element.querySelector(`[${MARKER_ATTRIBUTE}]`)) {
-    return element.textContent;
-  }
-
   let text = '';
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    if (!node.parentElement.closest(`[${MARKER_ATTRIBUTE}]`)) {
-      text += node.data;
+    if (node.parentElement.closest(`[${MARKER_ATTRIBUTE}]`)) {
+      continue;
     }
+    if (/\p{L}$/u.test(text) && /^\p{L}/u.test(node.data)) {
+      text += ' ';
+    }
+    text += node.data;
   }
   return text;
 }
@@ -215,7 +221,35 @@ function render(rows, settings) {
 }
 
 /**
- * Removes every conversion this extension has inserted under `root`.
+ * Puts `settings.pageStyles` on the page, in a style element marked like the
+ * conversions so that removeConversions() takes it away with them. Replaced
+ * when the styles change, removed when there are none, otherwise left alone —
+ * it runs on every scan.
+ *
+ * @param {Object} settings - Resolved settings for the current URL
+ */
+export function applyPageStyles(settings) {
+  const existing = document.querySelector(`style[${MARKER_ATTRIBUTE}]`);
+  const css = settings?.pageStyles;
+
+  if (existing && existing.textContent === css) {
+    return;
+  }
+  existing?.remove();
+
+  if (!css) {
+    return;
+  }
+
+  const style = document.createElement('style');
+  style.setAttribute(MARKER_ATTRIBUTE, '');
+  style.textContent = css;
+  (document.head ?? document.documentElement).append(style);
+}
+
+/**
+ * Removes every conversion this extension has inserted under `root`, and
+ * the page styles that went with them.
  *
  * For when the settings change rather than the page: the prices themselves
  * are untouched, so annotatePrices() would skip each one as already done and
@@ -281,14 +315,36 @@ export function annotatePrices(root, settings, rates) {
     const source = priceText(priceElement) + companionSource;
     const previous = inserted.get(priceElement);
 
-    if (previous && previous.source === source && previous.node.isConnected) {
+    // Still ours means still in the page, still marked, still reading what
+    // was written. Sites that hydrate server-rendered markup (ozon.by, on
+    // Vue) can adopt an inserted <div> as one of their own and rewrite it in
+    // place: it stays connected, but the conversion is gone.
+    const stillOurs = previous?.node.isConnected
+      && previous.node.hasAttribute(MARKER_ATTRIBUTE)
+      && previous.node.textContent === previous.text;
+
+    if (stillOurs && previous.source === source) {
       continue;
     }
 
-    previous?.node.remove();
+    // A node the site has taken over is the site's now; removing it would
+    // tear a hole in its layout.
+    // Our marker and inline style are let go too: left behind, the marker
+    // would have removeConversions() delete the site's element, and the
+    // style would draw it in ours.
+    if (stillOurs) {
+      previous.node.remove();
+    } else if (previous) {
+      previous.node.removeAttribute(MARKER_ATTRIBUTE);
+      if (previous.node.getAttribute('style') === previous.style) {
+        previous.node.removeAttribute('style');
+      }
+    }
     inserted.delete(priceElement);
 
-    const parseOptions = { requireMarker: !effective.markerOptional };
+    // Read in the region's currency, which every conversion starts from.
+    const currency = effective.sourceCurrency ?? SOURCE_CURRENCY;
+    const parseOptions = { requireMarker: !effective.markerOptional, currency };
 
     // Zero converts to zero in every currency, so there is nothing to show.
     // Booking forms print a "0 BYN" total until dates are picked, and sites
@@ -303,7 +359,7 @@ export function annotatePrices(root, settings, rates) {
       ...effective,
       companion: { ...effective.companion, amount: companionPrice?.amount },
     };
-    const rows = priceRows(price.amount, SOURCE_CURRENCY, effective.currencies, rates, forPrice);
+    const rows = priceRows(price.amount, currency, effective.currencies, rates, forPrice);
     if (!rows.length) {
       continue;
     }
@@ -312,6 +368,8 @@ export function annotatePrices(root, settings, rates) {
 
     if (effective.insertPosition === 'after') {
       priceElement.after(node);
+    } else if (effective.insertPosition === 'before') {
+      priceElement.before(node);
     } else {
       const container = containerFor(priceElement, effective.priceContainer);
       if (!container) {
@@ -326,7 +384,12 @@ export function annotatePrices(root, settings, rates) {
       }
     }
 
-    inserted.set(priceElement, { source, node });
+    inserted.set(priceElement, {
+      source,
+      node,
+      text: node.textContent,
+      style: node.getAttribute('style'),
+    });
     changed++;
   }
 

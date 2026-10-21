@@ -35,6 +35,104 @@
     "message": "Введите сумму для пересчёта",
     "description": "Shown in the preview on the converter tab while the amount field holds no number."
   },
+  "popupSites": {
+    "message": "Сайты",
+    "description": "Name of the popup tab with a switch per supported site."
+  },
+  "popupSitesHint": {
+    "message": "Где пересчитывать цены",
+    "description": "Small hint above the list of sites."
+  },
+  "site_onliner_by": {
+    "message": "Новости и остальное",
+    "description": "onliner.by itself and its subdomains without a line of their own."
+  },
+  "site_catalog_onliner_by": {
+    "message": "Каталог",
+    "description": "catalog.onliner.by"
+  },
+  "site_r_onliner_by": {
+    "message": "Недвижимость",
+    "description": "r.onliner.by"
+  },
+  "site_ab_onliner_by": {
+    "message": "Автобарахолка",
+    "description": "ab.onliner.by"
+  },
+  "site_cart_onliner_by": {
+    "message": "Корзина",
+    "description": "cart.onliner.by"
+  },
+  "site_mb_onliner_by": {
+    "message": "Мотобарахолка",
+    "description": "mb.onliner.by"
+  },
+  "site_kufar_by": {
+    "message": "Объявления и авто",
+    "description": "kufar.by and auto.kufar.by"
+  },
+  "site_re_kufar_by": {
+    "message": "Недвижимость",
+    "description": "re.kufar.by"
+  },
+  "site_travel_kufar_by": {
+    "message": "Посуточная аренда",
+    "description": "travel.kufar.by"
+  },
+  "site_realt_by": {
+    "message": "Недвижимость",
+    "description": "realt.by"
+  },
+  "site_flatby_by": {
+    "message": "Квартиры",
+    "description": "flatby.by"
+  },
+  "site_av_by": {
+    "message": "Авто",
+    "description": "av.by"
+  },
+  "site_salon_av_by": {
+    "message": "Авто от салонов",
+    "description": "salon.av.by"
+  },
+  "site_abw_by": {
+    "message": "Авто",
+    "description": "abw.by"
+  },
+  "popupSubdomains": {
+    "message": "Поддомены $HOST$",
+    "description": "Accessible label of the chevron that folds a site's subdomains on the Sites tab.",
+    "placeholders": {
+      "host": {
+        "content": "$1",
+        "example": "onliner.by"
+      }
+    }
+  },
+  "site_21vek_by": {
+    "message": "Онлайн-гипермаркет",
+    "description": "21vek.by"
+  },
+  "site_ozon_by": {
+    "message": "Маркетплейс",
+    "description": "ozon.by"
+  },
+  "site_olx_pl": {
+    "message": "Объявления",
+    "description": "olx.pl"
+  },
+  "site_otodom_pl": {
+    "message": "Недвижимость",
+    "description": "otodom.pl"
+  },
+  "site_wildberries_by": {
+    "message": "Маркетплейс",
+    "description": "wildberries.by"
+  },
+  "popupRegionEmpty": {
+    "message": "Сайтов пока нет",
+    "description": "Shown on the Sites tab under a region that has no sites yet."
+  },
   "popupSaved": {
     "message": "Сохранено"
   },
@@ -42,7 +140,7 @@
     "message": "Пересчёт выключен"
   },
   "popupSourceHint": {
-    "message": "На поддерживаемых сайтах цены и так в этой валюте",
+    "message": "На белорусских сайтах не показывается: цены там и так в BYN",
     "description": "Tooltip on the source currency row in the popup."
   },
   "popupPreviewNone": {

@@ -1,5 +1,6 @@
 import { convertPrices } from './format.js';
 import { DEFAULT_SETTINGS, SOURCE_CURRENCY, loadSettings, setDefaults } from './settings.js';
+import { REGIONS, SITE_PRESETS, hostnameChain } from './sites.js';
 
 /**
  * The toolbar popup: which currencies prices are converted into, and in what
@@ -48,6 +49,11 @@ let state = {
   amount: '100',
   from: 'USD',
   to: SOURCE_CURRENCY,
+  /**
+   * Groups on the Sites tab folded (true) or unfolded (false) by hand, keyed
+   * "region:BY", "site:onliner.by". One not here is as its default.
+   */
+  folds: {},
 };
 
 async function loadState() {
@@ -56,10 +62,11 @@ async function loadState() {
     const known = DEFAULT_SETTINGS.currencyOrder;
 
     state = {
-      tab: saved.tab === 'converter' ? 'converter' : 'currencies',
+      tab: ['converter', 'sites'].includes(saved.tab) ? saved.tab : 'currencies',
       amount: typeof saved.amount === 'string' ? saved.amount : state.amount,
       from: known.includes(saved.from) ? saved.from : state.from,
       to: known.includes(saved.to) ? saved.to : state.to,
+      folds: Object.fromEntries(Object.entries(saved.folds ?? {}).filter(([, folded]) => typeof folded === 'boolean')),
     };
   } catch {
     // Opens on the defaults.
@@ -102,6 +109,7 @@ const els = {
   search: document.getElementById('search'),
   back: document.getElementById('back'),
   status: document.getElementById('status'),
+  sites: document.getElementById('sites'),
   previewSource: document.getElementById('preview-source'),
   previewPrices: document.getElementById('preview-prices'),
   previewDate: document.getElementById('preview-date'),
@@ -368,8 +376,12 @@ function renderPicker() {
       mark.innerHTML = PICK_MARKS;
 
       button.append(badge(code), text, mark);
-      button.addEventListener('click', () => togglePick(button));
-      button.addEventListener('mouseleave', () => button.classList.remove('is-fresh'));
+      if (choosing) {
+        button.addEventListener('click', () => choose(code));
+      } else {
+        button.addEventListener('click', () => togglePick(button));
+        button.addEventListener('mouseleave', () => button.classList.remove('is-fresh'));
+      }
       markPick(button);
       item.append(button);
 
@@ -391,9 +403,20 @@ const PICK_MARKS = [
   '<svg class="pick__remove" viewBox="0 0 24 24" width="14" height="14"><path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
 ].join('');
 
-/** Brings a pick's look and label in line with whether its currency is chosen. */
+/**
+ * Brings a pick's look and label in line with whether its currency is chosen
+ * — or, choosing for the converter, whether it is the one picked there now.
+ */
 function markPick(button) {
   const { code } = button.dataset;
+
+  if (choosing) {
+    const current = code === state[choosing];
+    button.classList.toggle('is-current', current);
+    button.setAttribute('aria-current', String(current));
+    return;
+  }
+
   const on = chosen.includes(code);
 
   button.classList.toggle('is-chosen', on);
@@ -432,20 +455,58 @@ function togglePick(button) {
  */
 let pickerOrder = [];
 
+/**
+ * Which converter field the picker is choosing for, 'from' or 'to', or null
+ * when it is adding currencies to the list. Choosing, a click picks one
+ * currency and goes back; the one picked now is checked.
+ */
+let choosing = null;
+
 function openPicker() {
-  pickerOrder = [...order];
+  choosing = null;
+  showPicker([...order]);
+}
+
+/**
+ * Opens the picker to choose a converter currency, listing every currency in
+ * the grouped order of the settings — the same place each time, unlike the
+ * list's own order, which moves with what is chosen.
+ *
+ * @param {'from'|'to'} field
+ */
+function openChooser(field) {
+  choosing = field;
+  showPicker([...DEFAULT_SETTINGS.currencyOrder]);
+}
+
+function showPicker(codes) {
+  pickerOrder = codes;
   els.search.value = '';
+  els.pickerList.classList.toggle('picks--choose', Boolean(choosing));
   renderPicker();
   els.main.hidden = true;
   els.picker.hidden = false;
   els.search.focus();
+
+  // Choosing, the current currency is in view straight away.
+  els.pickerList.querySelector('.is-current')?.scrollIntoView({ block: 'nearest' });
   fitList();
 }
 
+/** Sets the converter field being chosen for, and goes back to it. */
+function choose(code) {
+  state[choosing] = code;
+  converterChanged();
+  closePicker();
+}
+
 function closePicker() {
+  const back = choosing === 'from' ? els.convertFrom : choosing === 'to' ? els.convertTo : els.add;
+  choosing = null;
+
   els.picker.hidden = true;
   els.main.hidden = false;
-  els.add.focus();
+  back.focus();
 
   // The card was measured while hidden, at no height at all; picks made in
   // the picker may also have changed what it holds.
@@ -540,8 +601,9 @@ function enableKeyboard() {
   els.search.addEventListener('keydown', event => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      // Enter adds the first match; it never removes one already chosen.
-      els.pickerList.querySelector('.pick:not(.is-chosen)')?.click();
+      // Enter takes the first match. Adding, it never removes one already
+      // chosen; choosing for the converter, any match will do.
+      els.pickerList.querySelector(choosing ? '.pick' : '.pick:not(.is-chosen)')?.click();
     } else if (event.key === 'ArrowDown') {
       event.preventDefault();
       els.pickerList.querySelector('.pick')?.focus();
@@ -855,7 +917,13 @@ async function measureWindow() {
 }
 
 function fitList() {
-  const list = els.picker.hidden ? els.currencies : els.pickerList;
+  // The picker's list, or the one in the open tab; a tab may have none.
+  const list = els.picker.hidden
+    ? document.querySelector('[role="tabpanel"]:not([hidden]) [data-fit]')
+    : els.pickerList;
+  if (!list) {
+    return;
+  }
 
   // The rest of the popup is measured around the list at whatever height it
   // has now, never by lifting its cap first: for that moment the list would
@@ -906,57 +974,67 @@ function renderConverter() {
 }
 
 /**
- * Wires the converter: both lists offer every currency, in the grouped order
- * of the settings rather than the user's, so a currency is always where it
- * was last time. Every change is saved as it is made, and redraws the
- * preview, which converts the same amount.
+ * Saves a converter change and redraws what follows from it: the two
+ * currency buttons, the result, and the preview, which converts the same
+ * amount.
+ */
+function converterChanged() {
+  saveState();
+  labelCurrencyButtons();
+  preview();
+  renderConverter();
+
+  // A currency no site converts into is not in the rates yet.
+  const known = lastRates?.rates ?? {};
+  if (!(state.from in known) || !(state.to in known)) {
+    loadRates();
+  }
+}
+
+/**
+ * The converter's currency buttons: the badge, the code and the name of the
+ * currency picked, the name cut short to fit. Each button's accessible name
+ * keeps its role ("Convert from") and adds what is picked.
+ */
+function labelCurrencyButtons() {
+  for (const [button, code] of [[els.convertFrom, state.from], [els.convertTo, state.to]]) {
+    const { name } = describe(code);
+    const text = el('span', 'currency-button__text');
+    text.append(el('span', 'currency-button__code', code));
+    if (name) {
+      text.append(el('span', 'currency-button__name', name));
+    }
+
+    const chevron = el('span', 'currency-button__chevron');
+    chevron.setAttribute('aria-hidden', 'true');
+    chevron.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    button.dataset.role ??= button.getAttribute('aria-label') ?? '';
+    button.setAttribute('aria-label', `${button.dataset.role}: ${code}${name ? `, ${name}` : ''}`);
+    button.replaceChildren(badge(code), text, chevron);
+  }
+}
+
+/**
+ * Wires the converter. Its currencies are picked on the picker's screen, with
+ * the same search as adding a currency, rather than in a plain drop-down,
+ * which has none. Every change is saved as it is made.
  */
 function enableConverter() {
-  for (const select of [els.convertFrom, els.convertTo]) {
-    select.replaceChildren(...DEFAULT_SETTINGS.currencyOrder.map(code => {
-      const { name } = describe(code);
-      const option = el('option', null, name ? `${code} · ${name}` : code);
-      option.value = code;
-      return option;
-    }));
-  }
-
   els.convertAmount.value = state.amount;
-  els.convertFrom.value = state.from;
-  els.convertTo.value = state.to;
-
-  const changed = () => {
-    saveState();
-    preview();
-    renderConverter();
-
-    // A currency no site converts into is not in the rates yet.
-    const known = lastRates?.rates ?? {};
-    if (!(state.from in known) || !(state.to in known)) {
-      loadRates();
-    }
-  };
+  labelCurrencyButtons();
 
   els.convertAmount.addEventListener('input', () => {
     state.amount = els.convertAmount.value;
-    changed();
+    converterChanged();
   });
 
-  els.convertFrom.addEventListener('change', () => {
-    state.from = els.convertFrom.value;
-    changed();
-  });
-
-  els.convertTo.addEventListener('change', () => {
-    state.to = els.convertTo.value;
-    changed();
-  });
+  els.convertFrom.addEventListener('click', () => openChooser('from'));
+  els.convertTo.addEventListener('click', () => openChooser('to'));
 
   els.convertSwap.addEventListener('click', () => {
     [state.from, state.to] = [state.to, state.from];
-    els.convertFrom.value = state.from;
-    els.convertTo.value = state.to;
-    changed();
+    converterChanged();
   });
 }
 
@@ -1012,6 +1090,249 @@ function enableTabs() {
   select(document.getElementById(`tab-${state.tab}`) ?? tabs[0]);
 }
 
+/** Every site with a preset of its own, in the order sites.js lists them. */
+const SITE_HOSTS = Object.keys(SITE_PRESETS);
+
+/** The sites switched off, as stored in `defaults.disabledSites`. */
+let disabledSites = [];
+
+/**
+ * The nearest site above a host that has a preset of its own — "onliner.by"
+ * for "ab.onliner.by" — or null for a site at the top.
+ *
+ * @param {string} host
+ * @returns {string|null}
+ */
+function siteParent(host) {
+  return hostnameChain(host).slice(0, -1).reverse().find(each => SITE_HOSTS.includes(each)) ?? null;
+}
+
+/**
+ * The region a site serves, from its top-level domain: "BY" for every ".by"
+ * site. Sites are grouped by it, so one for another country gets a group of
+ * its own with no more than its preset.
+ *
+ * @param {string} host
+ * @returns {string} An ISO region code, upper case
+ */
+function siteRegion(host) {
+  return host.slice(host.lastIndexOf('.') + 1).toUpperCase();
+}
+
+/**
+ * A region's name in the popup's language — "Belarus", "Беларусь" — or its
+ * code when the browser has no name for it.
+ *
+ * @param {string} code
+ * @returns {string}
+ */
+function regionName(code) {
+  try {
+    return new Intl.DisplayNames([chrome.i18n.getUILanguage()], { type: 'region' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+/**
+ * The sites, grouped by region under a heading each — every region in
+ * REGIONS, in its order, even one with no sites yet — and within a region in
+ * the order sites.js lists them. A region folds away under its heading, and a domain's
+ * subdomains under the domain. Regions start unfolded and domains folded, so
+ * the tab opens on one line per site; folding by hand is remembered.
+ */
+function renderSites() {
+  const regions = new Map(Object.keys(REGIONS).map(code => [code.toUpperCase(), []]));
+  for (const host of SITE_HOSTS) {
+    const code = siteRegion(host);
+    regions.set(code, [...(regions.get(code) ?? []), host]);
+  }
+
+  els.sites.replaceChildren(...[...regions].map(([code, hosts]) => {
+    const group = el('li', 'region');
+    const title = el('h3', 'region__title');
+    const list = el('ul', 'region__sites');
+
+    list.id = `region-${code}`;
+    list.append(...hosts.filter(host => !hosts.includes(siteParent(host))).map(host => siteNode(host, hosts)));
+    if (hosts.length === 0) {
+      list.append(el('li', 'rows__empty', t('popupRegionEmpty', 'No sites here yet')));
+    }
+
+    const toggle = foldButton(`region:${code}`, list, 'region__toggle', false);
+    toggle.append(el('span', 'region__code', code), el('span', 'region__name', regionName(code)));
+    title.append(toggle, siteSwitch(code.toLowerCase(), [], regionName(code)));
+    group.append(title, list);
+
+    return group;
+  }));
+}
+
+/**
+ * A site with no subdomains of its own is a card. A domain with some is a
+ * group: a heading card with the switch for the whole domain, and under it,
+ * folding away, a card for the domain's own pages beside one per subdomain —
+ * so its own pages can be switched off without the rest.
+ *
+ * @param {string} host
+ * @param {string[]} hosts - Every site in its region
+ * @returns {HTMLLIElement}
+ */
+function siteNode(host, hosts) {
+  const node = el('li', 'site-node');
+  const above = hostnameChain(host).slice(0, -1);
+  const children = hosts.filter(each => siteParent(each) === host);
+
+  if (children.length === 0) {
+    node.append(siteCard(host, host, siteName(host), above));
+    return node;
+  }
+
+  const list = el('ul', 'site__children');
+  list.id = `site-${host.replace(/\./g, '-')}`;
+
+  const own = el('li', 'site-node');
+  own.append(siteCard(`${host}${OWN_PAGES}`, host, siteName(host), [...above, host]));
+  list.append(own, ...children.map(child => siteNode(child, hosts)));
+
+  // What the group holds, for when it is folded.
+  const summary = [host, ...children].map(siteName).filter(Boolean).join(', ');
+  const heading = siteCard(host, host, summary, above);
+  heading.classList.add('site--domain');
+
+  const toggle = foldButton(`site:${host}`, list, 'site__fold', true);
+  toggle.setAttribute('aria-label', t('popupSubdomains', `${host} subdomains`, [host]));
+  heading.querySelector('.site__fold-space').replaceWith(toggle);
+
+  node.append(heading, list);
+  return node;
+}
+
+/**
+ * Appended to a domain to name its own pages, apart from its subdomains:
+ * "onliner.by:own" is onliner.by itself and every subdomain without a preset
+ * of its own (people., tech., …). See isSiteEnabled() in settings.js.
+ */
+const OWN_PAGES = ':own';
+
+/** What a site is — "Cars" — from the locale, or empty. */
+function siteName(host) {
+  return t(`site_${host.replace(/[.-]/g, '_')}`, '');
+}
+
+/** The chevron a fold button opens with, turned sideways while folded. */
+const FOLD_CHEVRON = '<svg class="fold__chevron" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/**
+ * A button that folds `target` away and back, remembering which under
+ * `key` in the popup's state.
+ *
+ * @param {string} key
+ * @param {HTMLElement} target - Needs an id, for aria-controls
+ * @param {string} className
+ * @param {boolean} foldedByDefault - Until folded or unfolded by hand
+ * @returns {HTMLButtonElement}
+ */
+function foldButton(key, target, className, foldedByDefault) {
+  const button = el('button', className);
+  button.type = 'button';
+  button.innerHTML = FOLD_CHEVRON;
+  button.setAttribute('aria-controls', target.id);
+
+  const show = () => {
+    const folded = state.folds[key] ?? foldedByDefault;
+    button.setAttribute('aria-expanded', String(!folded));
+    target.hidden = folded;
+  };
+
+  button.addEventListener('click', () => {
+    state.folds = { ...state.folds, [key]: !(state.folds[key] ?? foldedByDefault) };
+    saveState();
+    show();
+    fitList();
+  });
+
+  show();
+  return button;
+}
+
+/**
+ * One card: a host, what it covers, and its switch. Faded while anything
+ * above it is off, as its switch then cannot be used.
+ *
+ * @param {string} key - What the switch turns off, see siteSwitch()
+ * @param {string} host - Shown in bold
+ * @param {string} description - Shown under it
+ * @param {string[]} above - Keys whose being off locks this one
+ * @returns {HTMLDivElement}
+ */
+function siteCard(key, host, description, above) {
+  const row = el('div', 'site');
+  const label = el('label', 'site__label');
+  const text = el('span', 'site__text');
+  const toggle = siteSwitch(key, above);
+
+  text.append(el('span', 'site__host', host));
+  if (description) {
+    text.append(el('span', 'site__name', description));
+  }
+
+  row.classList.toggle('is-inactive', toggle.disabled);
+  label.append(text, toggle);
+  // Room for a fold chevron, which a domain's heading puts here: every
+  // card's text lines up, chevron or not.
+  row.append(el('span', 'site__fold-space'), label);
+
+  return row;
+}
+
+/**
+ * An on/off switch, for what pages check in `defaults.disabledSites`: a
+ * site's hostname, which covers its subdomains; a domain's own pages
+ * ("onliner.by:own"); or a whole region by its top-level domain ("by").
+ * While anything above is off, the switch cannot be used, but keeps its own
+ * setting for when that is back on.
+ *
+ * @param {string} key
+ * @param {string[]} above - Keys whose being off locks this one
+ * @param {string} [label] - Accessible name, where nothing visible gives one
+ * @returns {HTMLInputElement}
+ */
+function siteSwitch(key, above, label) {
+  const toggle = el('input', 'switch');
+
+  toggle.type = 'checkbox';
+  toggle.setAttribute('role', 'switch');
+  if (label) {
+    toggle.setAttribute('aria-label', label);
+  }
+  toggle.dataset.host = key;
+  toggle.checked = !disabledSites.includes(key);
+  toggle.disabled = above.some(each => disabledSites.includes(each));
+  toggle.addEventListener('change', () => toggleSite(key, toggle.checked));
+
+  return toggle;
+}
+
+/**
+ * Switches a site on or off, and redraws, since a domain's switch decides
+ * whether its subdomains' can be used. Pages watch the settings, so open
+ * ones follow at once.
+ *
+ * @param {string} host
+ * @param {boolean} on
+ */
+function toggleSite(host, on) {
+  disabledSites = on
+    ? disabledSites.filter(each => each !== host)
+    : [...disabledSites.filter(each => each !== host), host];
+
+  renderSites();
+  els.sites.querySelector(`input[data-host="${host}"]`)?.focus();
+
+  save({ disabledSites: [...disabledSites] }, t('popupSaved', 'Saved'));
+}
+
 async function start() {
   localize();
   els.name.textContent = chrome.runtime.getManifest().name;
@@ -1022,8 +1343,18 @@ async function start() {
   order = usableOrder(settings.currencyOrder);
   chosen = (settings.currencies ?? []).filter(code => order.includes(code));
   order = [...chosen, ...order.filter(code => !chosen.includes(code))];
+  // Sites, domains' own pages, and regions by their top-level domain.
+  const switchable = [
+    ...SITE_HOSTS,
+    ...SITE_HOSTS.filter(host => SITE_HOSTS.some(each => siteParent(each) === host)).map(host => `${host}${OWN_PAGES}`),
+    ...SITE_HOSTS.map(host => siteRegion(host).toLowerCase()),
+  ];
+  disabledSites = Array.isArray(settings.disabledSites)
+    ? settings.disabledSites.filter(host => switchable.includes(host))
+    : [];
 
   renderRows();
+  renderSites();
   enableConverter();
   enableTabs();
   enableKeyboard();

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BYN prices in USD/EUR/RUB",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "default_locale": "en",
   "description": "__MSG_extensionDescription__",
   "permissions": [
@@ -25,15 +25,15 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*", "https://*.av.by/*", "https://*.abw.by/*"],
+      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*", "https://*.av.by/*", "https://*.abw.by/*", "https://*.21vek.by/*", "https://*.wildberries.by/*", "https://*.ozon.by/*", "https://*.olx.pl/*", "https://*.otodom.pl/*"],
       "js": ["src/content.js"],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["src/*.js"],
-      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*", "https://*.av.by/*", "https://*.abw.by/*"]
+      "resources": ["src/*.js", "src/sites/*.js"],
+      "matches": ["https://*.onliner.by/*", "https://*.kufar.by/*", "https://*.realt.by/*", "https://*.flatby.by/*", "https://*.av.by/*", "https://*.abw.by/*", "https://*.21vek.by/*", "https://*.wildberries.by/*", "https://*.ozon.by/*", "https://*.olx.pl/*", "https://*.otodom.pl/*"]
     }
   ],
   "icons": {
