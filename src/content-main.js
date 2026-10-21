@@ -27,18 +27,71 @@ async function fetchRates() {
   return response.data.rates;
 }
 
-async function start() {
-  let rates = await fetchRates();
-  if (!rates) {
-    return;
+/** Least time between two attempts at rates that failed to load. */
+const RATES_RETRY_MS = 3000;
+
+/** Timed retries before waiting on page changes alone. */
+const RATES_RETRY_LIMIT = 10;
+
+/**
+ * Resolves once the page is on screen.
+ *
+ * ozon.by prerenders the product page behind a hovered tile, so the content
+ * script can start in a page nobody is looking at yet, where requests may be
+ * held back or fail. Waiting for activation costs a plain page nothing.
+ *
+ * @returns {Promise<void>}
+ */
+function whenShown() {
+  if (!document.prerendering) {
+    return Promise.resolve();
   }
+  return new Promise(resolve => {
+    document.addEventListener('prerenderingchange', () => resolve(), { once: true });
+  });
+}
+
+async function start() {
+  await whenShown();
 
   let stored = await loadSettings();
+
+  // A first request for rates can fail — the service worker waking up, the
+  // network blinking while a page loads in the background. Rather than give
+  // the page up until a reload, the next scan asks again, no more often than
+  // RATES_RETRY_MS.
+  let rates = await fetchRates();
+  let ratesAskedAt = Date.now();
+  let ratesPending = false;
+  let ratesRetries = 0;
+
+  const retryRates = () => {
+    if (ratesPending || Date.now() - ratesAskedAt < RATES_RETRY_MS) {
+      return;
+    }
+    ratesPending = true;
+    ratesAskedAt = Date.now();
+    fetchRates().then(fresh => {
+      ratesPending = false;
+      rates ??= fresh;
+      if (rates) {
+        scan();
+      } else if (++ratesRetries < RATES_RETRY_LIMIT) {
+        // A quiet page fires no mutations to retry on, so try on a timer too.
+        setTimeout(scan, RATES_RETRY_MS);
+      }
+    });
+  };
 
   // A site switched off in the popup is left as the site drew it. Checked on
   // every scan, like the settings, since it can be switched back on while
   // the page is open.
   const scan = () => {
+    if (!rates) {
+      retryRates();
+      return 0;
+    }
+
     if (!isSiteEnabled(location.href, stored)) {
       return 0;
     }

@@ -1458,6 +1458,20 @@ export const SITE_PRESETS = {
    *
    * The conversion goes under the price row, above the per-unit line.
    *
+   * A product on sale is first served with webPrice, which the page's
+   * scripts then swap for a webSale widget holding the same price row a
+   * level deeper. The conversion follows it there:
+   *
+   *   <div data-widget="webSale">
+   *     …
+   *     <div class="pdp_b8i">                             (price row)
+   *       <div …><div …>
+   *         <span class="… tsHeadline600Large">29,75 BYN</span>
+   *         <span class="… tsBody400Small">61,51 BYN</span>   (old)
+   *       </div></div>
+   *       …info icon…
+   *
+   *
    * Cart (ozon.by/cart): each item's price sits in the grid's price column,
    * built like a tile's price block one level deeper:
    *
@@ -1497,6 +1511,7 @@ export const SITE_PRESETS = {
     priceSelector: [
       '.tile-root span[class*="tsHeadline"]',
       '[data-widget="webPrice"] span[class*="tsHeadline"]',
+      '[data-widget="webSale"] span[class*="tsHeadline"]',
       '[data-widget="cartSplit"] span[class*="tsHeadline"]',
       '[data-widget="total"] div:has(> span:first-child) > div > span',
       '[data-widget="webSellerList"] div:not(:has(*))',
@@ -1509,6 +1524,11 @@ export const SITE_PRESETS = {
       {
         selector: '[data-widget="webPrice"]',
         priceContainer: '[data-widget="webPrice"] > div > div',
+        fontSize: '16px',
+      },
+      {
+        selector: '[data-widget="webSale"]',
+        priceContainer: 'div:has(> div > div > span[class*="tsHeadline"])',
         fontSize: '16px',
       },
       {

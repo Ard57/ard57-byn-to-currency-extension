@@ -309,11 +309,31 @@ export function annotatePrices(root, settings, rates) {
     const source = priceText(priceElement) + companionSource;
     const previous = inserted.get(priceElement);
 
-    if (previous && previous.source === source && previous.node.isConnected) {
+    // Still ours means still in the page, still marked, still reading what
+    // was written. Sites that hydrate server-rendered markup (ozon.by, on
+    // Vue) can adopt an inserted <div> as one of their own and rewrite it in
+    // place: it stays connected, but the conversion is gone.
+    const stillOurs = previous?.node.isConnected
+      && previous.node.hasAttribute(MARKER_ATTRIBUTE)
+      && previous.node.textContent === previous.text;
+
+    if (stillOurs && previous.source === source) {
       continue;
     }
 
-    previous?.node.remove();
+    // A node the site has taken over is the site's now; removing it would
+    // tear a hole in its layout.
+    // Our marker and inline style are let go too: left behind, the marker
+    // would have removeConversions() delete the site's element, and the
+    // style would draw it in ours.
+    if (stillOurs) {
+      previous.node.remove();
+    } else if (previous) {
+      previous.node.removeAttribute(MARKER_ATTRIBUTE);
+      if (previous.node.getAttribute('style') === previous.style) {
+        previous.node.removeAttribute('style');
+      }
+    }
     inserted.delete(priceElement);
 
     const parseOptions = { requireMarker: !effective.markerOptional };
@@ -354,7 +374,12 @@ export function annotatePrices(root, settings, rates) {
       }
     }
 
-    inserted.set(priceElement, { source, node });
+    inserted.set(priceElement, {
+      source,
+      node,
+      text: node.textContent,
+      style: node.getAttribute('style'),
+    });
     changed++;
   }
 
