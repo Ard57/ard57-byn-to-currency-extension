@@ -1479,6 +1479,19 @@ export const SITE_PRESETS = {
    *       <div …><span …>68.8 BYN</span></div>
    *
    * The conversion goes under that row, right-aligned with the total.
+   *
+   * "Other offers" popup on a product page, one row per seller:
+   *
+   *   <div data-widget="webSellerList">
+   *     …
+   *     <div class="pdp_nb0 pdp_nb1">                     (price column)
+   *       <div class="pdp_n5b">                           (price block)
+   *         <div class="pdp_bn6">7,95 BYN</div>
+   *         <div><span>43%</span><span>14,01 BYN</span></div>   (old)
+   *
+   * The current price is a plain-text div; the old one is a span. Other
+   * text-only divs in a row ("Перейти в магазин", "В корзину") carry no
+   * currency and are skipped. The conversion goes under the price block.
    */
   'ozon.by': {
     priceSelector: [
@@ -1486,6 +1499,7 @@ export const SITE_PRESETS = {
       '[data-widget="webPrice"] span[class*="tsHeadline"]',
       '[data-widget="cartSplit"] span[class*="tsHeadline"]',
       '[data-widget="total"] div:has(> span:first-child) > div > span',
+      '[data-widget="webSellerList"] div:not(:has(*))',
     ].join(', '),
     priceContainer: '.tile-root > div > div',
     insertPosition: 'afterContainer',
@@ -1507,6 +1521,10 @@ export const SITE_PRESETS = {
         fontSize: '14px',
         textAlign: 'right',
         margin: '4px 0 0',
+      },
+      {
+        selector: '[data-widget="webSellerList"]',
+        priceContainer: 'div:has(> div:first-child:not(:has(*)))',
       },
     ],
   },
