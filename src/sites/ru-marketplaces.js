@@ -255,6 +255,26 @@ export const OZON = {
  *
  *   Only the total converts, not the goods subtotal or the discount above
  *   it. The conversion goes under the line, right-aligned under the amount.
+ *
+ * The redesigned basket, matched alongside the older one:
+ *
+ * - Each item's price over its old one, at the right of the row:
+ *
+ *     <div class="listItemPrice--…">
+ *       <h4 class="… listItemPriceWithoutWallet--…">19,34 ƃ</h4>
+ *       <span class="… priceOld--…">21,16 ƃ</span>
+ *     </div>
+ *
+ *   The conversion goes under that block.
+ *
+ * - The total, printed inside the checkout button:
+ *
+ *     <button class="… basketSummaryBtn--…">
+ *       …Войти и оформить…
+ *       <div class="mo-flex mo-button__prices"><span><span>1 287,26 ƃ</span></span></div>
+ *     </button>
+ *
+ *   A conversion inside would stretch the button, so it goes under it.
  */
 export const WILDBERRIES = {
   pageStyles: `
@@ -282,6 +302,8 @@ export const WILDBERRIES = {
     '[class*="priceNow--"]',
     '.list-item__price-new',
     '.b-top__total > span:last-child',
+    '[class*="listItemPriceWithoutWallet--"]',
+    '[class*="basketSummaryBtn--"] .mo-button__prices',
     '.price__lower-price',
   ].join(', '),
   priceContainer: 'div[class^="price--"], div[class*=" price--"], .product-card__price',
@@ -319,6 +341,15 @@ export const WILDBERRIES = {
       selector: '.b-top__total',
       priceContainer: '.b-top__total',
       textAlign: 'right',
+    },
+    {
+      selector: '[class*="listItemPriceWithoutWallet--"]',
+      priceContainer: '[class*="listItemPrice--"]',
+    },
+    {
+      selector: '[class*="basketSummaryBtn--"]',
+      priceContainer: '[class*="basketSummaryBtn--"]',
+      margin: '8px 0 0',
     },
   ],
 };
