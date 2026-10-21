@@ -1253,7 +1253,10 @@ export const SITE_PRESETS = {
    *   it with a full-width basis: on a line of its own under the price.
    * - Goods of the week, a narrow card — WeeklyProductMiniCard, or
    *   ProductCardCompact where 21vek's "unified-product-card-compact" flag
-   *   is on; both are laid out alike. The price shares a row with the basket
+   *   is on — and the AccessoriesProduct cards in the "Рекомендуем с этим
+   *   товаром" popup that opens on adding to the basket; all are laid out
+   *   alike (the popup's cards are fixed at 200px tall, so `pageStyles` lets
+   *   one grow to fit its conversion). The price shares a row with the basket
    *   button, and a conversion in the price's
    *   container would squeeze in between and spill under the button. It goes
    *   after that whole row instead, across the card, where it wraps within
@@ -1348,6 +1351,9 @@ export const SITE_PRESETS = {
   '21vek.by': {
     priceSelector: [
       `.Price-module__price:not(${VEK_SERVICES})`,
+      // The popup after adding to the basket is a services modal, excluded
+      // above, but its "Рекомендуем с этим товаром" cards are plain goods.
+      '[class*="AccessoriesProduct_price__"] > .Price-module__price',
       '[class*="ListingSEOProductsTable_price__"]',
       '[class*="Prices_priceContainer__"] > [class*="ProductPrice_productPrice__"]',
       '[class*="CollectionProduct_prices__"] > :first-child',
@@ -1378,12 +1384,24 @@ export const SITE_PRESETS = {
       [class*="OrderPrice_totalPrice__"]:has(> [data-byn-to-currency]) {
         flex-wrap: wrap !important;
       }
+      [class*="AccessoriesProduct_product__"]:has([data-byn-to-currency]) {
+        height: auto !important;
+        min-height: 200px;
+      }
     `,
 
     styles: [
       {
-        selector: '[class*="WeeklyProductMiniCard_price__"], [class*="ProductCardCompact_price__"]',
-        priceContainer: '[class*="WeeklyProductMiniCard_priceBasketWrapper__"], [class*="ProductCardCompact_priceBasketWrapper__"]',
+        selector: [
+          '[class*="WeeklyProductMiniCard_price__"]',
+          '[class*="ProductCardCompact_price__"]',
+          '[class*="AccessoriesProduct_price__"]',
+        ].join(', '),
+        priceContainer: [
+          '[class*="WeeklyProductMiniCard_priceBasketWrapper__"]',
+          '[class*="ProductCardCompact_priceBasketWrapper__"]',
+          '[class*="AccessoriesProduct_priceBasketWrapper__"]',
+        ].join(', '),
         insertPosition: 'afterContainer',
         flexBasis: null,
         margin: '6px 0 0',
