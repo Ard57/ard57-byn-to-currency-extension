@@ -1,4 +1,4 @@
-import { findPrices } from './parse.js';
+import { findPriceRange, findPrices } from './parse.js';
 import { priceRows, priceSeparator, DEFAULT_COMPANION_SEPARATOR } from './format.js';
 import { SOURCE_CURRENCY } from './settings.js';
 
@@ -352,7 +352,7 @@ export function annotatePrices(root, settings, rates) {
     // Zero converts to zero in every currency, so there is nothing to show.
     // Booking forms print a "0 BYN" total until dates are picked, and sites
     // put "0 ƃ" on "list your ad for free" buttons.
-    const [price] = findPrices(priceText(priceElement), parseOptions);
+    const price = findPriceRange(priceText(priceElement), parseOptions);
     if (!price || price.amount === 0) {
       continue;
     }
@@ -361,6 +361,7 @@ export function annotatePrices(root, settings, rates) {
     const forPrice = {
       ...effective,
       companion: { ...effective.companion, amount: companionPrice?.amount },
+      upTo: price.upTo,
     };
     const rows = priceRows(price.amount, currency, effective.currencies, rates, forPrice);
     if (!rows.length) {

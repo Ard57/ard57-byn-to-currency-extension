@@ -230,12 +230,51 @@ export const PL_PRESETS = {
    *   </div>
    *
    * The conversion goes under the whole tile, on one line.
+   *
+   * Offer page (gratka.pl/nieruchomosci/…/ob/…): the price and its per-m²
+   * figure in a row under the title, in a block of their own:
+   *
+   *   <div id="details-price" class="details-price">
+   *     <div class="details-price__inner">                (inline flex, wraps)
+   *       <span data-cy="priceRowPrice" …>742 920 zł</span>
+   *       <span data-cy="detailsRowTextPriceM2Formatted" …>12 000 zł/m²</span>
+   *     </div>
+   *     <!---->                                           …previous price, if cut…
+   *   </div>
+   *   …"Zapytaj o możliwość negocjacji ceny"…
+   *
+   * A development's page (…/inwestycje-deweloperskie/…/ok/…) has the same
+   * block holding a range, "478 224 - 1 007 471 zł", with no per-m² figure;
+   * each line then reads "$131,512 – $277,055". Under it, a table of the
+   * flats still for sale, built in the browser:
+   *
+   *   <tr class="investment-table-row-desktop" data-cy="investmentTableRow" …>
+   *     <td …>…plan, reference "3_133"…</td>
+   *     <td …>33,21 m²</td><td …>2</td><td …>1/3</td>
+   *     <td class="investment-table-row-desktop__price-col">
+   *       <div class="investment-table-row-price">
+   *         <span class="investment-table-row-price__value">478 224 zł</span>
+   *         <!---->
+   *       </div>
+   *     </td>
+   *     …chevron…
+   *   </tr>
+   *
+   * The conversion goes inside the price component, under the price, so it
+   * stays in the price column; the component is picked by its own class
+   * rather than the row's, so whichever row it sits in is covered.
+   *
+   * The same stack as on the cards, larger, at the end of that block. The
+   * price repeated further down belongs to a mortgage calculator advert and
+   * is left alone; the recommendations are the cards above.
    */
   'gratka.pl': {
     priceSelector: [
       '[data-cy="propertyCardPrice"]',
       '[data-cy="cardDevelopmentPrice"] > span',
       '[data-cy="favouritePropertyCard"] .offer-info__item > span:not([data-cy], .offer-info__separator)',
+      '[data-cy="priceRowPrice"]',
+      '.investment-table-row-price__value',
     ].join(', '),
     priceContainer: '.property-card__price',
     insertPosition: 'append',
@@ -270,6 +309,21 @@ export const PL_PRESETS = {
         insertPosition: 'afterContainer',
         layout: LAYOUT.INLINE,
         companion: null,
+      },
+      {
+        selector: '.investment-table-row-price',
+        priceContainer: '.investment-table-row-price',
+        companion: null,
+      },
+      {
+        selector: '#details-price',
+        priceContainer: '#details-price',
+        fontSize: '18px',
+        companion: {
+          scope: '#details-price',
+          selector: '[data-cy="detailsRowTextPriceM2Formatted"]',
+          suffix: '/m²',
+        },
       },
     ],
   },
