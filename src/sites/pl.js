@@ -221,11 +221,27 @@ export const PL_PRESETS = {
    *
    * There the conversion goes after the row: inside it, it would sit beside
    * the price rather than under it. The saving is left alone.
+   *
+   * Offer page (www.otomoto.pl/osobowe/oferta/…): the price is split the
+   * same way, in a grid it shares with the price evaluation:
+   *
+   *   <div data-testid="ad-price" class="grid … [grid-template-areas:'price_indicator']">
+   *     <div …>…<div …>
+   *       <h3 class="offer-price__number" …>189 000</h3>
+   *       <span class="… offer-price__currency …"> PLN</span>
+   *     </div>…</div>
+   *     <button data-testid="small-price-evaluation-indicator" …>…W średniej</button>
+   *   </div>
+   *
+   * The conversion goes after the whole grid, larger than on the cards. A
+   * reduced price puts this grid in a price-drop stack too, so its rule
+   * comes before the search cards' one.
    */
   'otomoto.pl': {
     priceSelector: [
       '[data-testid="homepage-card-standout-price"]',
       'article[data-id] div:has(> h3 > span[translate="no"]):has(> p[translate="no"])',
+      '[data-testid="ad-price"] div:has(> h3.offer-price__number)',
     ].join(', '),
     insertPosition: 'after',
     decimals: 0,
@@ -239,6 +255,13 @@ export const PL_PRESETS = {
         insertPosition: 'append',
         fontSize: '1em',
         opacity: 1,
+        textAlign: null,
+      },
+      {
+        selector: '[data-testid="ad-price"]',
+        priceContainer: '[data-testid="ad-price"]',
+        insertPosition: 'afterContainer',
+        fontSize: '16px',
         textAlign: null,
       },
       {
