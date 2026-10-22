@@ -70,6 +70,9 @@ function safeClosest(element, selector) {
  * "złdo" the sign would no longer read as one. A space goes between two
  * pieces only when the first ends in a letter and the next starts with one.
  *
+ * Style and script text is skipped: otomoto.pl renders its CSS-in-JS rules as
+ * <style> elements inside the price, and "24px" is no part of it.
+ *
  * @param {Element} element
  * @returns {string}
  */
@@ -77,7 +80,7 @@ function priceText(element) {
   let text = '';
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    if (node.parentElement.closest(`[${MARKER_ATTRIBUTE}]`)) {
+    if (node.parentElement.closest(`[${MARKER_ATTRIBUTE}], style, script`)) {
       continue;
     }
     if (/\p{L}$/u.test(text) && /^\p{L}/u.test(node.data)) {

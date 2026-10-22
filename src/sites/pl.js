@@ -194,13 +194,58 @@ export const PL_PRESETS = {
    * without wrapping the mileage and year. The conversion goes inside the
    * specs line, under it, in that line's own muted color and size — already
    * quieter than the price, so it is not dimmed further.
+   *
+   * Search results (www.otomoto.pl/osobowe/bmw/m5): each ad is an
+   * <article data-id>, its class names generated. The price is split, the
+   * amount in a heading and the currency in a paragraph beside it, so the
+   * element read is the grid holding both:
+   *
+   *   <div class="ooa-vtik1a …">                          (price column)
+   *     <div class="ooa-rz87wg …">                        (grid)
+   *       <h3 …><span translate="no">539 900</span></h3>
+   *       <p translate="no" …>PLN</p>
+   *     </div>
+   *     …price evaluation ("W granicach średniej")…
+   *   </div>
+   *
+   * The conversion goes right after that grid, above the evaluation, aligned
+   * to the right like the price. A reduced price comes in a stack of its own,
+   * the saving in a badge above it and the grid wrapped in a row:
+   *
+   *   <div data-testid="price-drop-stack" …>
+   *     <div class="flex flex-col gap-50 items-end">
+   *       <div data-testid="price-drop-savings-badge" …>- 10 000 PLN</div>
+   *       <div class="flex flex-row items-start gap-50 …">…the grid…</div>
+   *     </div>
+   *   </div>
+   *
+   * There the conversion goes after the row: inside it, it would sit beside
+   * the price rather than under it. The saving is left alone.
    */
   'otomoto.pl': {
-    priceSelector: '[data-testid="homepage-card-standout-price"]',
-    priceContainer: 'p:has(> [data-testid="homepage-card-standout-price"])',
-    insertPosition: 'append',
+    priceSelector: [
+      '[data-testid="homepage-card-standout-price"]',
+      'article[data-id] div:has(> h3 > span[translate="no"]):has(> p[translate="no"])',
+    ].join(', '),
+    insertPosition: 'after',
     decimals: 0,
-    fontSize: '1em',
-    opacity: 1,
+    fontSize: '14px',
+    textAlign: 'right',
+
+    styles: [
+      {
+        selector: '[data-testid="homepage-card-standout-price"]',
+        priceContainer: 'p:has(> [data-testid="homepage-card-standout-price"])',
+        insertPosition: 'append',
+        fontSize: '1em',
+        opacity: 1,
+        textAlign: null,
+      },
+      {
+        selector: '[data-testid="price-drop-stack"]',
+        priceContainer: 'div:has(> div > h3 > span[translate="no"])',
+        insertPosition: 'afterContainer',
+      },
+    ],
   },
 };
