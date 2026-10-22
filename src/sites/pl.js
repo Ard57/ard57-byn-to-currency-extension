@@ -210,11 +210,32 @@ export const PL_PRESETS = {
    * The conversion goes under the figure, inside the price block, which is
    * turned from a row into a column for it; the block still grows and keeps
    * the pair centred in the space it takes. The "od" is not carried over.
+   *
+   * Map popups show an offer as a tile, the price first in its line of specs,
+   * the only item there with no data-cy:
+   *
+   *   <div class="offer-item__content" data-cy="favouritePropertyCard">
+   *     <a data-cy="favouritePropertyUrl" …>
+   *       <img …>
+   *       <div class="offer-item__offer__content">
+   *         …location, street…
+   *         <ul class="offer-info">
+   *           <li …><span>900 000 zł</span></li>
+   *           <li …><span> • </span><span data-cy="cardPropertyInfoArea">25 m²</span></li>
+   *           …rooms, floor…
+   *         </ul>
+   *       </div>
+   *     </a>
+   *     <div class="offer-item__offer__actions">…favourites button…</div>
+   *   </div>
+   *
+   * The conversion goes under the whole tile, on one line.
    */
   'gratka.pl': {
     priceSelector: [
       '[data-cy="propertyCardPrice"]',
       '[data-cy="cardDevelopmentPrice"] > span',
+      '[data-cy="favouritePropertyCard"] .offer-info__item > span:not([data-cy], .offer-info__separator)',
     ].join(', '),
     priceContainer: '.property-card__price',
     insertPosition: 'append',
@@ -242,6 +263,13 @@ export const PL_PRESETS = {
         companion: null,
         fontSize: '16px',
         fontWeight: '400',
+      },
+      {
+        selector: '[data-cy="favouritePropertyCard"]',
+        priceContainer: '[data-cy="favouritePropertyCard"]',
+        insertPosition: 'afterContainer',
+        layout: LAYOUT.INLINE,
+        companion: null,
       },
     ],
   },
