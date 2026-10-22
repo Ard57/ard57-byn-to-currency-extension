@@ -174,6 +174,79 @@ export const PL_PRESETS = {
   },
 
   /**
+   * Real estate. A Nuxt site with readable class names and data-cy on every
+   * part of a card. The main page's sliders:
+   *
+   *   <div class="card" data-cy="card">
+   *     …
+   *     <div class="property-card__price">               (block, min-height 4rem)
+   *       <div class="property-card__price--wrapper">      (flex row)
+   *         <span data-cy="propertyCardPrice" …>2 500 000 zł</span>
+   *         <span data-cy="offerPricePerM2" …>7 485 zł/m²</span>
+   *       </div>
+   *       <!---->                                         …previous price, if cut…
+   *     </div>
+   *     <div data-cy="propertyCardInfo" …>334 m² • piętro 4/4</div>
+   *   </div>
+   *
+   * The per-m² figure rides along on each line, as on otodom.pl, and the
+   * stack goes at the end of the price block: under the previous price where
+   * one is shown, above the area and floor. The price row itself is left
+   * alone. Each card also opens with a hidden link whose text repeats the
+   * price ("…49 m² 780 000 zł Włochy…"); it is not selected.
+   *
+   * Developments (gratka.pl/nieruchomosci/inwestycje-deweloperskie) have
+   * cards of their own, priced by the square metre only, as a starting
+   * figure — or "Zapytaj o cenę", with no figure, which is left alone:
+   *
+   *   <div class="development-card__development-details">  (flex column)
+   *     <div class="development-card__header">…title, location…</div>
+   *     <div class="development-card__price" data-cy="cardDevelopmentPrice">
+   *       <span>od 11 297 zł/m²</span>                (flex row, grows)
+   *     </div>
+   *     <div data-cy="developmentCardInfo">IV kwartał 2026 • 33 - 89 m² • …</div>
+   *   </div>
+   *
+   * The conversion goes under the figure, inside the price block, which is
+   * turned from a row into a column for it; the block still grows and keeps
+   * the pair centred in the space it takes. The "od" is not carried over.
+   */
+  'gratka.pl': {
+    priceSelector: [
+      '[data-cy="propertyCardPrice"]',
+      '[data-cy="cardDevelopmentPrice"] > span',
+    ].join(', '),
+    priceContainer: '.property-card__price',
+    insertPosition: 'append',
+    layout: LAYOUT.BLOCK,
+    fontSize: '14px',
+    companion: {
+      scope: '[data-cy="card"]',
+      selector: '[data-cy="offerPricePerM2"]',
+      suffix: '/m²',
+    },
+
+    pageStyles: `
+      [data-cy="cardDevelopmentPrice"]:has(> div[data-byn-to-currency]) {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+      }
+    `,
+
+    styles: [
+      {
+        selector: '[data-cy="cardDevelopmentPrice"]',
+        insertPosition: 'after',
+        suffix: '/m²',
+        companion: null,
+        fontSize: '16px',
+        fontWeight: '400',
+      },
+    ],
+  },
+
+  /**
    * Cars, from the same group as OLX. Prices are written "45 900 PLN" rather
    * than in złoty. The main page's promoted cards — and the "today's pick"
    * spotlight above them — carry a test id on the price, which opens a line

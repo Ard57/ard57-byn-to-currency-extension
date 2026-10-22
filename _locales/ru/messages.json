@@ -125,6 +125,10 @@
     "message": "Авто",
     "description": "otomoto.pl"
   },
+  "site_gratka_pl": {
+    "message": "Недвижимость",
+    "description": "gratka.pl"
+  },
   "site_otodom_pl": {
     "message": "Недвижимость",
     "description": "otodom.pl"
