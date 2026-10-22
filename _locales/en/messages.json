@@ -121,6 +121,10 @@
     "message": "Classifieds",
     "description": "olx.pl"
   },
+  "site_otomoto_pl": {
+    "message": "Cars",
+    "description": "otomoto.pl"
+  },
   "site_otodom_pl": {
     "message": "Real estate",
     "description": "otodom.pl"

@@ -121,6 +121,10 @@
     "message": "Объявления",
     "description": "olx.pl"
   },
+  "site_otomoto_pl": {
+    "message": "Авто",
+    "description": "otomoto.pl"
+  },
   "site_otodom_pl": {
     "message": "Недвижимость",
     "description": "otodom.pl"

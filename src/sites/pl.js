@@ -172,4 +172,35 @@ export const PL_PRESETS = {
       },
     ],
   },
+
+  /**
+   * Cars, from the same group as OLX. Prices are written "45 900 PLN" rather
+   * than in złoty. The main page's promoted cards — and the "today's pick"
+   * spotlight above them — carry a test id on the price, which opens a line
+   * of specs:
+   *
+   *   <a data-testid="compact-promoted-card-…" …>
+   *     <div …><img …></div>
+   *     <div class="flex min-w-0 flex-col gap-[6px]">
+   *       <p …>Opel Astra 1.4 Turbo Start/Stop Automatik Ultimate</p>
+   *       <p class="… text-turbo-content-muted opacity-90 …">
+   *         <span data-testid="homepage-card-standout-price" …>45 900 PLN</span>
+   *         · 147 216 km · 2018
+   *       </p>
+   *     </div>
+   *   </a>
+   *
+   * The cards are 171px wide, too narrow to put anything beside the price
+   * without wrapping the mileage and year. The conversion goes inside the
+   * specs line, under it, in that line's own muted color and size — already
+   * quieter than the price, so it is not dimmed further.
+   */
+  'otomoto.pl': {
+    priceSelector: '[data-testid="homepage-card-standout-price"]',
+    priceContainer: 'p:has(> [data-testid="homepage-card-standout-price"])',
+    insertPosition: 'append',
+    decimals: 0,
+    fontSize: '1em',
+    opacity: 1,
+  },
 };
