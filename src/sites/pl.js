@@ -346,12 +346,42 @@ export const PL_PRESETS = {
    * which priceText() closes up. The conversion goes at the end of the price
    * box, under the price, in the box's own grid row. The "od" — the lowest of
    * the shops' offers — is not carried over.
+   *
+   * Search and category pages (www.ceneo.pl/Klimatyzatory) list products in
+   * rows, the price in a right-aligned column of its own, linked to the
+   * product or straight to a shop:
+   *
+   *   <div class="cat-prod-row__price">                   (text-align: right)
+   *     <a class="js_seoUrl js_clickHash go-to-shop" …>
+   *       <span class="price-prefix">od</span>            …where several shops…
+   *       <span class="price-format nowrap">…1 898,96 zł…</span>
+   *     </a>
+   *     <div class="btn-compare-outer">…"Porównaj ceny"…</div>
+   *     …"w 3 sklepach", "Darmowa wysyłka"…
+   *   </div>
+   *
+   * The conversion goes right after the link, under the price and above the
+   * button, right-aligned with them. The column sets line-height: 1, too
+   * tight for a conversion that wraps, so it gets its own.
    */
   'ceneo.pl': {
-    priceSelector: '.box-prod-price .price-format',
+    priceSelector: [
+      '.box-prod-price .price-format',
+      '.cat-prod-row__price > a > .price-format',
+    ].join(', '),
     priceContainer: '.box-prod-price',
     insertPosition: 'append',
     fontSize: '13px',
+
+    styles: [
+      {
+        selector: '.cat-prod-row__price',
+        priceContainer: '.cat-prod-row__price > a',
+        insertPosition: 'afterContainer',
+        lineHeight: '1.3',
+        margin: '0.25rem 0 0',
+      },
+    ],
   },
 
   /**
