@@ -368,6 +368,29 @@ export const PL_PRESETS = {
    * The wrapper's only class is a build hash, so it is found by what it
    * holds; the conversion goes after it, under the price and the badge,
    * larger than in the listings.
+   *
+   * Basket (allegro.pl/koszyk), all inside <main data-box-name="allegro.cart.view">:
+   * each item's price, the total and the "Dorzuć do przesyłki!" tiles have
+   * the search results' shape, but each sits in a flex row of its own, where
+   * a conversion right after it would land beside it:
+   *
+   *   <div class="mpof_ki myre_zn m389_0a">                (column)
+   *     <div class="mpof_ki m389_a6 m7f5_0a">              (row)
+   *       <span …>4759,<span …>00</span>&nbsp;<span …>zł</span></span>
+   *     </div>
+   *   </div>
+   *
+   *   <div class="mpof_ki m389_0a">                        (row)
+   *     <span data-testid="total-price-value" …>4759,<span …>00</span>…</span>
+   *   </div>
+   *
+   *   <li class="mg9e_8"><div class="mpof_ki m389_6m">     (row)
+   *     <div …><span …>3659,<span …>00</span>…</span></div>
+   *   </div></li>
+   *
+   * There the conversion goes after the row instead, under the price. The
+   * plain-text sums ("Wartość produktów 4759,00 zł", "Dostawa od 0,00 zł")
+   * have no such shape and are left alone.
    */
   'allegro.pl': {
     priceSelector: [
@@ -384,6 +407,11 @@ export const PL_PRESETS = {
         priceContainer: 'div:has(> div[class*="mgn2_"] > span[class*="mgn2_"] + span[class*="mgn2_"])',
         insertPosition: 'afterContainer',
         fontSize: '16px',
+      },
+      {
+        selector: '[data-box-name="allegro.cart.view"]',
+        priceContainer: 'div.mpof_ki',
+        insertPosition: 'afterContainer',
       },
       {
         selector: 'span:has(> span[class*="mgn2_"] + span[class*="mgn2_"])',
