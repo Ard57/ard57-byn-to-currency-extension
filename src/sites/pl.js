@@ -329,6 +329,31 @@ export const PL_PRESETS = {
   },
 
   /**
+   * Marketplace. Class names come in two kinds: atomic ones from Allegro's
+   * design system (mpof_ki, mgn2_21 — one property each, stable across
+   * releases) and per-build hashes (_e8529_5LKaL), which are never used here.
+   * A tile on the main page lists its parts, the price in a row of its own:
+   *
+   *   <li class="">
+   *     <div class="mpof_ki m389_6m">
+   *       <div class="mpof_ki mwdn_1 m389_6m meqh_en m6ax_n4 _e8529_5LKaL">   (flex row)
+   *         <span class="mgn2_21 mgn2_24_s mqu1_ae">15,90 zł</span>
+   *       </div>
+   *     </div>
+   *   </li>
+   *
+   * The price is picked by that shape and its font-size class; a span of the
+   * same shape without "zł" in it is not a price and is skipped. The
+   * conversion goes under the price row, inside the list item.
+   */
+  'allegro.pl': {
+    priceSelector: 'li > div > div > span[class*="mgn2_"]:only-child',
+    priceContainer: 'li > div',
+    insertPosition: 'afterContainer',
+    fontSize: '13px',
+  },
+
+  /**
    * Price comparison. The main page's product boxes, a grid that gives the
    * price box a row of its own:
    *

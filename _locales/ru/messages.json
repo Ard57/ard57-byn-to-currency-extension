@@ -125,6 +125,10 @@
     "message": "Авто",
     "description": "otomoto.pl"
   },
+  "site_allegro_pl": {
+    "message": "Маркетплейс",
+    "description": "allegro.pl"
+  },
   "site_ceneo_pl": {
     "message": "Сравнение цен",
     "description": "ceneo.pl"
