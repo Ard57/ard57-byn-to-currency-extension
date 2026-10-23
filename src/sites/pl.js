@@ -390,6 +390,19 @@ export const PL_PRESETS = {
    * There it goes right after the price link, above the delivery details.
    * Prices elsewhere on the page — other variants, the sticky bar, the price
    * history — are left alone.
+   *
+   * The search box's drop-down suggests products, each a compact row of
+   * picture and description, built in the browser:
+   *
+   *   <div class="suggester__product__description">      (grid)
+   *     <span class="suggester__product__description__name">…</span>
+   *     <div class="suggester__product__description__price">
+   *       <span class="price-prefix">od</span><span class="price-format …">…1948,00 zł…</span>
+   *     </div>
+   *   </div>
+   *
+   * The conversion goes at the end of the price box, under the price, small
+   * to keep the rows compact.
    */
   'ceneo.pl': {
     priceSelector: [
@@ -397,6 +410,7 @@ export const PL_PRESETS = {
       '.cat-prod-row__price > a > .price-format',
       '.product-offer-summary__price-box .price-format',
       '.product-offer__product__price > .product-price > .price-format',
+      '.suggester__product__description__price > .price-format',
     ].join(', '),
     priceContainer: '.box-prod-price',
     insertPosition: 'append',
@@ -423,6 +437,11 @@ export const PL_PRESETS = {
         priceContainer: '.product-price',
         insertPosition: 'afterContainer',
         lineHeight: '1.3',
+      },
+      {
+        selector: '.suggester__product__description__price',
+        priceContainer: '.suggester__product__description__price',
+        fontSize: '12px',
       },
     ],
   },
