@@ -403,6 +403,34 @@ export const PL_PRESETS = {
    *
    * The conversion goes at the end of the price box, under the price, small
    * to keep the rows compact.
+   *
+   * Basket, an Angular app with markup of its own. Each item:
+   *
+   *   <div data-cy="item-price-and-shipping" …>
+   *     <div data-cy="item-price" …><span id="price">1 459,99 zł</span></div>
+   *     <div class="product-item__description__shipping">…</div>
+   *   </div>
+   *
+   * a carousel of the shop's other products under the items:
+   *
+   *   <div class="recommended-offer">
+   *     …picture, name…
+   *     <div class="recommended-offer__price">580,99 zł</div>
+   *     <a …>Dodaj do koszyka</a>
+   *   </div>
+   *
+   * and the total, its parts in elements of their own, beside its label:
+   *
+   *   <div class="fixed-step-summary__price">
+   *     <div …>Suma</div>
+   *     <c-price class="fixed-step-summary__price__value">
+   *       <span class="price"><span class="price__integer">8 174</span>…<span class="price__currency"> zł</span></span>
+   *     </c-price>
+   *   </div>
+   *
+   * The conversion goes under each price inside its own box, and under the
+   * total's row. What is missing for free delivery ("brakuje Ci 1 825,02 zł")
+   * and the coupons' "15 zł" are not prices of anything, and are left alone.
    */
   'ceneo.pl': {
     priceSelector: [
@@ -411,6 +439,9 @@ export const PL_PRESETS = {
       '.product-offer-summary__price-box .price-format',
       '.product-offer__product__price > .product-price > .price-format',
       '.suggester__product__description__price > .price-format',
+      '[data-cy="item-price"] > #price',
+      '.recommended-offer__price',
+      '.fixed-step-summary__price__value > .price',
     ].join(', '),
     priceContainer: '.box-prod-price',
     insertPosition: 'append',
@@ -442,6 +473,21 @@ export const PL_PRESETS = {
         selector: '.suggester__product__description__price',
         priceContainer: '.suggester__product__description__price',
         fontSize: '12px',
+      },
+      {
+        selector: '[data-cy="item-price"]',
+        priceContainer: '[data-cy="item-price"]',
+      },
+      {
+        selector: '.recommended-offer__price',
+        priceContainer: ':scope',
+        fontSize: '12px',
+      },
+      {
+        selector: '.fixed-step-summary__price',
+        priceContainer: '.fixed-step-summary__price',
+        insertPosition: 'afterContainer',
+        fontSize: '14px',
       },
     ],
   },
