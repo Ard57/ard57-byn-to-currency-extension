@@ -345,12 +345,51 @@ export const PL_PRESETS = {
    * The price is picked by that shape and its font-size class; a span of the
    * same shape without "zł" in it is not a price and is skipped. The
    * conversion goes under the price row, inside the list item.
+   *
+   * Search results write the price large, the grosze and the sign smaller,
+   * each in a span of its own:
+   *
+   *   <span class="mli8_k4 … mgn2_27 mgn2_30_s">
+   *     3759,<span class="mgn2_19 mgn2_21_s m9qz_yq">00</span>&nbsp;<span class="mgn2_19 …">zł</span>
+   *   </span>
+   *
+   * Picked by that shape, the conversion goes right after the price.
+   *
+   * Offer page: the same shape in a div, after a "cena" label, sharing a
+   * wrapper with the Allegro Smart! badge and its tooltip:
+   *
+   *   <div class="_7030e_qVLm-">
+   *     <div class="mli8_k4 … mgn2_27 mgn2_30_s mpof_vs …">
+   *       <span …>cena </span><span>4759,</span><span class="mgn2_19 …">00</span>&nbsp;<span class="mgn2_19 …">zł</span>
+   *     </div>
+   *     <div class="mpof_vs">…Smart! badge, tooltip…</div>
+   *   </div>
+   *
+   * The wrapper's only class is a build hash, so it is found by what it
+   * holds; the conversion goes after it, under the price and the badge,
+   * larger than in the listings.
    */
   'allegro.pl': {
-    priceSelector: 'li > div > div > span[class*="mgn2_"]:only-child',
+    priceSelector: [
+      'li > div > div > span[class*="mgn2_"]:only-child',
+      ':is(span, div)[class*="mgn2_"]:has(> span[class*="mgn2_"] + span[class*="mgn2_"])',
+    ].join(', '),
     priceContainer: 'li > div',
     insertPosition: 'afterContainer',
     fontSize: '13px',
+
+    styles: [
+      {
+        selector: 'div[class*="mgn2_"]:has(> span[class*="mgn2_"] + span[class*="mgn2_"])',
+        priceContainer: 'div:has(> div[class*="mgn2_"] > span[class*="mgn2_"] + span[class*="mgn2_"])',
+        insertPosition: 'afterContainer',
+        fontSize: '16px',
+      },
+      {
+        selector: 'span:has(> span[class*="mgn2_"] + span[class*="mgn2_"])',
+        insertPosition: 'after',
+      },
+    ],
   },
 
   /**
