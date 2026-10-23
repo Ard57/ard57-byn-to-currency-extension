@@ -329,6 +329,32 @@ export const PL_PRESETS = {
   },
 
   /**
+   * Price comparison. The main page's product boxes, a grid that gives the
+   * price box a row of its own:
+   *
+   *   <div class="recommendation__content">                (grid)
+   *     …badges, name, "kupionych ostatnio", "Darmowa wysyłka"…
+   *     <div class="box-prod-price">
+   *       <span class="price-prefix">od</span>
+   *       <span class="price-format nowrap">
+   *         <span class="price"><span class="value">2 649</span><span class="penny">,00</span></span>zł
+   *       </span>
+   *     </div>
+   *   </div>
+   *
+   * The server's markup has line breaks between the parts of the price,
+   * which priceText() closes up. The conversion goes at the end of the price
+   * box, under the price, in the box's own grid row. The "od" — the lowest of
+   * the shops' offers — is not carried over.
+   */
+  'ceneo.pl': {
+    priceSelector: '.box-prod-price .price-format',
+    priceContainer: '.box-prod-price',
+    insertPosition: 'append',
+    fontSize: '13px',
+  },
+
+  /**
    * Cars, from the same group as OLX. Prices are written "45 900 PLN" rather
    * than in złoty. The main page's promoted cards — and the "today's pick"
    * spotlight above them — carry a test id on the price, which opens a line

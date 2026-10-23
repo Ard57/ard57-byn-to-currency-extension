@@ -125,6 +125,10 @@
     "message": "Авто",
     "description": "otomoto.pl"
   },
+  "site_ceneo_pl": {
+    "message": "Сравнение цен",
+    "description": "ceneo.pl"
+  },
   "site_gratka_pl": {
     "message": "Недвижимость",
     "description": "gratka.pl"

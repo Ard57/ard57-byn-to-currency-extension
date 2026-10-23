@@ -73,6 +73,10 @@ function safeClosest(element, selector) {
  * Style and script text is skipped: otomoto.pl renders its CSS-in-JS rules as
  * <style> elements inside the price, and "24px" is no part of it.
  *
+ * Whitespace between the whole part and the fraction is dropped: ceneo.pl
+ * puts "2 099" and ",99" in elements of their own, with a line break between
+ * them in its markup, and "2 099\n,99 zł" would read as 99 zł.
+ *
  * @param {Element} element
  * @returns {string}
  */
@@ -88,7 +92,7 @@ function priceText(element) {
     }
     text += node.data;
   }
-  return text;
+  return text.replace(/(\d)\s+(?=[.,]\d)/gu, '$1');
 }
 
 /**
