@@ -363,11 +363,40 @@ export const PL_PRESETS = {
    * The conversion goes right after the link, under the price and above the
    * button, right-aligned with them. The column sets line-height: 1, too
    * tight for a conversion that wraps, so it gets its own.
+   *
+   * Product page (www.ceneo.pl/194539597): the best offer's price heads the
+   * page, linked to its shop, or bare beside a buyer-protection badge:
+   *
+   *   <div class="product-offer-summary">
+   *     <div class="product-offer-summary__price-box">     (line-height: 1)
+   *       <span class="offer-default"><a …><span class="price-format …">…3 699,00 zł…</span></a></span>
+   *     </div>
+   *     <div class="product-offer-summary__button">…</div>
+   *   </div>
+   *
+   *   <div class="product-offer-summary__price-box product-offer-summary__price-box--with-icon">
+   *     <span class="price-format …">…</span>              (flex row)
+   *     <div class="product-offer-summary__price-box__pok">…badge…</div>
+   *   </div>
+   *
+   * Either way the conversion goes after the whole box, above the button.
+   * The shops' offers below each have a column of their own:
+   *
+   *   <div class="product-offer__product__price">        (flex column, to the right)
+   *     <a class="product-price go-to-shop" …><span class="price-format …">…</span></a>
+   *     <div class="product-offer__product__delivery-section">…</div>
+   *   </div>
+   *
+   * There it goes right after the price link, above the delivery details.
+   * Prices elsewhere on the page — other variants, the sticky bar, the price
+   * history — are left alone.
    */
   'ceneo.pl': {
     priceSelector: [
       '.box-prod-price .price-format',
       '.cat-prod-row__price > a > .price-format',
+      '.product-offer-summary__price-box .price-format',
+      '.product-offer__product__price > .product-price > .price-format',
     ].join(', '),
     priceContainer: '.box-prod-price',
     insertPosition: 'append',
@@ -380,6 +409,20 @@ export const PL_PRESETS = {
         insertPosition: 'afterContainer',
         lineHeight: '1.3',
         margin: '0.25rem 0 0',
+      },
+      {
+        selector: '.product-offer-summary__price-box',
+        priceContainer: '.product-offer-summary__price-box',
+        insertPosition: 'afterContainer',
+        fontSize: '16px',
+        lineHeight: '1.3',
+        margin: '0.25rem 0',
+      },
+      {
+        selector: '.product-offer__product__price',
+        priceContainer: '.product-price',
+        insertPosition: 'afterContainer',
+        lineHeight: '1.3',
       },
     ],
   },
