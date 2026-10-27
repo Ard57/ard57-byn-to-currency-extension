@@ -391,11 +391,19 @@ export const PL_PRESETS = {
    * There the conversion goes after the row instead, under the price. The
    * plain-text sums ("Wartość produktów 4759,00 zł", "Dostawa od 0,00 zł")
    * have no such shape and are left alone.
+   *
+   * Product comparison: a paragraph, the grosze and the sign together in one
+   * smaller span:
+   *
+   *   <p class="… mgn2_21 mgn2_25_s mpof_vs mryx_8 mp4t_8">4759,<span class="mgn2_16 …">00&nbsp;zł</span></p>
+   *
+   * The conversion goes right after the paragraph.
    */
   'allegro.pl': {
     priceSelector: [
       'li > div > div > span[class*="mgn2_"]:only-child',
       ':is(span, div)[class*="mgn2_"]:has(> span[class*="mgn2_"] + span[class*="mgn2_"])',
+      'p[class*="mgn2_"]:has(> span[class*="mgn2_"]:only-child)',
     ].join(', '),
     priceContainer: 'li > div',
     insertPosition: 'afterContainer',
@@ -415,6 +423,10 @@ export const PL_PRESETS = {
       },
       {
         selector: 'span:has(> span[class*="mgn2_"] + span[class*="mgn2_"])',
+        insertPosition: 'after',
+      },
+      {
+        selector: 'p[class*="mgn2_"]:has(> span[class*="mgn2_"]:only-child)',
         insertPosition: 'after',
       },
     ],
