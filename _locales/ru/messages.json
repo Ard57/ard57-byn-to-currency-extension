@@ -125,6 +125,10 @@
     "message": "Авто",
     "description": "otomoto.pl"
   },
+  "site_allegrolokalnie_pl": {
+    "message": "Объявления",
+    "description": "allegrolokalnie.pl"
+  },
   "site_allegro_pl": {
     "message": "Маркетплейс",
     "description": "allegro.pl"

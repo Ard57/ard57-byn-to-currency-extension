@@ -433,6 +433,34 @@ export const PL_PRESETS = {
   },
 
   /**
+   * Classifieds, Allegro's local sister site, with readable class names of
+   * its own. The main page's carousels arrive as skeletons and are filled in
+   * the browser; the card keeps the price in a column of its own:
+   *
+   *   <div class="mlc-offer-card__details-container">     (flex column)
+   *     <div class="mlc-offer-card__price">              (flex column)
+   *       …price component…
+   *     </div>
+   *     <div class="mlc-offer-card__details">…title, location…</div>
+   *   </div>
+   *
+   * The price component is one design-system element, sized by a modifier,
+   * the grosze and the sign in parts of their own:
+   *
+   *   <… class="ml-offer-price ml-offer-price--size-…">
+   *     …<… class="ml-offer-price__cents">…</…><… class="ml-offer-price__currency">zł</…>
+   *   </…>
+   *
+   * The conversion goes right after the component — under it, in the card's
+   * price column.
+   */
+  'allegrolokalnie.pl': {
+    priceSelector: '.ml-offer-price',
+    insertPosition: 'after',
+    fontSize: '13px',
+  },
+
+  /**
    * Price comparison. The main page's product boxes, a grid that gives the
    * price box a row of its own:
    *

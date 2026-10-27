@@ -125,6 +125,10 @@
     "message": "Cars",
     "description": "otomoto.pl"
   },
+  "site_allegrolokalnie_pl": {
+    "message": "Classifieds",
+    "description": "allegrolokalnie.pl"
+  },
   "site_allegro_pl": {
     "message": "Marketplace",
     "description": "allegro.pl"
