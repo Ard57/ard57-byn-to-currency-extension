@@ -453,11 +453,34 @@ export const PL_PRESETS = {
    *
    * The conversion goes right after the component — under it, in the card's
    * price column.
+   *
+   * Search results and offer pages put the component in a row instead,
+   * beside the Smart! badge:
+   *
+   *   <div class="mlc-offer-mobile-overview__price-and-smart-icon">  (flex row)
+   *     <span class="ml-offer-price ml-offer-price--size-extra-large">
+   *       <span class="ml-offer-price__dollars">38 900</span>
+   *       <span class="ml-offer-price__currency">&nbsp;zł</span>
+   *     </span>
+   *     …Smart! icon…
+   *   </div>
+   *
+   * Whatever row the price is in is let wrap, and the conversion, full width
+   * and ordered last, takes a line of its own under the price and the badge.
+   * In a column, as on the cards, neither makes a difference.
    */
   'allegrolokalnie.pl': {
     priceSelector: '.ml-offer-price',
     insertPosition: 'after',
     fontSize: '13px',
+    width: '100%',
+    order: 1,
+
+    pageStyles: `
+      :has(> .ml-offer-price + div[data-byn-to-currency]) {
+        flex-wrap: wrap !important;
+      }
+    `,
   },
 
   /**
