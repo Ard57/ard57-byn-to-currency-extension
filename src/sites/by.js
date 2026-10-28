@@ -12,6 +12,19 @@ const VEK_SERVICES = [
 ].map(prefix => `[class*="${prefix}"] *`).join(', ');
 
 /**
+ * A product's price in the catalog search box's dropdown, on every
+ * catalog.onliner.by page. Page rules that name their own prices add it back.
+ *
+ *   <div class="product__offers"><div class="product__offers__wrapper">
+ *     <div class="product__price">
+ *       <a class="product__price-value product__price-value_primary"><span>от 714,44 ƃ</span></a>
+ *     </div>
+ *     <a class="search-button-old … product__button"> 68 предложений </a>
+ *   </div></div>
+ */
+const ONLINER_SEARCH_PRICE = '.product__price > .product__price-value_primary';
+
+/**
  * Belarusian sites. Prices are in BYN.
  */
 export const BY_PRESETS = {
@@ -123,6 +136,7 @@ export const BY_PRESETS = {
     priceSelector: [
       '.catalog-form__link_huge-additional > span:not([class])',
       '.catalog-form__link_huge-alter',
+      ONLINER_SEARCH_PRICE,
     ].join(', '),
 
     /**
@@ -158,6 +172,24 @@ export const BY_PRESETS = {
         selector: '.catalog-form__description_huge-alter',
         layout: LAYOUT.BLOCK,
         fontSize: '0.6em',
+      },
+      {
+        /**
+         * The search box's dropdown (see ONLINER_SEARCH_PRICE): appended to
+         * the price div, under the link and above the offers button, on one
+         * line. A stack pushed the button down and shifted the whole row.
+         * Every field a page rule sets is reset, so the dropdown looks the
+         * same on any page.
+         */
+        selector: '.product__price',
+        priceContainer: '.product__price',
+        insertPosition: 'append',
+        layout: LAYOUT.INLINE,
+        className: null,
+        fontSize: '12px',
+        fontWeight: null,
+        lineHeight: null,
+        margin: null,
       },
     ],
 
@@ -201,7 +233,7 @@ export const BY_PRESETS = {
          * selector simply finds nothing if the link is absent.
          */
         pattern: '/*/*/*',
-        priceSelector: '.js-description-price-link, .product-recommended__price > a',
+        priceSelector: `.js-description-price-link, .product-recommended__price > a, ${ONLINER_SEARCH_PRICE}`,
         insertPosition: 'after',
         className: 'h_txt_fte',
         fontSize: null,
@@ -223,7 +255,7 @@ export const BY_PRESETS = {
          * narrow as products are added.
          */
         pattern: '/compare/*',
-        priceSelector: '.product-summary__price_primary',
+        priceSelector: `.product-summary__price_primary, ${ONLINER_SEARCH_PRICE}`,
         insertPosition: 'after',
         layout: LAYOUT.BLOCK,
         fontSize: '14px',
