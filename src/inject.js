@@ -1,4 +1,4 @@
-import { findPrices } from './parse.js';
+import { findPriceRange, findPrices } from './parse.js';
 import { priceRows, priceSeparator, DEFAULT_COMPANION_SEPARATOR } from './format.js';
 import { SOURCE_CURRENCY } from './settings.js';
 
@@ -70,6 +70,13 @@ function safeClosest(element, selector) {
  * "złdo" the sign would no longer read as one. A space goes between two
  * pieces only when the first ends in a letter and the next starts with one.
  *
+ * Style and script text is skipped: otomoto.pl renders its CSS-in-JS rules as
+ * <style> elements inside the price, and "24px" is no part of it.
+ *
+ * Whitespace between the whole part and the fraction is dropped: ceneo.pl
+ * puts "2 099" and ",99" in elements of their own, with a line break between
+ * them in its markup, and "2 099\n,99 zł" would read as 99 zł.
+ *
  * @param {Element} element
  * @returns {string}
  */
@@ -77,7 +84,7 @@ function priceText(element) {
   let text = '';
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    if (node.parentElement.closest(`[${MARKER_ATTRIBUTE}]`)) {
+    if (node.parentElement.closest(`[${MARKER_ATTRIBUTE}], style, script`)) {
       continue;
     }
     if (/\p{L}$/u.test(text) && /^\p{L}/u.test(node.data)) {
@@ -85,7 +92,7 @@ function priceText(element) {
     }
     text += node.data;
   }
-  return text;
+  return text.replace(/(\d)\s+(?=[.,]\d)/gu, '$1');
 }
 
 /**
@@ -349,7 +356,7 @@ export function annotatePrices(root, settings, rates) {
     // Zero converts to zero in every currency, so there is nothing to show.
     // Booking forms print a "0 BYN" total until dates are picked, and sites
     // put "0 ƃ" on "list your ad for free" buttons.
-    const [price] = findPrices(priceText(priceElement), parseOptions);
+    const price = findPriceRange(priceText(priceElement), parseOptions);
     if (!price || price.amount === 0) {
       continue;
     }
@@ -358,6 +365,7 @@ export function annotatePrices(root, settings, rates) {
     const forPrice = {
       ...effective,
       companion: { ...effective.companion, amount: companionPrice?.amount },
+      upTo: price.upTo,
     };
     const rows = priceRows(price.amount, currency, effective.currencies, rates, forPrice);
     if (!rows.length) {

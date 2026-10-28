@@ -121,6 +121,26 @@
     "message": "Classifieds",
     "description": "olx.pl"
   },
+  "site_otomoto_pl": {
+    "message": "Cars",
+    "description": "otomoto.pl"
+  },
+  "site_allegrolokalnie_pl": {
+    "message": "Classifieds",
+    "description": "allegrolokalnie.pl"
+  },
+  "site_allegro_pl": {
+    "message": "Marketplace",
+    "description": "allegro.pl"
+  },
+  "site_ceneo_pl": {
+    "message": "Price comparison",
+    "description": "ceneo.pl"
+  },
+  "site_gratka_pl": {
+    "message": "Real estate",
+    "description": "gratka.pl"
+  },
   "site_otodom_pl": {
     "message": "Real estate",
     "description": "otodom.pl"
