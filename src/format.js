@@ -173,6 +173,9 @@ export function convertPrices(amount, fromCurrency, currencies, rates, options =
 /** Between a converted price and its companion on the same line. */
 export const DEFAULT_COMPANION_SEPARATOR = ' · ';
 
+/** Between the two ends of a converted range. */
+const RANGE_SEPARATOR = ' – ';
+
 /**
  * What separates one converted price from the next — a newline in BLOCK
  * layout, " | " inline, unless the options name their own.
@@ -203,13 +206,26 @@ export function priceSeparator(options = {}) {
  * @param {string} fromCurrency
  * @param {string[]} currencies - Ordered target currency codes
  * @param {Object} rates - Rates map from getExchangeRates().rates
+ * A range — `upTo`, its high end in the same source currency — is converted
+ * at both ends and written as one: "$131,500 – $277,000". The suffix goes on
+ * the high end only.
+ *
  * @param {Object} [options] - See DEFAULT_OPTIONS, plus `companion`:
- *   { amount, suffix } — the companion amount is in the SAME source currency.
+ *   { amount, suffix } — the companion amount is in the SAME source currency;
+ *   and `upTo`, the high end of a range.
  * @returns {Array<{ currency: string, text: string, companion: string }>}
  */
 export function priceRows(amount, fromCurrency, currencies, rates, options = {}) {
   const resolved = { ...DEFAULT_OPTIONS, ...options };
   const companion = resolved.companion ?? {};
+
+  const highParts = new Map(
+    Number.isFinite(resolved.upTo)
+      ? convertPrices(resolved.upTo, fromCurrency, currencies, rates, resolved)
+        .map(part => [part.currency, part.text])
+      : []
+  );
+  const lowOptions = highParts.size ? { ...resolved, suffix: '' } : resolved;
 
   // Keyed by currency rather than zipped by position: a currency missing from
   // one list would otherwise shift every later pairing by one.
@@ -222,9 +238,11 @@ export function priceRows(amount, fromCurrency, currencies, rates, options = {})
       : []
   );
 
-  return convertPrices(amount, fromCurrency, currencies, rates, resolved).map(part => ({
+  return convertPrices(amount, fromCurrency, currencies, rates, lowOptions).map(part => ({
     currency: part.currency,
-    text: part.text,
+    text: highParts.has(part.currency)
+      ? `${part.text}${RANGE_SEPARATOR}${highParts.get(part.currency)}`
+      : part.text,
     companion: companionParts.get(part.currency) ?? '',
   }));
 }

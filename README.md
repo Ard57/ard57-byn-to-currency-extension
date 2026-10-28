@@ -24,9 +24,10 @@ Where it works
 
 Belarus, prices in Belarusian rubles:
 
-- Shops: catalog.onliner.by and its basket, 21vek.by, wildberries.by and
-  ozon.by — from the main page and search results to a product page, other
-  sellers' offers and the basket total.
+- Shops: catalog.onliner.by with its search box suggestions, compare page
+  and basket, 21vek.by, wildberries.by and ozon.by — from the main page and
+  search results to a product page, other sellers' offers and the basket
+  total.
 - Classifieds: onliner.by and kufar.by.
 - Property, for sale and to rent: onliner.by, kufar.by, realt.by and
   flatby.by — including the price per square metre where a site shows one.
@@ -34,9 +35,17 @@ Belarus, prices in Belarusian rubles:
 
 Poland, prices in złoty:
 
-- Classifieds: olx.pl — the main page, search results and ad pages.
+- Marketplace: allegro.pl — the main page, search results, offer pages,
+  product comparison and the basket.
+- Price comparison: ceneo.pl — the main page, search results and product
+  pages, the search box suggestions and the basket.
+- Classifieds: olx.pl — the main page, search results and ad pages;
+  allegrolokalnie.pl — the main page, search results and offer pages.
 - Property: otodom.pl — the main page, search results and offer pages,
-  with the price per square metre where it is shown.
+  with the price per square metre where it is shown; gratka.pl — the main
+  page, search results, developments and offer pages, with the price per
+  square metre.
+- Cars: otomoto.pl — the main page, search results and offer pages.
 
 Search results, ad pages, cards in a map popup and the totals a booking form
 works out are all covered. Where a site offers currencies of its own, the
@@ -133,9 +142,9 @@ https://chromewebstore.google.com/detail/byn-prices-in-usdeurrub/fnclffoajnfapbe
 
 Беларусь, цены в белорусских рублях:
 
-- Магазины: catalog.onliner.by и его корзина, 21vek.by, wildberries.by и
-  ozon.by — от главной и поиска до страницы товара, предложений других
-  продавцов и итога в корзине.
+- Магазины: catalog.onliner.by с подсказками поиска, сравнением товаров и
+  корзиной, 21vek.by, wildberries.by и ozon.by — от главной и поиска до
+  страницы товара, предложений других продавцов и итога в корзине.
 - Объявления: onliner.by и kufar.by.
 - Недвижимость, продажа и аренда: onliner.by, kufar.by, realt.by и
   flatby.by — вместе с ценой за квадратный метр, если сайт её показывает.
@@ -143,9 +152,16 @@ https://chromewebstore.google.com/detail/byn-prices-in-usdeurrub/fnclffoajnfapbe
 
 Польша, цены в злотых:
 
-- Объявления: olx.pl — главная, поиск и страницы объявлений.
+- Маркетплейс: allegro.pl — главная, поиск, страницы товаров, сравнение
+  товаров и корзина.
+- Сравнение цен: ceneo.pl — главная, поиск, страницы товаров, подсказки
+  поиска и корзина.
+- Объявления: olx.pl — главная, поиск и страницы объявлений;
+  allegrolokalnie.pl — главная, поиск и страницы объявлений.
 - Недвижимость: otodom.pl — главная, поиск и страницы предложений, вместе с
-  ценой за квадратный метр, где она указана.
+  ценой за квадратный метр, где она указана; gratka.pl — главная, поиск,
+  новостройки и страницы предложений, вместе с ценой за квадратный метр.
+- Автомобили: otomoto.pl — главная, поиск и страницы предложений.
 
 Страницы поиска, страницы объявлений, карточки во всплывающем окне на карте
 и итоги, которые считает форма бронирования, — всё это учитывается. Если

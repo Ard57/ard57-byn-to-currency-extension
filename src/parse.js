@@ -197,3 +197,49 @@ export function findPrices(text, { requireMarker = true, currency = 'BYN' } = {}
 
   return found;
 }
+
+/** A dash between the two ends of a range, spaced or not. */
+const RANGE_DASH = /\s*[-–—]\s*/;
+
+/** The low end of a range written with one marker: the "478 224 - " of "478 224 - 1 007 471 zł". */
+const RANGE_LOW = new RegExp('(' + NUMBER.source + ')' + RANGE_DASH.source + '$', 'u');
+
+/** Nothing but a dash, between two prices that both carry a marker. */
+const RANGE_GAP = new RegExp('^' + RANGE_DASH.source + '$', 'u');
+
+/**
+ * The first price in a string, as findPrices() would give it, widened to a
+ * range where the text writes one. gratka.pl prices a development as
+ * "478 224 - 1 007 471 zł": only the high end carries the marker, so on its
+ * own findPrices() would read the range as its top.
+ *
+ *   "478 224 - 1 007 471 zł"     → { amount: 478224, upTo: 1007471 }
+ *   "478 224 zł - 1 007 471 zł"  → { amount: 478224, upTo: 1007471 }
+ *   "742 920 zł"                 → { amount: 742920 }
+ *
+ * Only a number directly before the dash counts, so a lone "- 10 000 PLN"
+ * (a price cut) stays a single price.
+ *
+ * @param {string} text
+ * @param {Object} [options] - As for findPrices()
+ * @returns {{ amount: number, upTo?: number } | null}
+ */
+export function findPriceRange(text, options) {
+  const prices = findPrices(text, options);
+  const [first, second] = prices;
+  if (!first) {
+    return null;
+  }
+
+  const low = text.slice(0, first.index).match(RANGE_LOW);
+  const lowAmount = low ? parseAmount(low[1]) : null;
+  if (lowAmount !== null) {
+    return { amount: lowAmount, upTo: first.amount };
+  }
+
+  if (second && RANGE_GAP.test(text.slice(first.index + first.length, second.index))) {
+    return { amount: first.amount, upTo: second.amount };
+  }
+
+  return { amount: first.amount };
+}
