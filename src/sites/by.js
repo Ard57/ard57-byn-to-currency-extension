@@ -206,6 +206,31 @@ export const BY_PRESETS = {
         className: 'h_txt_fte',
         fontSize: null,
       },
+      {
+        /**
+         * Compare page, e.g. /compare/1001000001084+at807683b9b4884. Each
+         * product's column header shows its lowest price, drawn twice: in
+         * the table and in the bar that sticks to the top on scroll.
+         *
+         *   <div class="product-summary">
+         *     …
+         *     <a class="product-summary__price product-summary__price_primary">от 1163,92 ƃ </a>
+         *     <footer class="product-summary__footer">…66 предложений…</footer>
+         *   </div>
+         *
+         * The link is a 20px bold block that never wraps, so the conversion
+         * goes right after it, above the offers button, stacked: the columns
+         * narrow as products are added.
+         */
+        pattern: '/compare/*',
+        priceSelector: '.product-summary__price_primary',
+        insertPosition: 'after',
+        layout: LAYOUT.BLOCK,
+        fontSize: '14px',
+        fontWeight: '700',
+        lineHeight: '1.3',
+        margin: '0 0 8px',
+      },
     ],
   },
 
