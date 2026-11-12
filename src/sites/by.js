@@ -615,6 +615,10 @@ export const BY_PRESETS = {
    * preset replaces the parent's selector and rules outright. Six-figure
    * prices, so no cents.
    *
+   * Class names are CSS-module hashes, matched by their tails only. The separator
+   * after the hash went from "__" to "_" (now "knBPIa_price__meter"), so
+   * the tails start at a single underscore, which covers either.
+   *
    * One stack under the price, a currency per line, each line carrying that
    * currency's total AND its price per m²:
    *
@@ -625,18 +629,19 @@ export const BY_PRESETS = {
    *
    * Listing cards (re.kufar.by/l/belarus/kupit/kvartiru), a flex row:
    *
-   *   <div class="…__price …__price__map">
-   *     <span class="…__price__byr" data-testid="card-price">178 008 р.</span>
-   *     <span class="…__price__meter">4 485 р./м²</span>
-   *     <div class="…__calculator-icon">…</div>
+   *   <div class="">
+   *     <span class="…_price__byr" data-testid="card-price">178 008 р.</span>
+   *     <span class="…_price__meter">4 485 р./м²</span>
+   *     <div class="…_calculator-icon">…</div>
    *
-   * The row is nowrap with overflow hidden, so the stack is appended INSIDE
-   * the price span (priceContainer ':scope' — closest() matches the element
-   * itself). Flex items are blockified, so the stack sits under the number.
+   * The row is nowrap with overflow hidden, so the stack goes directly after
+   * the whole row, under both the price and the per-m² figure, as on the ad
+   * page. The row's class is empty, so it is found as the element holding the
+   * card price rather than by name.
    *
    * Map popup cards are a different component: same class tails, but the
    * price span carries no data-testid and the spans are inline rather than a
-   * flex row. Hence the [class$="__price__byr"] selector, which covers both.
+   * flex row. Hence the [class$="_price__byr"] selector, which covers both.
    *
    * Ad page (re.kufar.by/vi/minsk/kupit/kvartiru/1080759810), a flex row
    * aligned to the bottom:
@@ -666,9 +671,9 @@ export const BY_PRESETS = {
 
     priceSelector: [
       '[data-testid="card-price"]',
-      '[class$="__price__byr"]',
-      '[class$="__adview_price"] [class$="__main"]',
-      '[class$="__header"] > [class$="__price"] > span:first-child',
+      '[class$="_price__byr"]',
+      '[class$="_adview_price"] [class$="_main"]',
+      '[class$="_header"] > [class$="_price"] > span:first-child',
     ].join(', '),
     priceContainer: ':scope',
     fontSize: '14px',
@@ -687,8 +692,8 @@ export const BY_PRESETS = {
      * parent is searched instead.
      */
     companion: {
-      scope: '[class$="__adview_price"]',
-      selector: '[class$="__price__meter"], [class$="__per_square_meter"]',
+      scope: '[class$="_adview_price"]',
+      selector: '[class$="_price__meter"], [class$="_per_square_meter"]',
       suffix: '/м²',
       // Kufar prints every per-m² figure in gray; the converted ones match.
       color: 'gray',
@@ -702,8 +707,28 @@ export const BY_PRESETS = {
          * away from the price. Below the whole row instead, leaving the row as
          * the site drew it.
          */
-        selector: '[class$="__adview_price"]',
-        priceContainer: '[class$="__adview_price"]',
+        selector: '[class$="_adview_price"]',
+        priceContainer: '[class$="_adview_price"]',
+        insertPosition: 'afterContainer',
+      },
+      {
+        /**
+         * Map tiles (the card list beside the map). The price row
+         * ("…_price--map") shares a flex row ("…_top") with the favourite
+         * heart, so a stack after the price row would land beside it. After
+         * the whole top row instead, above the room count and area.
+         */
+        selector: '[class$="_price--map"] > [data-testid="card-price"]',
+        priceContainer: '[class$="_top"]:has([class$="_price--map"])',
+        insertPosition: 'afterContainer',
+      },
+      {
+        /**
+         * Listing cards: below the price row rather than inside the price,
+         * so the stack sits under both the price and the per-m² figure.
+         */
+        selector: '[data-testid="card-price"]',
+        priceContainer: ':has(> [data-testid="card-price"])',
         insertPosition: 'afterContainer',
       },
       {
@@ -718,8 +743,8 @@ export const BY_PRESETS = {
          * price span itself ("…__price__byr") has to be excluded, because
          * closest() would otherwise stop there.
          */
-        selector: '[class$="__price__byr"]:not([data-testid])',
-        priceContainer: '[class*="__price"]:not([class$="__price__byr"])',
+        selector: '[class$="_price__byr"]:not([data-testid])',
+        priceContainer: '[class*="_price"]:not([class$="_price__byr"])',
       },
     ],
   },
